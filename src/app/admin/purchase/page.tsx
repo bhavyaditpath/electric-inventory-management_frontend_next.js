@@ -33,6 +33,33 @@ const PurchasePage: React.FC = () => {
     brand: '',
   });
 
+  // VALIDATION FUNCTION
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.productName.trim()) newErrors.productName = "Product name is required";
+    if (!formData.brand.trim()) newErrors.brand = "Supplier name is required";
+
+    const qty = parseFloat(formData.quantity);
+    if (!qty || qty <= 0) newErrors.quantity = "Quantity must be greater than 0";
+
+    if (!formData.unit.trim()) newErrors.unit = "Unit is required";
+
+    const price = parseFloat(formData.pricePerUnit);
+    if (!price || price <= 0) newErrors.pricePerUnit = "Price per unit must be greater than 0";
+
+    const total = parseFloat(formData.totalPrice);
+    if (!total || total <= 0) newErrors.totalPrice = "Total price must be greater than 0";
+
+    const threshold = parseFloat(formData.lowStockThreshold);
+    if (!threshold || threshold <= 0)
+      newErrors.lowStockThreshold = "Low stock threshold must be at least 1";
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
   // Load all purchases
   const loadPurchases = useCallback(async () => {
     try {
@@ -59,14 +86,11 @@ const PurchasePage: React.FC = () => {
       try {
         const response = await purchaseApi.getPurchase(editId);
         setEditingPurchase(response as PurchaseResponseDto);
-        console.log(response);
       } catch (err) {
         showError('Failed to load purchase for editing');
       }
     })();
   }, [editId]);
-
-
 
   // Sync editingPurchase → formData
   useEffect(() => {
@@ -139,6 +163,12 @@ const PurchasePage: React.FC = () => {
   // Submit form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      showError("Please fix the errors in the form.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -172,6 +202,7 @@ const PurchasePage: React.FC = () => {
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+
             <InputField
               label="Product/Item Name"
               type="text"
@@ -198,12 +229,15 @@ const PurchasePage: React.FC = () => {
                   name="unit"
                   value={formData.unit}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-700"
                 >
                   <option value="pieces">Pieces</option>
                   <option value="boxes">Boxes</option>
                   <option value="kgs">Kgs</option>
                 </select>
+                {errors.unit && (
+                  <p className="text-red-500 text-sm mt-1">{errors.unit}</p>
+                )}
               </div>
             </div>
 
@@ -266,7 +300,7 @@ const PurchasePage: React.FC = () => {
           </form>
         </div>
 
-        {/* Purchase History */}
+        {/* HISTORY */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-4 text-gray-900">Recent Purchases</h2>
 
@@ -287,8 +321,10 @@ const PurchasePage: React.FC = () => {
                         {new Date(purchase.createdAt).toLocaleDateString()}
                       </p>
                     </div>
+
                     <div className="flex flex-col items-end space-y-2">
                       <p className="text-sm text-gray-600">Threshold: {purchase.lowStockThreshold}</p>
+
                       <div className="flex space-x-2">
                         <button
                           onClick={() => {
@@ -300,6 +336,7 @@ const PurchasePage: React.FC = () => {
                         >
                           <PencilIcon className="h-4 w-4" />
                         </button>
+
                         <button
                           onClick={() => {
                             setDeleteId(purchase.id);
@@ -318,6 +355,7 @@ const PurchasePage: React.FC = () => {
             )}
           </div>
         </div>
+
       </div>
 
       <ConfirmModal

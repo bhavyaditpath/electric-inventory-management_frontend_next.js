@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import InputField from '../../../components/InputField';
 import ConfirmModal from '../../../components/ConfirmModal';
-import { purchaseApi } from '@/Services/purchase.service';
+import { purchaseApi } from '../../../Services/purchase.service';
 import { PurchaseDto, PurchaseResponseDto } from '../../../types/api-types';
 import { showSuccess, showError } from '../../../Services/toast.service';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
@@ -33,6 +33,33 @@ const PurchasePage: React.FC = () => {
     brand: '',
   });
 
+  // VALIDATION FUNCTION
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.productName.trim()) newErrors.productName = "Product name is required";
+    if (!formData.brand.trim()) newErrors.brand = "Supplier name is required";
+
+    const qty = parseFloat(formData.quantity);
+    if (!qty || qty <= 0) newErrors.quantity = "Quantity must be greater than 0";
+
+    if (!formData.unit.trim()) newErrors.unit = "Unit is required";
+
+    const price = parseFloat(formData.pricePerUnit);
+    if (!price || price <= 0) newErrors.pricePerUnit = "Price per unit must be greater than 0";
+
+    const total = parseFloat(formData.totalPrice);
+    if (!total || total <= 0) newErrors.totalPrice = "Total price must be greater than 0";
+
+    const threshold = parseFloat(formData.lowStockThreshold);
+    if (!threshold || threshold <= 0)
+      newErrors.lowStockThreshold = "Low stock threshold must be at least 1";
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
   // Load all purchases
   const loadPurchases = useCallback(async () => {
     try {
@@ -51,7 +78,7 @@ const PurchasePage: React.FC = () => {
     loadPurchases();
   }, [loadPurchases]);
 
-  // Load purchase for URL edit
+  // Load purchase from URL edit
   useEffect(() => {
     if (!editId) return;
 
@@ -59,7 +86,7 @@ const PurchasePage: React.FC = () => {
       try {
         const response = await purchaseApi.getPurchase(editId);
         setEditingPurchase(response as PurchaseResponseDto);
-      } catch (error) {
+      } catch (err) {
         showError('Failed to load purchase for editing');
       }
     })();
@@ -80,18 +107,20 @@ const PurchasePage: React.FC = () => {
     });
   }, [editingPurchase]);
 
-  // Handle input change
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  // Handle form input change
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
+    const processedValue = value;
 
     setFormData(prev => {
-      const updated = { ...prev, [name]: value };
+      const updated = { ...prev, [name]: processedValue };
 
-      // total price calc
       if (name === 'quantity' || name === 'pricePerUnit') {
         updated.totalPrice =
-          (parseFloat(name === 'quantity' ? value : prev.quantity) *
-            parseFloat(name === 'pricePerUnit' ? value : prev.pricePerUnit)).toString();
+          (parseFloat(name === 'quantity' ? processedValue : prev.quantity) *
+            parseFloat(name === 'pricePerUnit' ? processedValue : prev.pricePerUnit)).toString();
       }
 
       return updated;
@@ -102,7 +131,7 @@ const PurchasePage: React.FC = () => {
 
   // Cancel Edit
   const handleCancelEdit = () => {
-    router.push('/branch/purchase');
+    router.push('/admin/purchase');
     setEditingPurchase(null);
 
     setFormData({
@@ -119,12 +148,11 @@ const PurchasePage: React.FC = () => {
   // Delete Purchase
   const handleDeletePurchase = async () => {
     if (!deleteId) return;
-
     try {
       await purchaseApi.removePurchase(deleteId.toString());
       showSuccess('Purchase deleted');
       loadPurchases();
-    } catch (error) {
+    } catch (err) {
       showError('Failed to delete purchase');
     } finally {
       setShowConfirmDelete(false);
@@ -135,6 +163,12 @@ const PurchasePage: React.FC = () => {
   // Submit form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      showError("Please fix the errors in the form.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -148,7 +182,8 @@ const PurchasePage: React.FC = () => {
 
       handleCancelEdit();
       loadPurchases();
-    } catch (error) {
+
+    } catch (err) {
       showError('Failed to save purchase');
     } finally {
       setLoading(false);
@@ -160,7 +195,6 @@ const PurchasePage: React.FC = () => {
       <h1 className="text-3xl font-bold mb-8 text-gray-900">Purchase Management</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
         {/* Purchase Form */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-4 text-gray-900">
@@ -168,7 +202,7 @@ const PurchasePage: React.FC = () => {
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            
+
             <InputField
               label="Product/Item Name"
               type="text"
@@ -201,6 +235,9 @@ const PurchasePage: React.FC = () => {
                   <option value="boxes">Boxes</option>
                   <option value="kgs">Kgs</option>
                 </select>
+                {errors.unit && (
+                  <p className="text-red-500 text-sm mt-1">{errors.unit}</p>
+                )}
               </div>
             </div>
 
@@ -246,11 +283,10 @@ const PurchasePage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
               >
                 {loading ? (editingPurchase ? 'Updating...' : 'Recording...') : (editingPurchase ? 'Update Purchase' : 'Record Purchase')}
               </button>
-
               {editingPurchase && (
                 <button
                   type="button"
@@ -261,11 +297,10 @@ const PurchasePage: React.FC = () => {
                 </button>
               )}
             </div>
-
           </form>
         </div>
 
-        {/* PURCHASE HISTORY */}
+        {/* HISTORY */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-4 text-gray-900">Recent Purchases</h2>
 
@@ -294,7 +329,7 @@ const PurchasePage: React.FC = () => {
                         <button
                           onClick={() => {
                             setEditingPurchase(purchase);
-                            router.push(`/branch/purchase?edit=${purchase.id}`);
+                            router.push(`/admin/purchase?edit=${purchase.id}`);
                           }}
                           className="p-1 text-blue-600 hover:text-blue-800"
                           title="Edit Purchase"
