@@ -37,11 +37,11 @@ export interface Inventory {
 
 export interface PurchaseDto {
   productName: string;
-  quantity: number;
+  quantity: string;
   unit: string;
-  pricePerUnit: number;
-  totalPrice: number;
-  lowStockThreshold: number;
+  pricePerUnit: string;
+  totalPrice: string;
+  lowStockThreshold: string;
   brand: string;
   branchId?: number;
 }

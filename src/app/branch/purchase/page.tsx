@@ -1,156 +1,130 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import InputField from '../../../components/InputField';
 import ConfirmModal from '../../../components/ConfirmModal';
+import { purchaseApi } from '@/Services/purchase.service';
 import { PurchaseDto, PurchaseResponseDto } from '../../../types/api-types';
 import { showSuccess, showError } from '../../../Services/toast.service';
-import { purchaseApi } from '@/Services/purchase.service';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 const PurchasePage: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const editId = searchParams.get('edit');
+
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const [formData, setFormData] = useState<PurchaseDto>({
-    productName: '',
-    quantity: 0,
-    unit: 'pieces',
-    pricePerUnit: 0,
-    totalPrice: 0,
-    lowStockThreshold: 10,
-    brand: '',
-  });
-
-  const [purchases, setPurchases] = useState<PurchaseResponseDto[]>([]);
   const [loadingPurchases, setLoadingPurchases] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [purchases, setPurchases] = useState<PurchaseResponseDto[]>([]);
   const [editingPurchase, setEditingPurchase] = useState<PurchaseResponseDto | null>(null);
+
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  useEffect(() => {
-    loadPurchases();
-  }, []);
+  const [formData, setFormData] = useState<PurchaseDto>({
+    productName: '',
+    quantity: '0',
+    unit: 'pieces',
+    pricePerUnit: '0',
+    totalPrice: '0',
+    lowStockThreshold: '10',
+    brand: '',
+  });
 
-  useEffect(() => {
-    const editId = searchParams.get('edit');
-    if (editId) {
-      loadPurchaseForEdit(editId);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    if (editingPurchase) {
-      setFormData({
-        productName: editingPurchase.productName,
-        quantity: editingPurchase.quantity,
-        unit: editingPurchase.unit,
-        pricePerUnit: editingPurchase.pricePerUnit,
-        totalPrice: editingPurchase.totalPrice,
-        lowStockThreshold: editingPurchase.lowStockThreshold,
-        brand: editingPurchase.brand,
-      });
-    }
-  }, [editingPurchase]);
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.productName.trim()) newErrors.productName = "Product Name is required";
-    if (!formData.brand.trim()) newErrors.brand = "Brand is required";
-    if (!formData.quantity || formData.quantity <= 0) newErrors.quantity = "Quantity must be greater than 0";
-    if (!formData.pricePerUnit || formData.pricePerUnit <= 0) newErrors.pricePerUnit = "Price per unit must be greater than 0";
-    if (!formData.totalPrice || formData.totalPrice <= 0) newErrors.totalPrice = "Total price must be greater than 0";
-    if (!formData.lowStockThreshold || formData.lowStockThreshold <= 0)
-      newErrors.lowStockThreshold = "Low stock threshold must be greater than 0";
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const loadPurchases = async () => {
+  // Load all purchases
+  const loadPurchases = useCallback(async () => {
     try {
       setLoadingPurchases(true);
       const response = await purchaseApi.getPurchases();
-      let InventoryData: PurchaseResponseDto[] = [];
-      if (Array.isArray(response)) {
-        InventoryData = response as PurchaseResponseDto[];
-      }
-      setPurchases(InventoryData);
-    } catch (error) {
-      console.error('Failed to load purchases:', error);
+      setPurchases(Array.isArray(response) ? response : []);
+    } catch (err) {
       setPurchases([]);
+      console.error('Failed to load purchases:', err);
     } finally {
       setLoadingPurchases(false);
     }
-  };
+  }, []);
 
-  const loadPurchaseForEdit = async (id: string) => {
-    try {
-      const response = await purchaseApi.getPurchase(id);
-      setEditingPurchase(response.data as PurchaseResponseDto);
-    } catch (error) {
-      console.error('Failed to load purchase for edit:', error);
-      showError('Failed to load purchase for editing');
-    }
-  };
+  useEffect(() => {
+    loadPurchases();
+  }, [loadPurchases]);
 
+  // Load purchase for URL edit
+  useEffect(() => {
+    if (!editId) return;
+
+    (async () => {
+      try {
+        const response = await purchaseApi.getPurchase(editId);
+        setEditingPurchase(response as PurchaseResponseDto);
+      } catch (error) {
+        showError('Failed to load purchase for editing');
+      }
+    })();
+  }, [editId]);
+
+  // Sync editingPurchase → formData
+  useEffect(() => {
+    if (!editingPurchase) return;
+
+    setFormData({
+      productName: editingPurchase.productName,
+      quantity: editingPurchase.quantity.toString(),
+      unit: editingPurchase.unit,
+      pricePerUnit: editingPurchase.pricePerUnit.toString(),
+      totalPrice: editingPurchase.totalPrice.toString(),
+      lowStockThreshold: editingPurchase.lowStockThreshold.toString(),
+      brand: editingPurchase.brand,
+    });
+  }, [editingPurchase]);
+
+  // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    const processedValue = type === 'number' ? parseFloat(value) || 0 : value;
+    const { name, value } = e.target;
 
-    setFormData(prev => ({
-      ...prev,
-      [name]: processedValue,
-    }));
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value };
 
-    // Auto-calc total price
-    if (name === 'quantity' || name === 'pricePerUnit') {
-      const quantity =
-        name === 'quantity'
-          ? (typeof processedValue === 'number' ? processedValue : 0)
-          : formData.quantity;
+      // total price calc
+      if (name === 'quantity' || name === 'pricePerUnit') {
+        updated.totalPrice =
+          (parseFloat(name === 'quantity' ? value : prev.quantity) *
+            parseFloat(name === 'pricePerUnit' ? value : prev.pricePerUnit)).toString();
+      }
 
-      const pricePerUnit =
-        name === 'pricePerUnit'
-          ? (typeof processedValue === 'number' ? processedValue : 0)
-          : formData.pricePerUnit;
+      return updated;
+    });
 
-      setFormData(prev => ({
-        ...prev,
-        totalPrice: quantity * pricePerUnit,
-      }));
-    }
-
-    setErrors(prev => ({ ...prev, [name]: '' })); // Clear error of field
+    setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
+  // Cancel Edit
   const handleCancelEdit = () => {
+    router.push('/branch/purchase');
     setEditingPurchase(null);
+
     setFormData({
       productName: '',
-      quantity: 0,
+      quantity: '0',
       unit: 'pieces',
-      pricePerUnit: 0,
-      totalPrice: 0,
-      lowStockThreshold: 10,
+      pricePerUnit: '0',
+      totalPrice: '0',
+      lowStockThreshold: '10',
       brand: '',
     });
-    setErrors({});
   };
 
+  // Delete Purchase
   const handleDeletePurchase = async () => {
     if (!deleteId) return;
 
     try {
       await purchaseApi.removePurchase(deleteId.toString());
-      showSuccess('Purchase deleted successfully!');
+      showSuccess('Purchase deleted');
       loadPurchases();
     } catch (error) {
-      console.error('Failed to delete purchase:', error);
       showError('Failed to delete purchase');
     } finally {
       setShowConfirmDelete(false);
@@ -158,39 +132,23 @@ const PurchasePage: React.FC = () => {
     }
   };
 
+  // Submit form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      showError("Please fill all required fields correctly.");
-      return;
-    }
-
     setLoading(true);
 
     try {
       if (editingPurchase) {
         await purchaseApi.editRecordPurchase(editingPurchase.id.toString(), formData);
-        showSuccess('Purchase updated successfully!');
-        setEditingPurchase(null);
+        showSuccess('Purchase updated');
       } else {
         await purchaseApi.recordPurchase(formData);
-        showSuccess('Purchase recorded successfully!');
+        showSuccess('Purchase recorded');
       }
 
-      setFormData({
-        productName: '',
-        quantity: 0,
-        unit: 'pieces',
-        pricePerUnit: 0,
-        totalPrice: 0,
-        lowStockThreshold: 10,
-        brand: '',
-      });
-
+      handleCancelEdit();
       loadPurchases();
     } catch (error) {
-      console.error('Failed to save purchase:', error);
       showError('Failed to save purchase');
     } finally {
       setLoading(false);
@@ -202,6 +160,7 @@ const PurchasePage: React.FC = () => {
       <h1 className="text-3xl font-bold mb-8 text-gray-900">Purchase Management</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
         {/* Purchase Form */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-4 text-gray-900">
@@ -209,6 +168,7 @@ const PurchasePage: React.FC = () => {
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            
             <InputField
               label="Product/Item Name"
               type="text"
@@ -222,7 +182,7 @@ const PurchasePage: React.FC = () => {
               <InputField
                 label="Quantity"
                 type="number"
-                value={formData.quantity.toString()}
+                value={formData.quantity}
                 onChange={handleInputChange}
                 name="quantity"
                 step="0.01"
@@ -235,7 +195,7 @@ const PurchasePage: React.FC = () => {
                   name="unit"
                   value={formData.unit}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-700"
                 >
                   <option value="pieces">Pieces</option>
                   <option value="boxes">Boxes</option>
@@ -247,7 +207,7 @@ const PurchasePage: React.FC = () => {
             <InputField
               label="Price per Unit"
               type="number"
-              value={formData.pricePerUnit.toString()}
+              value={formData.pricePerUnit}
               onChange={handleInputChange}
               name="pricePerUnit"
               step="0.01"
@@ -257,7 +217,7 @@ const PurchasePage: React.FC = () => {
             <InputField
               label="Total Price"
               type="number"
-              value={formData.totalPrice.toString()}
+              value={formData.totalPrice}
               onChange={handleInputChange}
               name="totalPrice"
               step="0.01"
@@ -267,7 +227,7 @@ const PurchasePage: React.FC = () => {
             <InputField
               label="Low Stock Alert Threshold"
               type="number"
-              value={formData.lowStockThreshold.toString()}
+              value={formData.lowStockThreshold}
               onChange={handleInputChange}
               name="lowStockThreshold"
               error={errors.lowStockThreshold}
@@ -286,10 +246,11 @@ const PurchasePage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
               >
                 {loading ? (editingPurchase ? 'Updating...' : 'Recording...') : (editingPurchase ? 'Update Purchase' : 'Record Purchase')}
               </button>
+
               {editingPurchase && (
                 <button
                   type="button"
@@ -300,10 +261,11 @@ const PurchasePage: React.FC = () => {
                 </button>
               )}
             </div>
+
           </form>
         </div>
 
-        {/* Purchase History */}
+        {/* PURCHASE HISTORY */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-4 text-gray-900">Recent Purchases</h2>
 
@@ -324,16 +286,22 @@ const PurchasePage: React.FC = () => {
                         {new Date(purchase.createdAt).toLocaleDateString()}
                       </p>
                     </div>
+
                     <div className="flex flex-col items-end space-y-2">
                       <p className="text-sm text-gray-600">Threshold: {purchase.lowStockThreshold}</p>
+
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => setEditingPurchase(purchase)}
+                          onClick={() => {
+                            setEditingPurchase(purchase);
+                            router.push(`/branch/purchase?edit=${purchase.id}`);
+                          }}
                           className="p-1 text-blue-600 hover:text-blue-800"
                           title="Edit Purchase"
                         >
                           <PencilIcon className="h-4 w-4" />
                         </button>
+
                         <button
                           onClick={() => {
                             setDeleteId(purchase.id);
@@ -352,6 +320,7 @@ const PurchasePage: React.FC = () => {
             )}
           </div>
         </div>
+
       </div>
 
       <ConfirmModal
