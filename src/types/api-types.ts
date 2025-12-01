@@ -35,7 +35,7 @@ export interface Inventory {
   totalPurchased: number;
 }
 
-export interface CreatePurchaseDto {
+export interface PurchaseDto {
   productName: string;
   quantity: number;
   unit: string;

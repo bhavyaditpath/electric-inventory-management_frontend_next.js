@@ -45,7 +45,6 @@ export default function UserPage() {
     const loadUsers = useCallback(async () => {
         setLoading(true);
         const response = await userApi.getAll();
-        console.log(response)
         let UserData: User[] = [];
         if (Array.isArray(response.data)) {
             UserData = response.data as User[];
@@ -122,7 +121,6 @@ export default function UserPage() {
         try {
             const response = await userApi.delete(deletingUser.id);
             if (response.success) {
-                console.log(response)
                 showSuccess(response.message || "User deleted successfully");
                 await loadUsers();
                 setShowDeleteModal(false);
@@ -190,13 +188,11 @@ export default function UserPage() {
             }
 
             if (response && response.success) {
-                console.log(response)
                 showSuccess(response.message || `User ${modalMode === 'create' ? 'created' : 'updated'} successfully`);
                 setShowModal(false);
                 setEditingUser(null);
                 await loadUsers();
             } else {
-                console.log('Showing error toast for response:', response);
                 showError(response?.message || `Error ${modalMode === 'create' ? 'creating' : 'updating'} user`);
             }
         } catch (error) {

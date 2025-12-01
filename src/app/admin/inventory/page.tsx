@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import DataTable from "../../../components/DataTable";
-import { showError } from "../../../Services/toast.service";
-import { purchaseApi } from "@/Services/inventory.service";
+import ConfirmModal from "../../../components/ConfirmModal";
+import { showError, showSuccess } from "../../../Services/toast.service";
+import { inventoryApi } from "@/Services/inventory.service";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 interface InventoryItem {
   id: string;
@@ -19,8 +22,11 @@ interface InventoryItem {
 }
 
 export default function AdminInventoryPage() {
+  const router = useRouter();
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     loadInventory();
@@ -29,8 +35,7 @@ export default function AdminInventoryPage() {
   const loadInventory = async () => {
     try {
       setLoading(true);
-      const response = await purchaseApi.getAll();
-      console.log(response)
+      const response = await inventoryApi.getAll();
       let InventoryData: InventoryItem[] = [];
       if (Array.isArray(response)) {
         InventoryData = response as InventoryItem[];
@@ -42,6 +47,44 @@ export default function AdminInventoryPage() {
       setInventory([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const actions = (row: InventoryItem) => (
+    <div className="flex space-x-2">
+      <button
+        onClick={() => router.push(`/admin/purchase?edit=${row.id}`)}
+        className="p-1 text-blue-600 hover:text-blue-800"
+        title="Edit Purchase"
+      >
+        <PencilIcon className="h-4 w-4" />
+      </button>
+      <button
+        onClick={() => {
+          setDeleteId(row.id);
+          setShowConfirmDelete(true);
+        }}
+        className="p-1 text-red-600 hover:text-red-800"
+        title="Delete Inventory"
+      >
+        <TrashIcon className="h-4 w-4" />
+      </button>
+    </div>
+  );
+
+  const handleDeleteInventory = async () => {
+    if (!deleteId) return;
+
+    try {
+      await inventoryApi.removeInventory(deleteId);
+      showSuccess('Inventory deleted successfully!');
+      loadInventory();
+    } catch (error) {
+      console.error('Failed to delete inventory:', error);
+      showError('Failed to delete inventory');
+    } finally {
+      setShowConfirmDelete(false);
+      setDeleteId(null);
     }
   };
 
@@ -116,6 +159,7 @@ export default function AdminInventoryPage() {
         striped={true}
         hover={true}
         size="md"
+        actions={actions}
       />
 
       {/* Stock Alert Summary */}
@@ -144,6 +188,15 @@ export default function AdminInventoryPage() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={showConfirmDelete}
+        onClose={() => setShowConfirmDelete(false)}
+        title="Delete Inventory Item"
+        message="Are you sure you want to delete this inventory item? This action cannot be undone."
+        onConfirm={handleDeleteInventory}
+        variant="danger"
+      />
     </div>
   );
 }
