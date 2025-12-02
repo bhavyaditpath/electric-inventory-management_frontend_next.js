@@ -45,3 +45,22 @@ export interface PurchaseDto {
   brand: string;
   branchId?: number;
 }
+
+export interface RequestDto {
+  adminUserId: number;
+  purchaseId: number;
+  quantityRequested: number;
+}
+
+export interface RequestResponseDto {
+  id: number;
+  adminUserId: number;
+  purchaseId: number;
+  quantityRequested: number;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  requestingUser?: { username: string };
+  adminUser?: { username: string };
+  purchase?: any; // the purchase object
+}

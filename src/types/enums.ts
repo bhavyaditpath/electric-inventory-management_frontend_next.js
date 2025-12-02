@@ -21,3 +21,11 @@ export enum AlertStatus {
   RESOLVED = 'resolved',
   DISMISSED = 'dismissed',
 }
+
+export enum RequestStatus {
+  REQUEST = 'REQUEST',
+  ACCEPT = 'ACCEPT',
+  REJECT = 'REJECT',
+  IN_TRANSIT = 'IN_TRANSIT',
+  DELIVERED = 'DELIVERED',
+}

@@ -5,21 +5,25 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import InputField from '../../../components/InputField';
 import ConfirmModal from '../../../components/ConfirmModal';
 import { purchaseApi } from '../../../Services/purchase.service';
+import { requestApi } from '../../../Services/request.service';
 import { PurchaseDto, PurchaseResponseDto } from '../../../types/api-types';
 import { showSuccess, showError } from '../../../Services/toast.service';
+import { useAuth } from '../../../contexts/AuthContext';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 const PurchasePage: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
   const editId = searchParams.get('edit');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loadingPurchases, setLoadingPurchases] = useState(false);
   const [loading, setLoading] = useState(false);
   const [purchases, setPurchases] = useState<PurchaseResponseDto[]>([]);
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
   const [editingPurchase, setEditingPurchase] = useState<PurchaseResponseDto | null>(null);
-
+  const [adminUserId, setAdminUserId] = useState<number | null>(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
@@ -77,6 +81,19 @@ const PurchasePage: React.FC = () => {
   useEffect(() => {
     loadPurchases();
   }, [loadPurchases]);
+
+  // Load admin users
+  useEffect(() => {
+    const loadAdmins = async () => {
+      try {
+        const admins = await requestApi.getAdminsForDropdown();
+        setAdminUsers(Array.isArray(admins) ? admins : []);
+      } catch (err) {
+        console.error('Failed to load admins:', err);
+      }
+    };
+    loadAdmins();
+  }, []);
 
   // Load purchase from URL edit
   useEffect(() => {
@@ -172,14 +189,31 @@ const PurchasePage: React.FC = () => {
     setLoading(true);
 
     try {
+      let purchaseRecord;
+
       if (editingPurchase) {
-        await purchaseApi.editRecordPurchase(editingPurchase.id.toString(), formData);
+        purchaseRecord = await purchaseApi.editRecordPurchase(editingPurchase.id.toString(), formData);
         showSuccess('Purchase updated');
       } else {
-        await purchaseApi.recordPurchase(formData);
+        purchaseRecord = await purchaseApi.recordPurchase(formData);
         showSuccess('Purchase recorded');
       }
 
+      if (!adminUserId) {
+        showError("Please select an admin user.");
+        return;
+      }
+
+      const requestingUserId = user?.id;
+
+      await requestApi.createRequest({
+        requestingUserId,
+        adminUserId,
+        purchaseId: (purchaseRecord.data as PurchaseResponseDto).id,
+        quantityRequested: Number(formData.quantity),
+      });
+
+      showSuccess("Request sent to Admin!");
       handleCancelEdit();
       loadPurchases();
 
@@ -188,6 +222,7 @@ const PurchasePage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+
   };
 
   return (
@@ -270,14 +305,24 @@ const PurchasePage: React.FC = () => {
               error={errors.lowStockThreshold}
             />
 
-            <InputField
-              label="Supplier Name"
-              type="text"
-              value={formData.brand}
-              onChange={handleInputChange}
-              name="brand"
-              error={errors.brand}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Supplier Name</label>
+              <select
+                name="brand"
+                value={adminUserId ?? ""}
+                onChange={(e) => setAdminUserId(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-700"
+              >
+                <option value="">Select Supplier</option>
+                {adminUsers.map(admin => (
+                  <option key={admin.id} value={admin.id}>
+                    {admin.username}
+                  </option>
+                ))}
+              </select>
+              {errors.brand && <p className="text-red-500 text-sm mt-1">{errors.brand}</p>}
+
+            </div>
 
             <div className="flex space-x-4">
               <button
