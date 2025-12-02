@@ -4,61 +4,10 @@ import { useState, useEffect } from "react";
 import { ExclamationTriangleIcon, CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import DataTable from "../../../components/DataTable";
 import ConfirmModal from "../../../components/ConfirmModal";
-
-// Mock alerts data - replace with API calls
-interface StockAlert {
-  id: number;
-  itemName: string;
-  currentStock: number;
-  minStock: number;
-  shortage: number;
-  priority: "low" | "medium" | "high" | "critical";
-  alertType: "low_stock" | "out_of_stock" | "expiring_soon";
-  createdDate: string;
-  status: "active" | "resolved" | "dismissed";
-  resolvedDate?: string;
-  notes?: string;
-}
-
-const mockAlertsData: StockAlert[] = [
-  {
-    id: 1,
-    itemName: "LED Bulb 10W",
-    currentStock: 3,
-    minStock: 20,
-    shortage: 17,
-    priority: "critical",
-    alertType: "low_stock",
-    createdDate: "2024-01-15T08:00:00Z",
-    status: "active",
-    notes: "Critical shortage - immediate restock required",
-  },
-  {
-    id: 2,
-    itemName: "Extension Cord 5m",
-    currentStock: 8,
-    minStock: 15,
-    shortage: 7,
-    priority: "medium",
-    alertType: "low_stock",
-    createdDate: "2024-01-14T10:30:00Z",
-    status: "active",
-    notes: "Reorder soon to avoid stockout",
-  },
-  {
-    id: 3,
-    itemName: "Circuit Breaker 20A",
-    currentStock: 0,
-    minStock: 5,
-    shortage: 5,
-    priority: "high",
-    alertType: "out_of_stock",
-    createdDate: "2024-01-13T14:15:00Z",
-    status: "resolved",
-    resolvedDate: "2024-01-14T09:00:00Z",
-    notes: "Restocked - alert resolved",
-  },
-];
+import { useAuth } from "../../../contexts/AuthContext";
+import { alertApi, StockAlert } from "../../../Services/alert.api";
+import { showSuccess, showError } from "../../../Services/toast.service";
+import { AlertStatus, AlertPriority } from "../../../types/enums";
 
 const priorityColors = {
   low: "bg-blue-100 text-blue-800",
@@ -74,15 +23,38 @@ const statusColors = {
 };
 
 export default function BranchAlertsPage() {
-  const [alerts, setAlerts] = useState<StockAlert[]>(mockAlertsData);
-  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+  const [alerts, setAlerts] = useState<StockAlert[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isResolveModalOpen, setIsResolveModalOpen] = useState(false);
   const [isDismissModalOpen, setIsDismissModalOpen] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<StockAlert | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const activeAlerts = alerts.filter(alert => alert.status === "active");
-  const resolvedAlerts = alerts.filter(alert => alert.status === "resolved");
+  useEffect(() => {
+    if (user?.branchId && user.branchId > 0) {
+      fetchAlerts();
+    }
+  }, [user?.branchId]);
+
+  const fetchAlerts = async () => {
+    if (!user?.branchId || user.branchId <= 0) return;
+
+    try {
+      setLoading(true);
+      const response = await alertApi.getByBranch(user.branchId, undefined, 1, 100);
+      console.log('API Response:', response);
+      setAlerts((response as any).data || []);
+    } catch (error) {
+      console.error('Error fetching alerts:', error);
+      showError('Error fetching alerts');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const activeAlerts = alerts.filter(alert => alert.status === AlertStatus.ACTIVE);
+  const resolvedAlerts = alerts.filter(alert => alert.status === AlertStatus.RESOLVED);
 
   const columns = [
     {
@@ -94,11 +66,14 @@ export default function BranchAlertsPage() {
       key: "currentStock",
       header: "Current Stock",
       sortable: true,
-      render: (value: number) => (
-        <span className={`font-medium ${value === 0 ? "text-red-600" : value <= 5 ? "text-orange-600" : "text-gray-900"}`}>
-          {value}
-        </span>
-      ),
+      render: (value: string) => {
+        const numValue = parseFloat(value);
+        return (
+          <span className={`font-medium ${numValue === 0 ? "text-red-600" : numValue <= 5 ? "text-orange-600" : "text-gray-900"}`}>
+            {numValue}
+          </span>
+        );
+      },
     },
     {
       key: "minStock",
@@ -109,11 +84,14 @@ export default function BranchAlertsPage() {
       key: "shortage",
       header: "Shortage",
       sortable: true,
-      render: (value: number) => (
-        <span className="text-red-600 font-medium">
-          -{value}
-        </span>
-      ),
+      render: (value: string) => {
+        const numValue = parseFloat(value);
+        return (
+          <span className="text-red-600 font-medium">
+            -{numValue}
+          </span>
+        );
+      },
     },
     {
       key: "priority",
@@ -146,7 +124,7 @@ export default function BranchAlertsPage() {
       ),
     },
     {
-      key: "createdDate",
+      key: "createdAt",
       header: "Created Date",
       sortable: true,
       render: (value: string) => new Date(value).toLocaleDateString(),
@@ -168,16 +146,24 @@ export default function BranchAlertsPage() {
 
     setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      setAlerts(prev =>
-        prev.map(alert =>
-          alert.id === selectedAlert.id
-            ? { ...alert, status: "resolved", resolvedDate: new Date().toISOString() }
-            : alert
-        )
-      );
+      const response = await alertApi.resolve(selectedAlert.id);
+      if (response.success) {
+        showSuccess('Alert resolved successfully');
+        setAlerts(prev =>
+          prev.map(alert =>
+            alert.id === selectedAlert.id
+              ? { ...alert, status: AlertStatus.RESOLVED, resolvedDate: new Date().toISOString() }
+              : alert
+          )
+        );
+        setIsResolveModalOpen(false);
+        setSelectedAlert(null);
+      } else {
+        showError('Failed to resolve alert');
+      }
+    } catch (error) {
+      console.error('Error resolving alert:', error);
+      showError('Error resolving alert');
     } finally {
       setIsSubmitting(false);
     }
@@ -188,16 +174,24 @@ export default function BranchAlertsPage() {
 
     setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      setAlerts(prev =>
-        prev.map(alert =>
-          alert.id === selectedAlert.id
-            ? { ...alert, status: "dismissed" }
-            : alert
-        )
-      );
+      const response = await alertApi.dismiss(selectedAlert.id);
+      if (response.success) {
+        showSuccess('Alert dismissed successfully');
+        setAlerts(prev =>
+          prev.map(alert =>
+            alert.id === selectedAlert.id
+              ? { ...alert, status: AlertStatus.DISMISSED }
+              : alert
+          )
+        );
+        setIsDismissModalOpen(false);
+        setSelectedAlert(null);
+      } else {
+        showError('Failed to dismiss alert');
+      }
+    } catch (error) {
+      console.error('Error dismissing alert:', error);
+      showError('Error dismissing alert');
     } finally {
       setIsSubmitting(false);
     }
@@ -205,7 +199,7 @@ export default function BranchAlertsPage() {
 
   const actions = (row: StockAlert) => (
     <div className="flex space-x-2">
-      {row.status === "active" && (
+      {row.status === AlertStatus.ACTIVE && (
         <>
           <button
             onClick={() => handleResolve(row)}
@@ -240,7 +234,7 @@ export default function BranchAlertsPage() {
             <ExclamationTriangleIcon className="w-8 h-8 text-red-600 mr-3" />
             <div>
               <div className="text-2xl font-bold text-red-600">
-                {alerts.filter(a => a.priority === "critical").length}
+                {alerts.filter(a => a.priority === AlertPriority.CRITICAL).length}
               </div>
               <div className="text-sm text-red-700">Critical Alerts</div>
             </div>
@@ -252,7 +246,7 @@ export default function BranchAlertsPage() {
             <ExclamationTriangleIcon className="w-8 h-8 text-orange-600 mr-3" />
             <div>
               <div className="text-2xl font-bold text-orange-600">
-                {alerts.filter(a => a.priority === "high").length}
+                {alerts.filter(a => a.priority === AlertPriority.HIGH).length}
               </div>
               <div className="text-sm text-orange-700">High Priority</div>
             </div>
