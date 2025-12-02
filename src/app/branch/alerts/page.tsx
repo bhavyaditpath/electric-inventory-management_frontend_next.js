@@ -55,6 +55,7 @@ export default function BranchAlertsPage() {
 
   const activeAlerts = alerts.filter(alert => alert.status === AlertStatus.ACTIVE);
   const resolvedAlerts = alerts.filter(alert => alert.status === AlertStatus.RESOLVED);
+  const dismissedAlerts = alerts.filter(alert => alert.status === AlertStatus.DISMISSED);
 
   const columns = [
     {
@@ -228,7 +229,7 @@ export default function BranchAlertsPage() {
       </div>
 
       {/* Alert Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex items-center">
             <ExclamationTriangleIcon className="w-8 h-8 text-red-600 mr-3" />
@@ -276,6 +277,18 @@ export default function BranchAlertsPage() {
             </div>
           </div>
         </div>
+
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <XCircleIcon className="w-8 h-8 text-gray-600 mr-3" />
+            <div>
+              <div className="text-2xl font-bold text-gray-600">
+                {dismissedAlerts.length}
+              </div>
+              <div className="text-sm text-gray-700">Dismissed</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Active Alerts */}
@@ -298,7 +311,7 @@ export default function BranchAlertsPage() {
       </div>
 
       {/* Resolved Alerts */}
-      <div>
+      <div className="mb-8">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Resolved Alerts</h2>
         <DataTable
           data={resolvedAlerts}
@@ -306,6 +319,24 @@ export default function BranchAlertsPage() {
           loading={loading}
           emptyMessage="No resolved alerts"
           moduleName="Resolved Stock Alerts"
+          pagination={true}
+          pageSize={5}
+          showPageSizeSelector={false}
+          striped={true}
+          hover={true}
+          size="md"
+        />
+      </div>
+
+      {/* Dismissed Alerts */}
+      <div>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Dismissed Alerts</h2>
+        <DataTable
+          data={dismissedAlerts}
+          columns={columns}
+          loading={loading}
+          emptyMessage="No dismissed alerts"
+          moduleName="Dismissed Stock Alerts"
           pagination={true}
           pageSize={5}
           showPageSizeSelector={false}

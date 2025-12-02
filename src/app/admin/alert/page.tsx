@@ -45,6 +45,7 @@ export default function AdminAlertsPage() {
       // Get alerts for the admin's branch
       const response = await alertApi.getByBranch(user.branchId, undefined, 1, 100);
       console.log('API Response:', response);
+      // Backend returns: {data: [...], total, page, limit}
       setAlerts((response as any).data || []);
     } catch (error) {
       console.error('Error fetching alerts:', error);
@@ -56,6 +57,7 @@ export default function AdminAlertsPage() {
 
   const activeAlerts = alerts.filter(alert => alert.status === AlertStatus.ACTIVE);
   const resolvedAlerts = alerts.filter(alert => alert.status === AlertStatus.RESOLVED);
+  const dismissedAlerts = alerts.filter(alert => alert.status === AlertStatus.DISMISSED);
 
   const columns = [
     {
@@ -229,7 +231,7 @@ export default function AdminAlertsPage() {
       </div>
 
       {/* Alert Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex items-center">
             <ExclamationTriangleIcon className="w-8 h-8 text-red-600 mr-3" />
@@ -277,6 +279,18 @@ export default function AdminAlertsPage() {
             </div>
           </div>
         </div>
+
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <XCircleIcon className="w-8 h-8 text-gray-600 mr-3" />
+            <div>
+              <div className="text-2xl font-bold text-gray-600">
+                {dismissedAlerts.length}
+              </div>
+              <div className="text-sm text-gray-700">Dismissed</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Active Alerts */}
@@ -299,7 +313,7 @@ export default function AdminAlertsPage() {
       </div>
 
       {/* Resolved Alerts */}
-      <div>
+      <div className="mb-8">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Resolved Alerts</h2>
         <DataTable
           data={resolvedAlerts}
@@ -307,6 +321,24 @@ export default function AdminAlertsPage() {
           loading={loading}
           emptyMessage="No resolved alerts"
           moduleName="Resolved Admin Alerts"
+          pagination={true}
+          pageSize={5}
+          showPageSizeSelector={false}
+          striped={true}
+          hover={true}
+          size="md"
+        />
+      </div>
+
+      {/* Dismissed Alerts */}
+      <div>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Dismissed Alerts</h2>
+        <DataTable
+          data={dismissedAlerts}
+          columns={columns}
+          loading={loading}
+          emptyMessage="No dismissed alerts"
+          moduleName="Dismissed Admin Alerts"
           pagination={true}
           pageSize={5}
           showPageSizeSelector={false}
