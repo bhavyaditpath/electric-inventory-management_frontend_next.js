@@ -131,7 +131,7 @@ const PurchasePage: React.FC = () => {
 
   // Cancel Edit
   const handleCancelEdit = () => {
-    router.push('/admin/purchase');
+    router.push('/branch/purchase');
     setEditingPurchase(null);
 
     setFormData({
@@ -329,7 +329,7 @@ const PurchasePage: React.FC = () => {
                         <button
                           onClick={() => {
                             setEditingPurchase(purchase);
-                            router.push(`/admin/purchase?edit=${purchase.id}`);
+                            router.push(`/branch/purchase?edit=${purchase.id}`);
                           }}
                           className="p-1 text-blue-600 hover:text-blue-800"
                           title="Edit Purchase"

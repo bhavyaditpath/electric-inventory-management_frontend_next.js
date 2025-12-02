@@ -82,7 +82,7 @@ export default function BranchInventoryPage() {
     (row: InventoryItem) => (
       <div className="flex space-x-2">
         <button
-          onClick={() => router.push(`/branch/purchase?edit=${row.id}`)}
+          onClick={() => router.push(`/admin/purchase?edit=${row.id}`)}
           className="p-1 text-blue-600 hover:text-blue-800"
           title="Edit Purchase"
         >
