@@ -55,7 +55,7 @@ export default function LayoutWrapper({
               )}
             </button>
             <h1 className="text-lg font-semibold text-gray-900">
-              {requiredRole === 'ADMIN' ? 'Admin Panel' : 'Branch Panel'}
+              {requiredRole === 'Admin' ? 'Admin Panel' : 'Branch Panel'}
             </h1>
           </div>
         </div>
@@ -73,7 +73,7 @@ export default function LayoutWrapper({
             <div className="relative flex w-full max-w-xs flex-col bg-white shadow-xl">
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  {requiredRole === 'ADMIN' ? 'Admin Menu' : 'Branch Menu'}
+                  {requiredRole === 'Admin' ? 'Admin Menu' : 'Branch Menu'}
                 </h2>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}

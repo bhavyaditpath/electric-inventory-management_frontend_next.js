@@ -29,7 +29,7 @@ const menuItems: MenuItem[] = [
   { name: "Inventory", href: "/admin/inventory", icon: CubeIcon },
   { name: "Purchase", href: "/admin/purchase", icon: ShoppingBagIcon },
   { name: "Sales", href: "/admin/sales", icon: ChartBarIcon },
-  { name: "Alerts", href: "/admin/alerts", icon: ExclamationTriangleIcon },
+  { name: "Alerts", href: "/admin/alert", icon: ExclamationTriangleIcon },
 ];
 
 interface SidebarProps {

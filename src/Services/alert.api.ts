@@ -29,7 +29,7 @@ export interface AlertsResponse {
 
 
 export const alertApi = {
-  getByBranch: (branchId: number, status?: string, page?: number, limit?: number) => {
+  getByBranch: (branchId: number, status?: AlertStatus, page?: number, limit?: number) => {
     const params = new URLSearchParams();
     if (status) params.append('status', status);
     if (page) params.append('page', page.toString());
