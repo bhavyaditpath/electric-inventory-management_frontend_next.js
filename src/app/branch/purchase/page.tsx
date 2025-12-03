@@ -69,7 +69,12 @@ const PurchasePage: React.FC = () => {
     try {
       setLoadingPurchases(true);
       const response = await purchaseApi.getPurchases();
-      setPurchases(Array.isArray(response) ? response : []);
+      if (response.success) {
+        setPurchases(Array.isArray(response.data) ? response.data : []);
+      } else {
+        showError(response.message || 'Failed to load purchases');
+        setPurchases([]);
+      }
     } catch (err) {
       setPurchases([]);
       console.error('Failed to load purchases:', err);
@@ -87,7 +92,7 @@ const PurchasePage: React.FC = () => {
     const loadAdmins = async () => {
       try {
         const admins = await requestApi.getAdminsForDropdown();
-        setAdminUsers(Array.isArray(admins) ? admins : []);
+        setAdminUsers(Array.isArray(admins.data) ? admins.data : []);
       } catch (err) {
         console.error('Failed to load admins:', err);
       }
@@ -189,14 +194,27 @@ const PurchasePage: React.FC = () => {
     setLoading(true);
 
     try {
-      let purchaseRecord;
+      let purchaseRecord: any;
 
       if (editingPurchase) {
-        purchaseRecord = await purchaseApi.editRecordPurchase(editingPurchase.id.toString(), formData);
-        showSuccess('Purchase updated');
+        purchaseRecord = await purchaseApi.editRecordPurchase(
+          editingPurchase.id.toString(),
+          formData
+        );
+        if (!purchaseRecord.success) {
+          showError(purchaseRecord.message || "Failed to update purchase");
+          setLoading(false);
+          return;
+        }
+        showSuccess(purchaseRecord.message || "Purchase updated");
       } else {
         purchaseRecord = await purchaseApi.recordPurchase(formData);
-        showSuccess('Purchase recorded');
+        if (!purchaseRecord.success) {
+          showError(purchaseRecord.message || "Failed to record purchase");
+          setLoading(false);
+          return;
+        }
+        showSuccess(purchaseRecord.message || "Purchase recorded");
       }
 
       if (!adminUserId) {
@@ -206,19 +224,30 @@ const PurchasePage: React.FC = () => {
 
       const requestingUserId = user?.id;
 
-      await requestApi.createRequest({
+      const purchaseIdToUse = editingPurchase
+        ? editingPurchase.id
+        : purchaseRecord.data?.id;
+
+
+      const requestResponse = await requestApi.createRequest({
         requestingUserId,
         adminUserId,
-        purchaseId: (purchaseRecord.data as PurchaseResponseDto).id,
+        purchaseId: purchaseIdToUse,
         quantityRequested: Number(formData.quantity),
       });
 
-      showSuccess("Request sent to Admin!");
+      if (!requestResponse.success) {
+        showError(requestResponse.message || "Failed to send request");
+        setLoading(false);
+        return;
+      }
+
+      showSuccess(requestResponse.message || "Request sent to Admin!");
       handleCancelEdit();
       loadPurchases();
 
     } catch (err) {
-      showError('Failed to save purchase');
+      showError("Failed to save purchase");
     } finally {
       setLoading(false);
     }
@@ -310,7 +339,19 @@ const PurchasePage: React.FC = () => {
               <select
                 name="brand"
                 value={adminUserId ?? ""}
-                onChange={(e) => setAdminUserId(Number(e.target.value))}
+                onChange={(e) => {
+                  const id = Number(e.target.value);
+                  setAdminUserId(id);
+
+                  // ALSO update the brand field in your formData
+                  const selectedAdmin = adminUsers.find(a => a.id === id);
+                  setFormData(prev => ({
+                    ...prev,
+                    brand: selectedAdmin?.username || ""
+                  }));
+
+                  setErrors(prev => ({ ...prev, brand: "" }));
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-700"
               >
                 <option value="">Select Supplier</option>

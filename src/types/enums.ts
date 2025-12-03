@@ -23,9 +23,9 @@ export enum AlertStatus {
 }
 
 export enum RequestStatus {
-  REQUEST = 'REQUEST',
-  ACCEPT = 'ACCEPT',
-  REJECT = 'REJECT',
-  IN_TRANSIT = 'IN_TRANSIT',
-  DELIVERED = 'DELIVERED',
+  REQUEST = 'Request',
+  ACCEPT = 'Accept',
+  REJECT = 'Reject',
+  IN_TRANSIT = 'InTransit',
+  DELIVERED = 'Delivered',
 }
