@@ -17,6 +17,7 @@ export const NAVIGATION = {
     dashboard: '/branch/dashboard',
     inventory: '/branch/inventory',
     purchase: '/branch/purchase',
+    requestedpurchase: '/branch/requestedpurchase',
     sales: '/branch/sales',
     alerts: '/branch/alerts',
     items: '/branch/inventory', // assuming items are in inventory

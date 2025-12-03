@@ -6,6 +6,7 @@ import {
   HomeIcon,
   CubeIcon,
   ShoppingBagIcon,
+  ClipboardDocumentListIcon,
   ChartBarIcon,
   ExclamationTriangleIcon,
   PowerIcon,
@@ -24,6 +25,7 @@ const menuItems: MenuItem[] = [
   { name: "Dashboard", href: "/branch/dashboard", icon: HomeIcon },
   { name: "Inventory", href: "/branch/inventory", icon: CubeIcon },
   { name: "Purchase", href: "/branch/purchase", icon: ShoppingBagIcon },
+  { name: "Requested Purchase", href: "/branch/requestedpurchase", icon: ClipboardDocumentListIcon },
   { name: "Sales", href: "/branch/sales", icon: ChartBarIcon },
   { name: "Alerts", href: "/branch/alerts", icon: ExclamationTriangleIcon },
 ];
