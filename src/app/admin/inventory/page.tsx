@@ -6,7 +6,7 @@ import DataTable from "../../../components/DataTable";
 import ConfirmModal from "../../../components/ConfirmModal";
 import { showError, showSuccess } from "../../../Services/toast.service";
 import { inventoryApi } from "@/Services/inventory.service";
-import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+// import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { purchaseApi } from "@/Services/purchase.service";
 
 interface InventoryItem {
@@ -81,7 +81,7 @@ export default function BranchInventoryPage() {
   const actions = useCallback(
     (row: InventoryItem) => (
       <div className="flex space-x-2">
-        <button
+        {/* <button
           onClick={() => router.push(`/admin/purchase?edit=${row.id}`)}
           className="p-1 text-blue-600 hover:text-blue-800"
           title="Edit Purchase"
@@ -97,7 +97,7 @@ export default function BranchInventoryPage() {
           title="Delete Inventory"
         >
           <TrashIcon className="h-4 w-4" />
-        </button>
+        </button> */}
       </div>
     ),
     []
@@ -185,7 +185,7 @@ export default function BranchInventoryPage() {
         striped={true}
         hover={true}
         size="md"
-        actions={actions}
+        // actions={actions}
       />
 
       {/* Stock Alert Summary */}

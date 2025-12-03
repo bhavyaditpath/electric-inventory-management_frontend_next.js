@@ -7,7 +7,7 @@ import ConfirmModal from '../../../components/ConfirmModal';
 import { purchaseApi } from '../../../Services/purchase.service';
 import { PurchaseDto, PurchaseResponseDto } from '../../../types/api-types';
 import { showSuccess, showError } from '../../../Services/toast.service';
-import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+// import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 const PurchasePage: React.FC = () => {
   const router = useRouter();
@@ -79,18 +79,18 @@ const PurchasePage: React.FC = () => {
   }, [loadPurchases]);
 
   // Load purchase from URL edit
-  useEffect(() => {
-    if (!editId) return;
+  // useEffect(() => {
+  //   if (!editId) return;
 
-    (async () => {
-      try {
-        const response = await purchaseApi.getPurchase(editId);
-        setEditingPurchase(response as PurchaseResponseDto);
-      } catch (err) {
-        showError('Failed to load purchase for editing');
-      }
-    })();
-  }, [editId]);
+  //   (async () => {
+  //     try {
+  //       const response = await purchaseApi.getPurchase(editId);
+  //       setEditingPurchase(response as PurchaseResponseDto);
+  //     } catch (err) {
+  //       showError('Failed to load purchase for editing');
+  //     }
+  //   })();
+  // }, [editId]);
 
   // Sync editingPurchase → formData
   useEffect(() => {
@@ -325,7 +325,7 @@ const PurchasePage: React.FC = () => {
                     <div className="flex flex-col items-end space-y-2">
                       <p className="text-sm text-gray-600">Threshold: {purchase.lowStockThreshold}</p>
 
-                      <div className="flex space-x-2">
+                      {/* <div className="flex space-x-2">
                         <button
                           onClick={() => {
                             setEditingPurchase(purchase);
@@ -347,7 +347,7 @@ const PurchasePage: React.FC = () => {
                         >
                           <TrashIcon className="h-4 w-4" />
                         </button>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>
