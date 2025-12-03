@@ -6,6 +6,7 @@ import { UserRole } from "../../../types/enums";
 import { tokenManager } from "@/Services/token.management.service";
 import { authApi } from "@/Services/auth.api";
 import { useAuth } from "@/contexts/AuthContext";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -154,7 +155,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700 
+            className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700
             transition font-semibold text-white shadow-lg hover:shadow-xl
             disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -173,6 +174,22 @@ export default function LoginPage() {
               "Sign In"
             )}
           </button>
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            </div>
+          </div>
+
+          {/* Google Sign-In */}
+          <GoogleSignInButton
+            onError={(error) => setError(error)}
+            disabled={isLoading}
+          />
         </form>
 
         {/* Footer */}

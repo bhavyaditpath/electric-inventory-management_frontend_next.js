@@ -13,4 +13,7 @@ export const authApi = {
 
   resetPassword: (data: { token: string; newPassword: string }) =>
     apiClient.post("/auth/reset-password", data),
+
+  googleCallback: (code: string) =>
+    apiClient.post<{ access_token: string; refresh_token?: string }>('/auth/google/callback', { code }),
 };

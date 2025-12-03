@@ -1,20 +1,40 @@
 
 // Token management
 export const tokenManager = {
+  // Legacy method for backward compatibility
   setToken: (token: string) => {
     localStorage.setItem('token', token);
   },
 
   getToken: () => {
-    return localStorage.getItem('token');
+    return localStorage.getItem('token') || localStorage.getItem('access_token');
   },
 
   removeToken: () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+  },
+
+  // OAuth specific methods
+  setAccessToken: (token: string) => {
+    localStorage.setItem('access_token', token);
+  },
+
+  getAccessToken: () => {
+    return localStorage.getItem('access_token') || localStorage.getItem('token');
+  },
+
+  setRefreshToken: (token: string) => {
+    localStorage.setItem('refresh_token', token);
+  },
+
+  getRefreshToken: () => {
+    return localStorage.getItem('refresh_token');
   },
 
   isAuthenticated: () => {
-    return !!tokenManager.getToken();
+    return !!(tokenManager.getAccessToken() || tokenManager.getToken());
   },
 
   decodeToken: (token: string) => {
@@ -29,7 +49,7 @@ export const tokenManager = {
   },
 
   getUserRole: () => {
-    const token = tokenManager.getToken();
+    const token = tokenManager.getAccessToken() || tokenManager.getToken();
     if (!token) return null;
 
     const decoded = tokenManager.decodeToken(token);
