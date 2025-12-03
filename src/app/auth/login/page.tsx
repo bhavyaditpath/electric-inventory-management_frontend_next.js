@@ -187,8 +187,6 @@ export default function LoginPage() {
 
           {/* Google Sign-In */}
           <GoogleSignInButton
-            onError={(error) => setError(error)}
-            disabled={isLoading}
           />
         </form>
 
