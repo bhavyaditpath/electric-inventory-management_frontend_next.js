@@ -7,4 +7,10 @@ export const authApi = {
 
   register: (userData: { username: string; password: string; role: string; branchName: string }) =>
     apiClient.post('/auth/register', userData),
+
+  forgotPassword: (data: { username: string }) =>
+    apiClient.post("/auth/forgot-password", data),
+
+  resetPassword: (data: { token: string; newPassword: string }) =>
+    apiClient.post("/auth/reset-password", data),
 };

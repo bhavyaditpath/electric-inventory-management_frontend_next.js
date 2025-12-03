@@ -31,7 +31,7 @@ export default function LoginPage() {
         if (decoded) {
           const userData = {
             id: decoded.sub || 0,
-            username: decoded.username || '',
+            username: decoded.username || "",
             role: (decoded.role as UserRole) || UserRole.BRANCH,
             branchId: decoded.branchId || 0,
           };
@@ -137,6 +137,17 @@ export default function LoginPage() {
                 </svg>
               </span>
             </div>
+
+            {/* Forgot Password Link */}
+            <div className="flex justify-end mt-1">
+              <button
+                type="button"
+                onClick={() => router.push("/auth/forgot-password")}
+                className="text-sm text-blue-600 hover:underline cursor-pointer"
+              >
+                Forgot Password?
+              </button>
+            </div>
           </div>
 
           {/* Submit */}
@@ -154,8 +165,7 @@ export default function LoginPage() {
                   <circle className="opacity-30" cx="12" cy="12" r="10"
                     stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-80" fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z">
-                  </path>
+                    d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z"></path>
                 </svg>
                 Signing in...
               </span>
