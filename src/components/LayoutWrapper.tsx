@@ -4,6 +4,7 @@ import { useState, useEffect, ReactNode, ComponentType } from "react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import RoleProtectedRoute from "./RoleProtectedRoute";
 import { UserRole } from "../types/enums";
+import Navbar from "./Navbar";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -40,26 +41,6 @@ export default function LayoutWrapper({
   return (
     <RoleProtectedRoute requiredRole={requiredRole}>
       <div className="min-h-screen bg-gray-100">
-        {/* Mobile Header */}
-        <div className="md:hidden bg-white shadow-sm border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              aria-label="Toggle menu"
-            >
-              {isMobileMenuOpen ? (
-                <XMarkIcon className="w-6 h-6" />
-              ) : (
-                <Bars3Icon className="w-6 h-6" />
-              )}
-            </button>
-            <h1 className="text-lg font-semibold text-gray-900">
-              {requiredRole === 'Admin' ? 'Admin Panel' : 'Branch Panel'}
-            </h1>
-          </div>
-        </div>
-
         {/* Mobile Menu Overlay */}
         {isMobileMenuOpen && (
           <div className="md:hidden fixed inset-0 z-40 flex">
@@ -103,14 +84,15 @@ export default function LayoutWrapper({
             className={`flex-1 transition-all duration-300 ease-in-out ${
               isSidebarCollapsed ? "ml-16" : "ml-64"
             }`}
-          >
+          > <Navbar sidebarOpen={false} isMobile={false} onMobileToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
             {children}
           </main>
         </div>
 
         {/* Mobile Layout */}
         <div className="md:hidden">
-          <main className="min-h-screen">
+          <Navbar sidebarOpen={false} isMobile={true} onMobileToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
+          <main className="min-h-screen pt-16">
             {children}
           </main>
         </div>
