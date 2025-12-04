@@ -9,13 +9,14 @@ export default function GoogleSignInButton() {
 
   return (
     <button
+      type="button"
       onClick={handleGoogleSignIn}
       className="
-        w-full flex items-center justify-center gap-3 
-        py-3 px-4 rounded-lg 
-        bg-white border border-gray-300 
+        w-full flex items-center justify-center gap-3
+        py-3 px-4 rounded-lg
+        bg-white border border-gray-300
         hover:bg-gray-50 active:bg-gray-100
-        transition-all duration-200 
+        transition-all duration-200
         shadow-sm hover:shadow-md
         font-medium text-gray-700
       "
