@@ -1,0 +1,661 @@
+"use client";
+
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import DataTable, { TableColumn } from '@/components/DataTable';
+import Modal from '@/components/Modal';
+import ConfirmModal from '@/components/ConfirmModal';
+import InputField from '@/components/InputField';
+import { showSuccess, showError } from '@/Services/toast.service';
+import { reportsApi, CreateReportPreferenceDto, UpdateReportPreferenceDto, ReportType, DeliveryMethod } from '@/Services/reports.api';
+import { PencilIcon, TrashIcon, DocumentTextIcon, CogIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+
+interface ReportPreference {
+  id: number;
+  reportType: ReportType;
+  deliveryMethod?: DeliveryMethod;
+  isActive?: boolean;
+}
+
+export default function ReportsPage() {
+  const [activeTab, setActiveTab] = useState('view');
+  const [reportType, setReportType] = useState(ReportType.DAILY);
+  const [reportData, setReportData] = useState<Record<string, unknown> | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [preferences, setPreferences] = useState<ReportPreference[]>([]);
+  const [showPreferenceModal, setShowPreferenceModal] = useState(false);
+  const [editingPreference, setEditingPreference] = useState<ReportPreference | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingPreference, setDeletingPreference] = useState<ReportPreference | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [formData, setFormData] = useState({
+    reportType: ReportType.DAILY,
+    deliveryMethod: DeliveryMethod.EMAIL,
+    isActive: true
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const tabs = [
+    { key: 'view', label: 'View Reports', icon: DocumentTextIcon },
+    { key: 'generate', label: 'Generate Reports', icon: ChartBarIcon },
+    { key: 'preferences', label: 'Preferences', icon: CogIcon },
+  ];
+
+  const firstLoad = useRef(false);
+
+  useEffect(() => {
+    if (!firstLoad.current) {
+      firstLoad.current = true;
+      if (activeTab === 'preferences') {
+        fetchPreferences();
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'preferences') {
+      fetchPreferences();
+    }
+  }, [activeTab]);
+
+  const fetchReport = async (type: ReportType) => {
+    setLoading(true);
+    try {
+      let response;
+      switch (type) {
+        case ReportType.DAILY:
+          response = await reportsApi.getDailyReport();
+          break;
+        case ReportType.WEEKLY:
+          response = await reportsApi.getWeeklyReport();
+          break;
+        case ReportType.MONTHLY:
+          response = await reportsApi.getMonthlyReport();
+          break;
+        case ReportType.HALF_YEARLY:
+          response = await reportsApi.getHalfYearlyReport();
+          break;
+        case ReportType.YEARLY:
+          response = await reportsApi.getYearlyReport();
+          break;
+        default:
+          return;
+      }
+      if (response) {
+        setReportData(response as unknown as Record<string, unknown>);
+        showSuccess('Report loaded successfully');
+      } else {
+        showError(response || 'Failed to load report');
+      }
+    } catch (error) {
+      console.error('Error fetching report:', error);
+      showError('Error loading report');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPreferences = async () => {
+    try {
+      const response = await reportsApi.getUserPreferences();
+      console.log(response)
+      if (response) {
+        setPreferences(Array.isArray(response) ? response : []);
+      } else {
+        showError(response || 'Failed to load preferences');
+      }
+    } catch (error) {
+      console.error('Error fetching preferences:', error);
+      showError('Error loading preferences');
+    }
+  };
+
+  const handleGenerateReport = async () => {
+    setLoading(true);
+    try {
+      const response = await reportsApi.generateReport(reportType);
+      if (response.success) {
+        showSuccess('Report generated successfully!');
+      } else {
+        showError(response.message || 'Failed to generate report');
+      }
+    } catch (error) {
+      console.error('Error generating report:', error);
+      showError('Error generating report');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerateScheduled = async () => {
+    setLoading(true);
+    try {
+      const response = await reportsApi.generateScheduledReports();
+      if (response.success) {
+        showSuccess('Scheduled reports generated successfully!');
+      } else {
+        showError(response.message || 'Failed to generate scheduled reports');
+      }
+    } catch (error) {
+      console.error('Error generating scheduled reports:', error);
+      showError('Error generating scheduled reports');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreatePreference = useCallback(async () => {
+    setIsSubmitting(true);
+    try {
+      debugger
+      const response = await reportsApi.createPreference(formData);
+      if (response) {
+        showSuccess('Preference created successfully');
+        fetchPreferences();
+        setShowPreferenceModal(false);
+        resetForm();
+      } else {
+        showError(response || 'Failed to create preference');
+      }
+    } catch (error) {
+      console.error('Error creating preference:', error);
+      showError('Error creating preference');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [formData]);
+
+  const handleUpdatePreference = useCallback(async () => {
+    if (!editingPreference) return;
+    setIsSubmitting(true);
+    try {
+      const response = await reportsApi.updatePreference(editingPreference.id, formData);
+      if (response) {
+        showSuccess('Preference updated successfully');
+        fetchPreferences();
+        setEditingPreference(null);
+        resetForm();
+      } else {
+        showError(response || 'Failed to update preference');
+      }
+    } catch (error) {
+      console.error('Error updating preference:', error);
+      showError('Error updating preference');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [editingPreference, formData]);
+
+  const handleDeletePreference = useCallback(async () => {
+    if (!deletingPreference) return;
+    setIsDeleting(true);
+    try {
+      const response = await reportsApi.removePreference(deletingPreference.id);
+      if (response.success) {
+        showSuccess('Preference deleted successfully');
+        fetchPreferences();
+        setShowDeleteModal(false);
+        setDeletingPreference(null);
+      } else {
+        showError(response.message || 'Failed to delete preference');
+      }
+    } catch (error) {
+      console.error('Error deleting preference:', error);
+      showError('Error deleting preference');
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [deletingPreference]);
+
+  const resetForm = () => {
+    setFormData({
+      reportType: ReportType.DAILY,
+      deliveryMethod: DeliveryMethod.EMAIL,
+      isActive: true
+    });
+    setErrors({});
+  };
+
+  const handleEdit = useCallback((preference: ReportPreference) => {
+    setEditingPreference(preference);
+    setFormData({
+      reportType: preference.reportType,
+      deliveryMethod: preference.deliveryMethod || DeliveryMethod.EMAIL,
+      isActive: preference.isActive ?? true
+    });
+    setErrors({});
+  }, []);
+
+  const handleDelete = useCallback((preference: ReportPreference) => {
+    setDeletingPreference(preference);
+    setShowDeleteModal(true);
+  }, []);
+
+  const validateForm = useCallback(() => {
+    const newErrors: Record<string, string> = {};
+    // Add validation logic if needed
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, []);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    if (editingPreference) {
+      await handleUpdatePreference();
+    } else {
+      await handleCreatePreference();
+    }
+  }, [editingPreference, validateForm, handleUpdatePreference, handleCreatePreference]);
+
+  const columns = useMemo<TableColumn<ReportPreference>[]>(() => [
+    {
+      key: "reportType",
+      header: "Report Type",
+      sortable: true,
+      render: (value: ReportType) => (
+        <span className="capitalize font-medium">
+          {value.replace('-', ' ')} Report
+        </span>
+      )
+    },
+    {
+      key: "deliveryMethod",
+      header: "Delivery Method",
+      sortable: true,
+      render: (value?: DeliveryMethod) => value || 'Not set'
+    },
+    {
+      key: "isActive",
+      header: "Status",
+      sortable: true,
+      render: (value?: boolean) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+          value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+        }`}>
+          {value ? 'Active' : 'Inactive'}
+        </span>
+      )
+    }
+  ], []);
+
+  const actions = useCallback(
+    (preference: ReportPreference) => (
+      <div className="flex items-center space-x-2">
+        <button
+          onClick={() => handleEdit(preference)}
+          className="text-yellow-600 hover:text-yellow-900 p-1 cursor-pointer"
+          title="Edit Preference"
+        >
+          <PencilIcon className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => handleDelete(preference)}
+          className="text-red-600 hover:text-red-900 p-1 cursor-pointer"
+          title="Delete Preference"
+        >
+          <TrashIcon className="w-4 h-4" />
+        </button>
+      </div>
+    ),
+    [handleEdit, handleDelete]
+  );
+
+  return (
+    <div className="p-6">
+      <div className="mb-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Reports Management</h1>
+            <p className="text-gray-600 mt-2">View, generate and manage system reports and preferences</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Tabs */}
+      <div className="mb-6">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                    activeTab === tab.key
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 mr-2" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+
+      {/* Content based on active tab */}
+      {activeTab === 'view' && (
+        <div className="space-y-6">
+          {/* Report Type Selection */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold mb-4 text-gray-900">Select Report Type</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {Object.values(ReportType).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => {
+                    setReportType(type);
+                    fetchReport(type);
+                  }}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    reportType === type
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="text-center">
+                    <DocumentTextIcon className="w-8 h-8 mx-auto mb-2" />
+                    <span className="font-medium capitalize">
+                      {type.replace('-', ' ')}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Report Display */}
+          <div className="bg-white rounded-lg shadow p-6">
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading report...</p>
+              </div>
+            ) : reportData ? (
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {reportType.charAt(0).toUpperCase() + reportType.slice(1).replace('-', ' ')} Report
+                  </h2>
+                  <button
+                    onClick={() => fetchReport(reportType)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Refresh
+                  </button>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4 overflow-auto max-h-96">
+                  <pre className="text-sm text-gray-800 whitespace-pre-wrap">
+                    {JSON.stringify(reportData, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <DocumentTextIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 text-lg">Select a report type to view data</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'generate' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Generate Specific Report */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900">Generate Specific Report</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Report Type
+                </label>
+                <select
+                  value={reportType}
+                  onChange={(e) => setReportType(e.target.value as ReportType)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {Object.values(ReportType).map((type) => (
+                    <option key={type} value={type}>
+                      {type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ')} Report
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                onClick={handleGenerateReport}
+                disabled={loading}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center"
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <ChartBarIcon className="w-4 h-4 mr-2" />
+                    Generate Report
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Generate Scheduled Reports */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900">Generate Scheduled Reports</h2>
+            <p className="text-gray-600 mb-4">
+              Generate all reports that are scheduled based on user preferences.
+            </p>
+            <button
+              onClick={handleGenerateScheduled}
+              disabled={loading}
+              className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center justify-center"
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <CogIcon className="w-4 h-4 mr-2" />
+                  Generate All Scheduled Reports
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'preferences' && (
+        <div className="space-y-6">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <DocumentTextIcon className="w-6 h-6 text-blue-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Preferences</p>
+                  <p className="text-2xl font-bold text-gray-900">{preferences.length}</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <ChartBarIcon className="w-6 h-6 text-green-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Active Preferences</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {preferences.filter(p => p.isActive).length}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <CogIcon className="w-6 h-6 text-purple-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Email Delivery</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {preferences.filter(p => p.deliveryMethod === DeliveryMethod.EMAIL).length}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Preferences Table */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-gray-900">Report Preferences</h2>
+                <button
+                  onClick={() => {
+                    setEditingPreference(null);
+                    resetForm();
+                    setShowPreferenceModal(true);
+                  }}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center"
+                >
+                  <CogIcon className="w-4 h-4 mr-2" />
+                  Add Preference
+                </button>
+              </div>
+            </div>
+            <DataTable
+              data={preferences}
+              columns={columns}
+              loading={loading}
+              emptyMessage="No preferences found"
+              moduleName="Report Preferences"
+              actions={actions}
+              striped={true}
+              hover={true}
+              size="md"
+              pagination={true}
+              pageSize={10}
+              showPageSizeSelector={true}
+              pageSizeOptions={[5, 10, 25, 50]}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Preference Modal */}
+      <Modal
+        isOpen={showPreferenceModal || !!editingPreference}
+        onClose={() => {
+          setShowPreferenceModal(false);
+          setEditingPreference(null);
+          resetForm();
+        }}
+        title={editingPreference ? 'Edit Report Preference' : 'Create Report Preference'}
+      >
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="reportType" className="block text-sm font-medium text-gray-700 mb-1">
+              Report Type <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="reportType"
+              value={formData.reportType}
+              onChange={(e) => setFormData({ ...formData, reportType: e.target.value as ReportType })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
+            >
+              {Object.values(ReportType).map((type) => (
+                <option key={type} value={type}>
+                  {type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ')} Report
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="deliveryMethod" className="block text-sm font-medium text-gray-700 mb-1">
+              Delivery Method <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="deliveryMethod"
+              value={formData.deliveryMethod}
+              onChange={(e) => setFormData({ ...formData, deliveryMethod: e.target.value as DeliveryMethod })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
+            >
+              <option value={DeliveryMethod.EMAIL}>Email</option>
+              <option value={DeliveryMethod.LOCAL_FILE}>Dashboard</option>
+            </select>
+          </div>
+
+          <div className="flex items-center">
+            <input
+              id="isActive"
+              type="checkbox"
+              checked={formData.isActive}
+              onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label htmlFor="isActive" className="ml-2 block text-sm text-gray-900">
+              Active
+            </label>
+          </div>
+
+          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-xl">
+            <button
+              type="button"
+              onClick={() => {
+                setShowPreferenceModal(false);
+                setEditingPreference(null);
+                resetForm();
+              }}
+              disabled={isSubmitting}
+              className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer"
+            >
+              {isSubmitting ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  {editingPreference ? 'Updating...' : 'Creating...'}
+                </span>
+              ) : (
+                editingPreference ? 'Update Preference' : 'Create Preference'
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Report Preference"
+        message={`Are you sure you want to delete the "${deletingPreference?.reportType}" preference? This action cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={handleDeletePreference}
+        isDeleting={isDeleting}
+        variant="danger"
+      />
+    </div>
+  );
+}

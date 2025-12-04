@@ -11,6 +11,7 @@ export const NAVIGATION = {
     inventory: '/admin/inventory',
     purchase: '/admin/purchase',
     request: '/admin/request',
+    reports: '/admin/reports',
     items: '/admin/inventory', // assuming items are in inventory
   },
   branch: {

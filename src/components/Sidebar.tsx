@@ -11,6 +11,7 @@ import {
   ShoppingBagIcon,
   ExclamationTriangleIcon,
   ClipboardDocumentListIcon,
+  DocumentChartBarIcon,
   PowerIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -30,6 +31,7 @@ const menuItems: MenuItem[] = [
   { name: "Inventory", href: "/admin/inventory", icon: CubeIcon },
   { name: "Purchase", href: "/admin/purchase", icon: ShoppingBagIcon },
   { name: "Request", href: "/admin/request", icon: ClipboardDocumentListIcon },
+  { name: "Reports", href: "/admin/reports", icon: DocumentChartBarIcon },
   { name: "Sales", href: "/admin/sales", icon: ChartBarIcon },
   { name: "Alerts", href: "/admin/alert", icon: ExclamationTriangleIcon },
 ];
