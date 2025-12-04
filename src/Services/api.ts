@@ -27,8 +27,8 @@ class ApiClient {
       ...options,
     };
 
-    // Add auth token if available
-    const token = localStorage.getItem('token');
+    // Add auth token if available (prefer access_token for OAuth)
+    const token = localStorage.getItem('access_token') || localStorage.getItem('token');
     if (token) {
       config.headers = {
         ...config.headers,
@@ -37,12 +37,62 @@ class ApiClient {
     }
 
     try {
-      const response = await fetch(url, config);
-      const data = await response.json();
+      let response = await fetch(url, config);
+      let data = await response.json();
+
+      // If unauthorized and we have a refresh token, try to refresh
+      if (response.status === 401 && localStorage.getItem('refresh_token')) {
+        const refreshResponse = await this.refreshAccessToken();
+        if (refreshResponse.success && refreshResponse.data?.access_token) {
+          // Retry the original request with new token
+          config.headers = {
+            ...config.headers,
+            Authorization: `Bearer ${refreshResponse.data.access_token}`,
+          };
+          response = await fetch(url, config);
+          data = await response.json();
+        }
+      }
+
       return data;
     } catch (error) {
       console.error('API Error:', error);
       throw error;
+    }
+  }
+
+  private async refreshAccessToken(): Promise<ApiResponse<{ access_token: string; refresh_token?: string }>> {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) {
+      return { success: false, message: 'No refresh token available' };
+    }
+
+    try {
+      const response = await fetch(`${this.baseURL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.data?.access_token) {
+        localStorage.setItem('access_token', data.data.access_token);
+        if (data.data.refresh_token) {
+          localStorage.setItem('refresh_token', data.data.refresh_token);
+        }
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      // Clear tokens on refresh failure
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('token');
+      return { success: false, message: 'Token refresh failed' };
     }
   }
 

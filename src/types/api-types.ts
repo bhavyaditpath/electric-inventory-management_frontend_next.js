@@ -4,6 +4,17 @@ export interface Item {
   stock: number;
 }
 
+export interface User {
+    id: number;
+    username: string;
+    password: string | null;
+    role: string;
+    branchId: number;
+    branch: string | null;
+    createdAt: number | null;
+    isRemoved: boolean;
+}
+
 export interface PurchaseResponseDto {
   id: number;
   productName: string;

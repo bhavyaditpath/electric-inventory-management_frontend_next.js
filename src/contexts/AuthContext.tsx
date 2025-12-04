@@ -3,12 +3,18 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserRole } from '../types/enums';
 import { tokenManager } from '@/Services/token.management.service';
+import { authApi } from '@/Services/auth.api';
 
 interface User {
   id: number;
   username: string;
   role: UserRole;
   branchId: number;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  profilePicture?: string | null;
+  branch?: string | null;
 }
 
 interface AuthContextType {
@@ -17,6 +23,7 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
+  fetchProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,6 +44,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchProfile = async () => {
+    try {
+      const response = await authApi.getProfile();
+      console.log(response.data)
+      if (response.success && response.data) {
+        setUser(prevUser => ({
+          ...prevUser,
+          ...response.data,
+        } as User));
+      }
+    } catch (error) {
+      console.error('Failed to fetch profile:', error);
+    }
+  };
+
   useEffect(() => {
     // Check if user is logged in on app start
     const token = tokenManager.getToken();
@@ -50,6 +72,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           role: (decoded.role as UserRole) || UserRole.BRANCH,
           branchId: decoded.branchId || 0,
         });
+        // Fetch full profile data
+        fetchProfile();
       }
     }
     setIsLoading(false);
@@ -59,6 +83,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     tokenManager.setToken(token);
     if (userData) {
       setUser(userData);
+      // Fetch full profile data after login
+      fetchProfile();
     }
   };
 
@@ -73,6 +99,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     isAuthenticated: !!user,
     isLoading,
+    fetchProfile,
   };
 
   return (

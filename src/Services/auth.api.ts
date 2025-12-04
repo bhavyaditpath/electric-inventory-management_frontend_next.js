@@ -16,4 +16,20 @@ export const authApi = {
 
   googleCallback: (code: string) =>
     apiClient.post<{ access_token: string; refresh_token?: string }>('/auth/google/callback', { code }),
+
+  refreshToken: (refreshToken: string) =>
+    apiClient.post<{ access_token: string; refresh_token?: string }>('/auth/refresh', { refresh_token: refreshToken }),
+
+  getProfile: () =>
+    apiClient.get<{
+      id: number;
+      username: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      profilePicture: string | null;
+      role: string;
+      branch: string | null;
+      branchId: number;
+    }>('/auth/me'),
 };
