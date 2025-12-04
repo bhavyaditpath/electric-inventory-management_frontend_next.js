@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import DataTable from "../../../components/DataTable";
 import ConfirmModal from "../../../components/ConfirmModal";
@@ -23,8 +23,6 @@ interface InventoryItem {
 }
 
 export default function BranchInventoryPage() {
-  const router = useRouter();
-
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -51,9 +49,14 @@ export default function BranchInventoryPage() {
       setLoading(false);
     }
   }, []);
+  const firstLoad = useRef(false);
 
   useEffect(() => {
-    loadInventory();
+    if (!firstLoad.current) {
+      firstLoad.current = true;
+      loadInventory();
+
+    }
   }, [loadInventory]);
 
   const filteredInventory = useMemo(() => {
@@ -185,7 +188,7 @@ export default function BranchInventoryPage() {
         striped={true}
         hover={true}
         size="md"
-        // actions={actions}
+      // actions={actions}
       />
 
       {/* Stock Alert Summary */}

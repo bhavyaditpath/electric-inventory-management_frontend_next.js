@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import ConfirmModal from '../../../components/ConfirmModal';
 import { requestApi } from '../../../Services/request.service';
 import { RequestStatus } from '../../../types/enums';
@@ -35,15 +35,19 @@ const RequestPage = () => {
     }
   }, []);
 
+  const firstLoad = useRef(false);
   useEffect(() => {
-    loadRequests();
+    if (!firstLoad.current) {
+      firstLoad.current = true;
+      loadRequests();
+    }
   }, [loadRequests]);
 
   // API call every 5000 millisecond
-  useEffect(() => {
-    const interval = setInterval(loadRequests, 5000);
-    return () => clearInterval(interval);
-  }, [loadRequests]);
+  // useEffect(() => {
+  //   const interval = setInterval(loadRequests, 5000);
+  //   return () => clearInterval(interval);
+  // }, [loadRequests]);
 
   const handleAction = async () => {
     if (!actionRequest) return;
@@ -100,17 +104,16 @@ const RequestPage = () => {
                     </p>
 
                     <span
-                      className={`inline-block px-2 py-1 text-xs rounded-full ${
-                        request.status === RequestStatus.REQUEST
+                      className={`inline-block px-2 py-1 text-xs rounded-full ${request.status === RequestStatus.REQUEST
                           ? 'bg-yellow-100 text-yellow-800'
                           : request.status === RequestStatus.ACCEPT
-                          ? 'bg-green-100 text-green-800'
-                          : request.status === RequestStatus.REJECT
-                          ? 'bg-red-100 text-red-800'
-                          : request.status === RequestStatus.IN_TRANSIT
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
+                            ? 'bg-green-100 text-green-800'
+                            : request.status === RequestStatus.REJECT
+                              ? 'bg-red-100 text-red-800'
+                              : request.status === RequestStatus.IN_TRANSIT
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-gray-100 text-gray-800'
+                        }`}
                     >
                       {request.status.replace('_', ' ')}
                     </span>

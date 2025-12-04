@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import DataTable, { TableColumn } from "../../../components/DataTable";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { branchApi } from "@/Services/branch.api";
@@ -100,10 +100,14 @@ export default function BranchesPage() {
       branch.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [branches, searchTerm]);
+  const firstLoad = useRef(false);
 
   useEffect(() => {
-    loadBranches();
-  }, []);
+    if (!firstLoad.current) {
+      firstLoad.current = true;
+      loadBranches();
+    }
+  }, [loadBranches]);
 
 
   const handleEdit = useCallback((branch: Branch) => {
@@ -114,7 +118,7 @@ export default function BranchesPage() {
       address: branch.address || '',
       phone: branch.phone || '',
     });
-    setErrors({ name: '', phone: ''});
+    setErrors({ name: '', phone: '' });
     setShowModal(true);
   }, []);
 
@@ -145,7 +149,7 @@ export default function BranchesPage() {
   }, [deletingBranch, loadBranches]);
 
   const validateForm = useCallback(() => {
-    const newErrors = { name: '', phone: ''};
+    const newErrors = { name: '', phone: '' };
 
     if (!formData.name.trim()) {
       newErrors.name = 'Branch name is required';
@@ -201,8 +205,8 @@ export default function BranchesPage() {
 
   const handleCreateBranch = useCallback(() => {
     setModalMode('create');
-    setFormData({ name: '', address: '', phone: ''});
-    setErrors({ name: '', phone: ''});
+    setFormData({ name: '', address: '', phone: '' });
+    setErrors({ name: '', phone: '' });
     setShowModal(true);
   }, []);
 
@@ -229,7 +233,7 @@ export default function BranchesPage() {
         <TrashIcon className="w-4 h-4" />
       </button>
     </div>
-  ), [handleEdit, handleDelete]);
+  ), []);
 
   return (
     <div className="p-6">
@@ -256,7 +260,7 @@ export default function BranchesPage() {
           </div>
         </div>
       </div>
-        {/* bg-white rounded-lg shadow */}
+      {/* bg-white rounded-lg shadow */}
       <div className="">
         <div className="p-0">
           <DataTable

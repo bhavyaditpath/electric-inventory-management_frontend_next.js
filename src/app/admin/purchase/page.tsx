@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import InputField from '../../../components/InputField';
 import ConfirmModal from '../../../components/ConfirmModal';
@@ -73,9 +73,12 @@ const PurchasePage: React.FC = () => {
       setLoadingPurchases(false);
     }
   }, []);
-
+  const firstLoad = useRef(false);
   useEffect(() => {
-    loadPurchases();
+    if (!firstLoad.current) {
+      firstLoad.current = true;
+      loadPurchases();
+    }
   }, [loadPurchases]);
 
   // Load purchase from URL edit

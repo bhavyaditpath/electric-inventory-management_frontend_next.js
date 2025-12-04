@@ -4,22 +4,13 @@ import DataTable, { TableColumn } from "@/components/DataTable";
 import { userApi } from "@/Services/user.api";
 import { branchApi } from "@/Services/branch.api";
 import { PencilIcon, TrashIcon } from "@heroicons/react/16/solid";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import Modal from "@/components/Modal";
 import ConfirmModal from "@/components/ConfirmModal";
+import InputField from "@/components/InputField";
 import { UserRole } from "@/types/enums";
 import { showSuccess, showError } from "@/Services/toast.service";
-
-interface User {
-    id: number;
-    username: string;
-    password: string | null;
-    role: string;
-    branchId: number;
-    branch: string | null;
-    createdAt: number | null;
-    isRemoved: boolean;
-}
+import { User } from "@/types/api-types";
 
 export default function UserPage() {
     const [users, setUsers] = useState<User[]>([]);
@@ -36,11 +27,12 @@ export default function UserPage() {
     const [isDeleting, setIsDeleting] = useState(false);
 
     const loadBranches = useCallback(async () => {
+        if (branches.length > 0) return;
         const response = await branchApi.getAll();
         if (response.success && Array.isArray(response.data)) {
-            setBranches(response.data as { id: number; name: string }[]);
+            setBranches(response.data);
         }
-    }, []);
+    }, [branches]);
 
     const loadUsers = useCallback(async () => {
         setLoading(true);
@@ -83,17 +75,21 @@ export default function UserPage() {
         //         </span>
         //     )
         // }
-    ], [branches]);
+    ], []);
+    const firstLoad = useRef(false);
 
     useEffect(() => {
-        loadUsers();
-        loadBranches();
+        if (!firstLoad.current) {
+            firstLoad.current = true;
+            loadUsers();
+        }
     }, []);
 
     const handleCreateUser = useCallback(() => {
         setModalMode('create');
         setFormData({ username: '', password: '', role: UserRole.BRANCH, branchId: 0 });
         setErrors({ username: '', password: '', branchId: '' });
+        loadBranches();
         setShowModal(true);
     }, [])
 
@@ -107,6 +103,7 @@ export default function UserPage() {
             branchId: user.branchId,
         });
         setErrors({ username: '', password: '', branchId: '' });
+        loadBranches();
         setShowModal(true);
     }, []);
 
@@ -141,6 +138,13 @@ export default function UserPage() {
 
         if (!formData.username.trim()) {
             newErrors.username = 'Username is required';
+        } else {
+            // Email validation REGEX
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!emailRegex.test(formData.username)) {
+                newErrors.username = 'Username must be a valid email';
+            }
         }
 
         if (modalMode === 'create' && !formData.password.trim()) {
@@ -203,30 +207,32 @@ export default function UserPage() {
         }
     }, [modalMode, editingUser, formData, validateForm, loadUsers, branches]);
 
-    const actions = useCallback((user: User, index: number) => (
-        <div className="flex items-center space-x-2">
-            <button
-                onClick={(e) => {
-                    e.stopPropagation();
-                    handleEdit(user);
-                }}
-                className="text-yellow-600 hover:text-yellow-900 p-1 cursor-pointer"
-                title="Edit User"
-            >
-                <PencilIcon className="w-4 h-4" />
-            </button>
-            <button
-                onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(user);
-                }}
-                className="text-red-600 hover:text-red-900 p-1 cursor-pointer"
-                title="Delete User"
-            >
-                <TrashIcon className="w-4 h-4" />
-            </button>
-        </div>
-    ), [handleEdit, handleDelete]);
+    const actions = useCallback(
+        (user: User) => (
+            <div className="flex items-center space-x-2">
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(user);
+                    }}
+                    className="text-yellow-600 hover:text-yellow-900 p-1 cursor-pointer"
+                >
+                    <PencilIcon className="w-4 h-4" />
+                </button>
+
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(user);
+                    }}
+                    className="text-red-600 hover:text-red-900 p-1 cursor-pointer"
+                >
+                    <TrashIcon className="w-4 h-4" />
+                </button>
+            </div>
+        ),
+        []
+    );
 
     return (
         <div className="p-6">
@@ -245,24 +251,22 @@ export default function UserPage() {
                 </div>
             </div>
             {/* bg-white rounded-lg shadow */}
-            <div className="">
-                <div className="p-0">
-                    <DataTable
-                        data={users}
-                        columns={columns}
-                        loading={loading}
-                        emptyMessage="No users found"
-                        actions={actions}
-                        moduleName="Users Management"
-                        striped={true}
-                        hover={true}
-                        size="md"
-                        pagination={true}
-                        pageSize={10}
-                        showPageSizeSelector={true}
-                        pageSizeOptions={[5, 10, 25, 50]}
-                    />
-                </div>
+            <div className="p-0">
+                <DataTable
+                    data={users}
+                    columns={columns}
+                    loading={loading}
+                    emptyMessage="No users found"
+                    actions={actions}
+                    moduleName="Users Management"
+                    striped={true}
+                    hover={true}
+                    size="md"
+                    pagination={true}
+                    pageSize={10}
+                    showPageSizeSelector={true}
+                    pageSizeOptions={[5, 10, 25, 50]}
+                />
             </div>
 
             {/* User Modal */}
@@ -272,69 +276,57 @@ export default function UserPage() {
                 title={modalMode === 'create' ? 'Create New User' : 'Edit User'}
             >
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="space-y-1">
-                        <label htmlFor="username" className="block text-sm font-semibold text-gray-800">
-                            Username <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            id="username"
-                            type="text"
-                            value={formData.username}
-                            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 placeholder-gray-500"
-                            placeholder="Enter username"
-                        />
-                        {errors.username && <p className="text-sm text-red-600 mt-1">{errors.username}</p>}
-                    </div>
+                    <InputField
+                        label="Username *"
+                        type="text"
+                        value={formData.username}
+                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                        error={errors.username}
+                        name="username"
+                    />
 
                     {modalMode === 'create' && (
-                        <div className="space-y-1">
-                            <label htmlFor="password" className="block text-sm font-semibold text-gray-800">
-                                Password <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                id="password"
-                                type="password"
-                                value={formData.password}
-                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 placeholder-gray-500"
-                                placeholder="Enter password"
-                            />
-                            {errors.password && <p className="text-sm text-red-600 mt-1">{errors.password}</p>}
-                        </div>
+                        <InputField
+                            label="Password *"
+                            type="password"
+                            value={formData.password}
+                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            error={errors.password}
+                            name="password"
+                        />
                     )}
 
-                    <div className="space-y-1">
-                        <label htmlFor="role" className="block text-sm font-semibold text-gray-800">
+                    <div>
+                        <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
                             Role <span className="text-red-500">*</span>
                         </label>
                         <select
                             id="role"
                             value={formData.role}
                             onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
                         >
                             <option value={UserRole.ADMIN}>Admin</option>
                             <option value={UserRole.BRANCH}>Branch</option>
                         </select>
                     </div>
 
-                    <div className="space-y-1">
-                        <label htmlFor="branchid" className="block text-sm font-semibold text-gray-800">
+                    <div>
+                        <label htmlFor="branchId" className="block text-sm font-medium text-gray-700 mb-1">
                             Branch <span className="text-red-500">*</span>
                         </label>
                         <select
                             id="branchId"
                             value={formData.branchId}
                             onChange={(e) => setFormData({ ...formData, branchId: Number(e.target.value) })}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900"
+                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700 ${errors.branchId ? 'border-red-500' : 'border-gray-300'}`}
                         >
                             <option value={0}>Select Branch</option>
                             {branches.map(branch => (
                                 <option key={branch.id} value={branch.id}>{branch.name}</option>
                             ))}
                         </select>
-                        {errors.branchId && <p className="text-sm text-red-600 mt-1">{errors.branchId}</p>}
+                        {errors.branchId && <p className="text-red-500 text-xs mt-1">{errors.branchId}</p>}
                     </div>
 
                     <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-xl">
