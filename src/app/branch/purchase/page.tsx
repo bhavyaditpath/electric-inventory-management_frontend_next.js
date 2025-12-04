@@ -69,12 +69,7 @@ const PurchasePage: React.FC = () => {
     try {
       setLoadingPurchases(true);
       const response = await purchaseApi.getPurchases();
-      if (response.success) {
-        setPurchases(Array.isArray(response.data) ? response.data : []);
-      } else {
-        showError(response.message || 'Failed to load purchases');
-        setPurchases([]);
-      }
+      setPurchases(Array.isArray(response) ? response : []);
     } catch (err) {
       setPurchases([]);
       console.error('Failed to load purchases:', err);
@@ -88,17 +83,18 @@ const PurchasePage: React.FC = () => {
   }, [loadPurchases]);
 
   // Load admin users
-  useEffect(() => {
-    const loadAdmins = async () => {
-      try {
-        const admins = await requestApi.getAdminsForDropdown();
-        setAdminUsers(Array.isArray(admins.data) ? admins.data : []);
-      } catch (err) {
-        console.error('Failed to load admins:', err);
-      }
-    };
-    loadAdmins();
+  const loadAdmins = useCallback(async (params?: { productName?: string; brand?: string }) => {
+    try {
+      const admins = await requestApi.getAdminsForDropdown(params);
+      setAdminUsers(Array.isArray(admins.data) ? admins.data : []);
+    } catch (err) {
+      console.error('Failed to load admins:', err);
+    }
   }, []);
+
+  useEffect(() => {
+    loadAdmins();
+  }, [loadAdmins]);
 
   // Load purchase from URL edit
   // useEffect(() => {
@@ -149,6 +145,14 @@ const PurchasePage: React.FC = () => {
     });
 
     setErrors(prev => ({ ...prev, [name]: '' }));
+
+    // Load admins when productName changes
+    if (name === 'productName') {
+      loadAdmins({ productName: processedValue });
+      // Clear selected admin when productName changes
+      setAdminUserId(null);
+      setFormData(prev => ({ ...prev }));
+    }
   };
 
   // Cancel Edit
@@ -201,20 +205,21 @@ const PurchasePage: React.FC = () => {
           editingPurchase.id.toString(),
           formData
         );
-        if (!purchaseRecord.success) {
-          showError(purchaseRecord.message || "Failed to update purchase");
+        if (!purchaseRecord) {
+          showError("Failed to update purchase");
           setLoading(false);
           return;
         }
-        showSuccess(purchaseRecord.message || "Purchase updated");
+        showSuccess("Purchase updated");
       } else {
         purchaseRecord = await purchaseApi.recordPurchase(formData);
-        if (!purchaseRecord.success) {
-          showError(purchaseRecord.message || "Failed to record purchase");
+        debugger
+        if (!purchaseRecord) {
+          showError("Failed to record purchase");
           setLoading(false);
           return;
         }
-        showSuccess(purchaseRecord.message || "Purchase recorded");
+        showSuccess("Purchase recorded");
       }
 
       if (!adminUserId) {
@@ -226,11 +231,11 @@ const PurchasePage: React.FC = () => {
 
       const purchaseIdToUse = editingPurchase
         ? editingPurchase.id
-        : purchaseRecord.data?.id;
+        : purchaseRecord.id;
 
 
       const requestResponse = await requestApi.createRequest({
-        requestingUserId,
+        requestingUserId,   
         adminUserId,
         purchaseId: purchaseIdToUse,
         quantityRequested: Number(formData.quantity),
@@ -337,21 +342,20 @@ const PurchasePage: React.FC = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Supplier Name</label>
               <select
-                name="brand"
                 value={adminUserId ?? ""}
                 onChange={(e) => {
                   const id = Number(e.target.value);
                   setAdminUserId(id);
 
-                  // ALSO update the brand field in your formData
-                  const selectedAdmin = adminUsers.find(a => a.id === id);
+                  const supplier = adminUsers.find(a => a.id === id);
                   setFormData(prev => ({
                     ...prev,
-                    brand: selectedAdmin?.username || ""
+                    brand: supplier?.username || ""
                   }));
 
                   setErrors(prev => ({ ...prev, brand: "" }));
                 }}
+
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-700"
               >
                 <option value="">Select Supplier</option>

@@ -8,9 +8,9 @@ import { showSuccess, showError } from '../../../Services/toast.service';
 import { MagnifyingGlassIcon, CubeIcon, CheckCircleIcon, TruckIcon, XCircleIcon, ClockIcon } from '@heroicons/react/24/outline';
 
 const RequestedPurchasePage: React.FC = () => {
-   const [loadingRequests, setLoadingRequests] = useState(false);
-   const [requests, setRequests] = useState<RequestResponseDto[]>([]);
-   const [searchTerm, setSearchTerm] = useState('');
+  const [loadingRequests, setLoadingRequests] = useState(false);
+  const [requests, setRequests] = useState<RequestResponseDto[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   // Load requests
   const loadRequests = useCallback(async () => {
     try {
@@ -141,7 +141,21 @@ const RequestedPurchasePage: React.FC = () => {
                         <CubeIcon className="h-5 w-5 text-gray-400 mr-2" />
                         <h3 className="font-medium text-gray-900">{request.purchase?.productName || 'Unknown Product'}</h3>
                       </div>
-                      <p className="text-sm text-gray-600 mb-1">Quantity: {request.quantityRequested}</p>
+
+                      <p className="text-sm text-gray-600 mb-1">
+                        Quantity: {request.quantityRequested}
+                      </p>
+
+                      {/* NEW: Requesting User */}
+                      <p className="text-sm text-gray-600 mb-1">
+                        Requested By: <span className="font-medium">{request.requestingUser?.username}</span>
+                      </p>
+
+                      {/* NEW: Admin User */}
+                      <p className="text-sm text-gray-600 mb-1">
+                        Assigned Admin: <span className="font-medium">{request.adminUser?.username || "Not Assigned"}</span>
+                      </p>
+
                       <div className="flex items-center mb-1">
                         <span className="text-sm text-gray-600 mr-2">Status:</span>
                         <span className={getStatusBadge(request.status)}>
@@ -167,6 +181,7 @@ const RequestedPurchasePage: React.FC = () => {
                     </div>
                   </div>
                 </div>
+
               ))
             )}
           </div>
