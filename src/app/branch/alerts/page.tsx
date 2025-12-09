@@ -43,7 +43,6 @@ export default function BranchAlertsPage() {
     try {
       setLoading(true);
       const response = await alertApi.getByBranch(user.branchId, undefined, 1, 100);
-      console.log('API Response:', response);
       setAlerts((response as any).data || []);
     } catch (error) {
       console.error('Error fetching alerts:', error);
