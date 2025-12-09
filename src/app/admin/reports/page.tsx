@@ -5,6 +5,7 @@ import DataTable, { TableColumn } from '@/components/DataTable';
 import Modal from '@/components/Modal';
 import ConfirmModal from '@/components/ConfirmModal';
 import InputField from '@/components/InputField';
+import ReportDataRenderer from '@/components/ReportDataRenderer';
 import { showSuccess, showError } from '@/Services/toast.service';
 import { reportsApi, CreateReportPreferenceDto, UpdateReportPreferenceDto, ReportType, DeliveryMethod } from '@/Services/reports.api';
 import { PencilIcon, TrashIcon, DocumentTextIcon, CogIcon, ChartBarIcon } from '@heroicons/react/24/outline';
@@ -114,10 +115,10 @@ export default function ReportsPage() {
     setLoading(true);
     try {
       const response = await reportsApi.generateReport(reportType);
-      if (response.success) {
-        showSuccess('Report generated successfully!');
+      if (response) {
+        showSuccess(response.message || 'Report generated successfully!');
       } else {
-        showError(response.message || 'Failed to generate report');
+        showError('Failed to generate report');
       }
     } catch (error) {
       console.error('Error generating report:', error);
@@ -131,10 +132,10 @@ export default function ReportsPage() {
     setLoading(true);
     try {
       const response = await reportsApi.generateScheduledReports();
-      if (response.success) {
-        showSuccess('Scheduled reports generated successfully!');
+      if (response) {
+        showSuccess(response.message ||  'Scheduled reports generated successfully!');
       } else {
-        showError(response.message || 'Failed to generate scheduled reports');
+        showError('Failed to generate scheduled reports');
       }
     } catch (error) {
       console.error('Error generating scheduled reports:', error);
@@ -147,10 +148,9 @@ export default function ReportsPage() {
   const handleCreatePreference = useCallback(async () => {
     setIsSubmitting(true);
     try {
-      debugger
       const response = await reportsApi.createPreference(formData);
       if (response) {
-        showSuccess('Preference created successfully');
+        showSuccess(response.message || 'Preference created successfully');
         fetchPreferences();
         setShowPreferenceModal(false);
         resetForm();
@@ -158,7 +158,6 @@ export default function ReportsPage() {
         showError(response || 'Failed to create preference');
       }
     } catch (error) {
-      console.error('Error creating preference:', error);
       showError('Error creating preference');
     } finally {
       setIsSubmitting(false);
@@ -171,7 +170,7 @@ export default function ReportsPage() {
     try {
       const response = await reportsApi.updatePreference(editingPreference.id, formData);
       if (response) {
-        showSuccess('Preference updated successfully');
+        showSuccess(response.message || 'Preference updated successfully');
         fetchPreferences();
         setEditingPreference(null);
         resetForm();
@@ -179,7 +178,6 @@ export default function ReportsPage() {
         showError(response || 'Failed to update preference');
       }
     } catch (error) {
-      console.error('Error updating preference:', error);
       showError('Error updating preference');
     } finally {
       setIsSubmitting(false);
@@ -192,7 +190,7 @@ export default function ReportsPage() {
     try {
       const response = await reportsApi.removePreference(deletingPreference.id);
       if (response.success) {
-        showSuccess('Preference deleted successfully');
+        showSuccess(response.message || 'Preference deleted successfully');
         fetchPreferences();
         setShowDeleteModal(false);
         setDeletingPreference(null);
@@ -389,10 +387,8 @@ export default function ReportsPage() {
                     Refresh
                   </button>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4 overflow-auto max-h-96">
-                  <pre className="text-sm text-gray-800 whitespace-pre-wrap">
-                    {JSON.stringify(reportData, null, 2)}
-                  </pre>
+                <div className="bg-gray-50 rounded-lg p-0 overflow-auto max-h-96">
+                  <ReportDataRenderer data={reportData} />
                 </div>
               </div>
             ) : (
@@ -418,7 +414,7 @@ export default function ReportsPage() {
                 <select
                   value={reportType}
                   onChange={(e) => setReportType(e.target.value as ReportType)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none text-gray-700"
                 >
                   {Object.values(ReportType).map((type) => (
                     <option key={type} value={type}>
@@ -594,7 +590,7 @@ export default function ReportsPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
             >
               <option value={DeliveryMethod.EMAIL}>Email</option>
-              <option value={DeliveryMethod.LOCAL_FILE}>Dashboard</option>
+              <option value={DeliveryMethod.LOCAL_FILE}>Local File</option>
             </select>
           </div>
 
