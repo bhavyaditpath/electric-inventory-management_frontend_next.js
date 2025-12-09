@@ -55,4 +55,18 @@ export const tokenManager = {
     const decoded = tokenManager.decodeToken(token);
     return decoded?.role || null;
   },
+
+  getTokenExpiry: () => {
+    const token = tokenManager.getAccessToken() || tokenManager.getToken();
+    if (!token) return null;
+
+    const decoded = tokenManager.decodeToken(token);
+    return decoded?.exp ? new Date(decoded.exp * 1000) : null;
+  },
+
+  isTokenExpired: () => {
+    const expiry = tokenManager.getTokenExpiry();
+    if (!expiry) return true;
+    return new Date() > expiry;
+  },
 };

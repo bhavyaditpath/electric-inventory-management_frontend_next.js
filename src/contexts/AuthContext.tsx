@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { UserRole } from '../types/enums';
 import { tokenManager } from '@/Services/token.management.service';
 import { authApi } from '@/Services/auth.api';
@@ -43,6 +44,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   const fetchProfile = async () => {
     try {
@@ -63,6 +65,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Check if user is logged in on app start
     const token = tokenManager.getToken();
     if (token) {
+      // Check if token is expired
+      if (tokenManager.isTokenExpired()) {
+        // Token expired, logout user
+        logout();
+        setIsLoading(false);
+        return;
+      }
+
       // Decode token to get user information
       const decoded = tokenManager.decodeToken(token);
       if (decoded) {
@@ -78,6 +88,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
     setIsLoading(false);
   }, []);
+
+  // Check token expiry every minute
+  useEffect(() => {
+    const checkTokenExpiry = () => {
+      if (tokenManager.isTokenExpired()) {
+        logout();
+        router.push('/auth/login');
+      }
+    };
+
+    const interval = setInterval(checkTokenExpiry, 60000); // Check every 60 seconds
+
+    return () => clearInterval(interval);
+  }, [router]);
 
   const login = (token: string, userData?: User) => {
     tokenManager.setToken(token);
