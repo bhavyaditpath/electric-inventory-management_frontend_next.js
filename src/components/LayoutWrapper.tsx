@@ -68,13 +68,13 @@ export default function LayoutWrapper({
             <div className="relative w-72 max-w-[90vw] bg-white shadow-xl z-50 transform transition-transform duration-300 translate-x-0">
 
               <div className="flex items-center justify-between p-4 border-b">
-                <h2 className="text-lg font-semibold">
+                <h2 className="text-lg font-semibold text-black">
                   {requiredRole === UserRole.ADMIN ? "Admin Panel" : "Branch Panel"}
                 </h2>
 
                 <button
                   onClick={closeMobile}
-                  className="p-2 rounded-md hover:bg-gray-100"
+                  className="p-2 rounded-md hover:bg-gray-100 text-black"
                 >
                   <XMarkIcon className="w-6 h-6" />
                 </button>

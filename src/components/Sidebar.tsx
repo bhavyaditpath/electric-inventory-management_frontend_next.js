@@ -73,14 +73,14 @@ export default function Sidebar({
           : "fixed left-0 top-0 z-50"
       }`}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between p-3 lg:p-4 border-b border-gray-200">
-        {!isCollapsed && (
-          <h2 className="text-base lg:text-lg font-semibold text-gray-800 truncate">
-            Admin Panel
-          </h2>
-        )}
-        {!isMobile && (
+      {/* Header - Hide when in mobile overlay since LayoutWrapper provides its own header */}
+      {!isMobile && (
+        <div className="flex items-center justify-between p-3 lg:p-4 border-b border-gray-200">
+          {!isCollapsed && (
+            <h2 className="text-base lg:text-lg font-semibold text-gray-800 truncate">
+              Admin Panel
+            </h2>
+          )}
           <button
             onClick={onToggle}
             className="p-1.5 rounded-md hover:bg-gray-100 transition-colors flex-shrink-0"
@@ -92,8 +92,8 @@ export default function Sidebar({
               <ChevronLeftIcon className="w-5 h-5 text-gray-600" />
             )}
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Menu Items */}
       <nav className="flex-1 px-2 lg:px-3 py-3 lg:py-4 space-y-1 lg:space-y-2 overflow-y-auto">
