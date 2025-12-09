@@ -44,8 +44,6 @@ export default function AdminAlertsPage() {
       setLoading(true);
       // Get alerts for the admin's branch
       const response = await alertApi.getByBranch(user.branchId, undefined, 1, 100);
-      console.log('API Response:', response);
-      // Backend returns: {data: [...], total, page, limit}
       setAlerts((response as any).data || []);
     } catch (error) {
       console.error('Error fetching alerts:', error);
