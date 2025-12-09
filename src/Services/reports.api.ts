@@ -4,7 +4,7 @@ export enum ReportType {
   DAILY = 'daily',
   WEEKLY = 'weekly',
   MONTHLY = 'monthly',
-  HALF_YEARLY = 'half-yearly',
+  // HALF_YEARLY = 'half-yearly',
   YEARLY = 'yearly',
 }
 

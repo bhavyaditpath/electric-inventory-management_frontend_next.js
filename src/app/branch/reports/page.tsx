@@ -67,7 +67,7 @@ export default function ReportsPage() {
           response = await reportsApi.getDailyReport();
           break;
         case ReportType.WEEKLY:
-          response = await reportsApi.getWeeklyReport();
+          response = await reportsApi.getWeeklyReport();  
           break;
         case ReportType.MONTHLY:
           response = await reportsApi.getMonthlyReport();
