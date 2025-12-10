@@ -188,13 +188,19 @@ export default function ReportsPage() {
     setIsDeleting(true);
     try {
       const response = await reportsApi.removePreference(deletingPreference.id);
-      if (response.success) {
+      if (response && response.success) {
         showSuccess(response.message || 'Preference deleted successfully');
         fetchPreferences();
         setShowDeleteModal(false);
         setDeletingPreference(null);
-      } else {
+      } else if (response) {
         showError(response.message || 'Failed to delete preference');
+      } else {
+        // Handle case where API returns non-JSON response (successful deletion)
+        showSuccess('Preference deleted successfully');
+        fetchPreferences();
+        setShowDeleteModal(false);
+        setDeletingPreference(null);
       }
     } catch (error) {
       console.error('Error deleting preference:', error);

@@ -38,7 +38,23 @@ class ApiClient {
 
     try {
       let response = await fetch(url, config);
-      let data = await response.json();
+
+      // Check if response has valid JSON content
+      const contentType = response.headers.get('content-type');
+      let data;
+
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        // If response is not JSON, handle it appropriately
+        if (response.ok) {
+          // For successful non-JSON responses, return a basic success response
+          return { success: true, message: 'Operation completed successfully' };
+        } else {
+          // For error responses that aren't JSON, create an appropriate error response
+          throw new Error(`API request failed with status ${response.status}: ${response.statusText}`);
+        }
+      }
 
       // If unauthorized and we have a refresh token, try to refresh
       if (response.status === 401 && localStorage.getItem('refresh_token')) {
@@ -50,7 +66,17 @@ class ApiClient {
             Authorization: `Bearer ${refreshResponse.data.access_token}`,
           };
           response = await fetch(url, config);
-          data = await response.json();
+
+          // Handle retry response JSON parsing
+          try {
+            data = await response.json();
+          } catch (retryJsonError) {
+            if (response.ok) {
+              return { success: true, message: 'Operation completed successfully' };
+            } else {
+              throw new Error(`API request failed with status ${response.status}: ${response.statusText}`);
+            }
+          }
         }
       }
 
@@ -76,7 +102,17 @@ class ApiClient {
         body: JSON.stringify({ refresh_token: refreshToken }),
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        // Handle non-JSON response for refresh token
+        if (response.ok) {
+          return { success: true, message: 'Token refresh completed' };
+        } else {
+          throw new Error(`Token refresh failed with status ${response.status}`);
+        }
+      }
 
       if (data.success && data.data?.access_token) {
         localStorage.setItem('access_token', data.data.access_token);
