@@ -33,6 +33,7 @@ export interface DataTableProps<T = any> {
   serverSide?: boolean; // Enable server-side pagination mode
   showPageSizeSelector?: boolean;
   pageSizeOptions?: number[];
+  onSort?: (sortBy: string, sortOrder: 'asc' | 'desc') => void; // Server-side sorting callback
 }
 
 export default function DataTable<T extends Record<string, any>>({
@@ -55,6 +56,7 @@ export default function DataTable<T extends Record<string, any>>({
   onPageSizeChange,
   totalItems: totalItemsProp,
   serverSide = false,
+  onSort,
   showPageSizeSelector = false,
   pageSizeOptions = [5, 10, 25, 50],
 }: DataTableProps<T>) {
@@ -64,7 +66,8 @@ export default function DataTable<T extends Record<string, any>>({
   const [pageSize, setPageSize] = useState(initialPageSize);
 
   const sortedData = useMemo(() => {
-    if (!sortColumn) return data;
+    // Only apply client-side sorting if not using server-side sorting
+    if (!sortColumn || serverSide || !onSort) return data;
 
     return [...data].sort((a, b) => {
       const aValue = a[sortColumn];
@@ -74,7 +77,7 @@ export default function DataTable<T extends Record<string, any>>({
       if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
-  }, [data, sortColumn, sortDirection]);
+  }, [data, sortColumn, sortDirection, serverSide, onSort]);
 
   // Pagination logic - supports both client-side and server-side
   const totalItems = serverSide && totalItemsProp !== undefined ? totalItemsProp : sortedData.length;
@@ -110,6 +113,12 @@ export default function DataTable<T extends Record<string, any>>({
     } else {
       setSortColumn(columnKey);
       setSortDirection("asc");
+    }
+
+    // Call server-side sorting callback if provided
+    if (onSort && serverSide) {
+      const newDirection = sortColumn === columnKey ? (sortDirection === "asc" ? "desc" : "asc") : "asc";
+      onSort(columnKey, newDirection);
     }
   };
 
@@ -278,13 +287,12 @@ export default function DataTable<T extends Record<string, any>>({
                 key={index}
                 onClick={() => typeof page === 'number' && handlePageChange(page)}
                 disabled={page === '...'}
-                className={`px-3 py-2 text-sm border rounded min-w-[40px] ${
-                  page === currentPage
+                className={`px-3 py-2 text-sm border rounded min-w-[40px] ${page === currentPage
                     ? 'bg-blue-600 text-white border-blue-600'
                     : page === '...'
-                    ? 'border-gray-300 cursor-default'
-                    : 'border-gray-300 hover:bg-gray-50'
-                }`}
+                      ? 'border-gray-300 cursor-default'
+                      : 'border-gray-300 hover:bg-gray-50'
+                  }`}
               >
                 {page}
               </button>
@@ -321,9 +329,8 @@ export default function DataTable<T extends Record<string, any>>({
               {columns.map((column, index) => (
                 <th
                   key={index}
-                  className={`text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                    getCellPadding()
-                  } ${column.className || ""}`}
+                  className={`text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${getCellPadding()
+                    } ${column.className || ""}`}
                 >
                   {column.sortable ? (
                     <button

@@ -4,6 +4,8 @@ export interface PaginationParams {
   page?: number;
   pageSize?: number;
   search?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 export const branchApi = {
@@ -12,6 +14,8 @@ export const branchApi = {
     if (params?.page) searchParams.append('page', params.page.toString());
     if (params?.pageSize) searchParams.append('pageSize', params.pageSize.toString());
     if (params?.search) searchParams.append('search', params.search);
+    if (params?.sortBy) searchParams.append('sortBy', params.sortBy);
+    if (params?.sortOrder) searchParams.append('sortOrder', params.sortOrder.toUpperCase());
     
     const queryString = searchParams.toString();
     return apiClient.get(`/branch${queryString ? `?${queryString}` : ''}`);

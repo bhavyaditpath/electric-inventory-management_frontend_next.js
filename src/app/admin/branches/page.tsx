@@ -85,13 +85,19 @@ export default function BranchesPage() {
   const [pageSize, setPageSize] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
 
-  const loadBranches = useCallback(async (page: number = currentPage, pageSizeValue: number = pageSize, search: string = searchTerm) => {
+  // Sorting state
+  const [sortBy, setSortBy] = useState<string>('');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  const loadBranches = useCallback(async (page: number = currentPage, pageSizeValue: number = pageSize, search: string = searchTerm, sortByValue: string = sortBy, sortOrderValue: string = sortOrder) => {
     setLoading(true);
     try {
       const response = await branchApi.getAll({
         page,
         pageSize: pageSizeValue,
-        search: search.trim() || undefined
+        search: search.trim() || undefined,
+        sortBy: sortByValue || undefined,
+        sortOrder: (sortOrderValue as 'asc' | 'desc') || undefined
       });
       if (response.success) {
         const data = response.data;
@@ -109,32 +115,39 @@ export default function BranchesPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, searchTerm]);
+  }, [currentPage, pageSize, searchTerm, sortBy, sortOrder]);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
     setCurrentPage(1); // Reset to first page when searching
-    loadBranches(1, pageSize, value);
-  }, [pageSize, loadBranches]);
+    loadBranches(1, pageSize, value, sortBy, sortOrder);
+  }, [pageSize, sortBy, sortOrder, loadBranches]);
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-    loadBranches(page, pageSize, searchTerm);
-  }, [pageSize, searchTerm, loadBranches]);
+    loadBranches(page, pageSize, searchTerm, sortBy, sortOrder);
+  }, [pageSize, searchTerm, sortBy, sortOrder, loadBranches]);
 
   const handlePageSizeChange = useCallback((newPageSize: number) => {
     setPageSize(newPageSize);
     setCurrentPage(1); // Reset to first page
-    loadBranches(1, newPageSize, searchTerm);
-  }, [searchTerm, loadBranches]);
+    loadBranches(1, newPageSize, searchTerm, sortBy, sortOrder);
+  }, [searchTerm, sortBy, sortOrder, loadBranches]);
+
+  const handleSort = useCallback((sortByValue: string, sortOrderValue: 'asc' | 'desc') => {
+    setSortBy(sortByValue);
+    setSortOrder(sortOrderValue);
+    setCurrentPage(1); // Reset to first page when sorting
+    loadBranches(1, pageSize, searchTerm, sortByValue, sortOrderValue);
+  }, [pageSize, searchTerm, loadBranches]);
 
   const firstLoad = useRef(false);
 
   useEffect(() => {
     if (!firstLoad.current) {
       firstLoad.current = true;
-      loadBranches(1, 10, '');
+      loadBranches(1, 10, '', '', '');
     }
   }, [loadBranches]);
 
@@ -163,7 +176,7 @@ export default function BranchesPage() {
       const response = await branchApi.delete(deletingBranch.id);
       if (response.success) {
         showSuccess(response.message || "Branch deleted successfully");
-        await loadBranches(currentPage, pageSize, searchTerm);
+        await loadBranches(currentPage, pageSize, searchTerm, sortBy, sortOrder);
         setShowDeleteModal(false);
         setDeletingBranch(null);
       } else {
@@ -175,7 +188,7 @@ export default function BranchesPage() {
     } finally {
       setIsDeleting(false);
     }
-  }, [deletingBranch, currentPage, pageSize, searchTerm, loadBranches]);
+  }, [deletingBranch, currentPage, pageSize, searchTerm, sortBy, sortOrder, loadBranches]);
 
   const validateForm = useCallback(() => {
     const newErrors = { name: '', phone: '' };
@@ -220,7 +233,7 @@ export default function BranchesPage() {
         showSuccess(response.message || `Branch ${modalMode === 'create' ? 'created' : 'updated'} successfully`);
         setShowModal(false);
         setEditingBranch(null);
-        await loadBranches(currentPage, pageSize, searchTerm);
+        await loadBranches(currentPage, pageSize, searchTerm, sortBy, sortOrder);
       } else {
         showError(response?.message || `Error ${modalMode === 'create' ? 'creating' : 'updating'} branch`);
       }
@@ -230,7 +243,7 @@ export default function BranchesPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [modalMode, editingBranch, formData, validateForm, currentPage, pageSize, searchTerm, loadBranches]);
+  }, [modalMode, editingBranch, formData, validateForm, currentPage, pageSize, searchTerm, sortBy, sortOrder, loadBranches]);
 
   const handleCreateBranch = useCallback(() => {
     setModalMode('create');
@@ -309,6 +322,7 @@ export default function BranchesPage() {
             totalItems={totalRecords}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
+            onSort={handleSort}
             showPageSizeSelector={true}
             pageSizeOptions={[5, 10, 25, 50]}
           />
