@@ -10,7 +10,7 @@ import ConfirmModal from "@/components/ConfirmModal";
 import InputField from "@/components/InputField";
 import { UserRole } from "@/types/enums";
 import { showSuccess, showError } from "@/Services/toast.service";
-import { User } from "@/types/api-types";
+import { User, PaginatedResponse } from "@/types/api-types";
 
 export default function UserPage() {
     const [users, setUsers] = useState<User[]>([]);
@@ -25,6 +25,12 @@ export default function UserPage() {
     const [errors, setErrors] = useState({ username: '', password: '', branchId: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+    const [totalRecords, setTotalRecords] = useState(0);
 
     const loadBranches = useCallback(async () => {
         if (branches.length > 0) return;
@@ -34,16 +40,30 @@ export default function UserPage() {
         }
     }, [branches]);
 
-    const loadUsers = useCallback(async () => {
+    const loadUsers = useCallback(async (page: number = currentPage, pageSizeValue: number = pageSize, search: string = searchTerm) => {
         setLoading(true);
-        const response = await userApi.getAll();
-        let UserData: User[] = [];
-        if (Array.isArray(response.data)) {
-            UserData = response.data as User[];
+        try {
+            const response = await userApi.getAll({
+                page,
+                pageSize: pageSizeValue,
+                search: search.trim() || undefined
+            });
+            if (response.success) {
+                const data = response.data;
+                const paginatedData = data as PaginatedResponse<User>;
+                setUsers(paginatedData.items);
+                setTotalRecords(paginatedData.total);
+            } else {
+                throw new Error('API response indicates failure');
+            }
+        } catch (error) {
+            console.error('Error loading users:', error);
+            setUsers([]);
+            setTotalRecords(0);
+        } finally {
+            setLoading(false);
         }
-        setUsers(UserData);
-        setLoading(false);
-    }, []);
+    }, [currentPage, pageSize, searchTerm]);
 
     const columns = useMemo<TableColumn<User>[]>(() => [
         {
@@ -81,9 +101,27 @@ export default function UserPage() {
     useEffect(() => {
         if (!firstLoad.current) {
             firstLoad.current = true;
-            loadUsers();
+            loadUsers(1, 10, '');
         }
-    }, []);
+    }, [loadUsers]);
+
+    const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setSearchTerm(value);
+        setCurrentPage(1); // Reset to first page when searching
+        loadUsers(1, pageSize, value);
+    }, [pageSize, loadUsers]);
+
+    const handlePageChange = useCallback((page: number) => {
+        setCurrentPage(page);
+        loadUsers(page, pageSize, searchTerm);
+    }, [pageSize, searchTerm, loadUsers]);
+
+    const handlePageSizeChange = useCallback((newPageSize: number) => {
+        setPageSize(newPageSize);
+        setCurrentPage(1); // Reset to first page
+        loadUsers(1, newPageSize, searchTerm);
+    }, [searchTerm, loadUsers]);
 
     const handleCreateUser = useCallback(() => {
         setModalMode('create');
@@ -119,7 +157,7 @@ export default function UserPage() {
             const response = await userApi.delete(deletingUser.id);
             if (response.success) {
                 showSuccess(response.message || "User deleted successfully");
-                await loadUsers();
+                await loadUsers(currentPage, pageSize, searchTerm);
                 setShowDeleteModal(false);
                 setDeletingUser(null);
             } else {
@@ -131,7 +169,7 @@ export default function UserPage() {
         } finally {
             setIsDeleting(false);
         }
-    }, [deletingUser, loadUsers]);
+    }, [deletingUser, currentPage, pageSize, searchTerm, loadUsers]);
 
     const validateForm = useCallback(() => {
         const newErrors = { username: '', password: '', branchId: '' };
@@ -195,7 +233,7 @@ export default function UserPage() {
                 showSuccess(response.message || `User ${modalMode === 'create' ? 'created' : 'updated'} successfully`);
                 setShowModal(false);
                 setEditingUser(null);
-                await loadUsers();
+                await loadUsers(currentPage, pageSize, searchTerm);
             } else {
                 showError(response?.message || `Error ${modalMode === 'create' ? 'creating' : 'updating'} user`);
             }
@@ -205,7 +243,7 @@ export default function UserPage() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [modalMode, editingUser, formData, validateForm, loadUsers, branches]);
+    }, [modalMode, editingUser, formData, validateForm, currentPage, pageSize, searchTerm, loadUsers, branches]);
 
     const actions = useCallback(
         (user: User) => (
@@ -237,17 +275,26 @@ export default function UserPage() {
     return (
         <div className="p-6">
             <div className="mb-6">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
                         <p className="text-gray-600 mt-2">Manage all Users in the system</p>
                     </div>
-                    <button
-                        onClick={handleCreateUser}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
-                    >
-                        Add New User
-                    </button>
+                    <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4 mt-4 md:mt-0">
+                        <input
+                            type="text"
+                            placeholder="Search by username..."
+                            value={searchTerm}
+                            onChange={handleSearchChange}
+                            className="w-full md:w-auto px-4 py-2 border border-gray-500 rounded-md focus:outline-none text-gray-900"
+                        />
+                        <button
+                            onClick={handleCreateUser}
+                            className="w-full md:w-auto bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
+                        >
+                            Add New User
+                        </button>
+                    </div>
                 </div>
             </div>
             {/* bg-white rounded-lg shadow */}
@@ -263,7 +310,12 @@ export default function UserPage() {
                     hover={true}
                     size="md"
                     pagination={true}
-                    pageSize={10}
+                    serverSide={true}
+                    currentPage={currentPage}
+                    pageSize={pageSize}
+                    totalItems={totalRecords}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
                     showPageSizeSelector={true}
                     pageSizeOptions={[5, 10, 25, 50]}
                 />
