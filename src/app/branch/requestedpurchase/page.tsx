@@ -119,7 +119,7 @@ const RequestedPurchasePage: React.FC = () => {
         </div>
 
         <div className="p-6">
-          <div className="space-y-4 max-h-96 overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
             {loadingRequests ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

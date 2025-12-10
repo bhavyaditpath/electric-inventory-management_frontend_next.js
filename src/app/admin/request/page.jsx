@@ -77,7 +77,7 @@ const RequestPage = () => {
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-xl font-semibold mb-4 text-gray-900">All Requests</h2>
 
-        <div className="space-y-4 max-h-96 overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
           {loadingRequests ? (
             <p className="text-gray-500">Loading requests...</p>
           ) : !requests.length ? (
@@ -87,9 +87,25 @@ const RequestPage = () => {
               <div key={request.id} className="border border-gray-200 rounded-lg p-4">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h3 className="font-medium text-gray-600">
-                      {request.purchase?.productName}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium text-gray-600">
+                        {request.purchase?.productName}
+                      </h3>
+                      <span
+                        className={`inline-block px-2 py-1 text-xs rounded-full ${request.status === RequestStatus.REQUEST
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : request.status === RequestStatus.ACCEPT
+                              ? 'bg-green-100 text-green-800'
+                              : request.status === RequestStatus.REJECT
+                                ? 'bg-red-100 text-red-800'
+                                : request.status === RequestStatus.IN_TRANSIT
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-gray-100 text-gray-800'
+                          }`}
+                      >
+                        {request.status.replace('_', ' ')}
+                      </span>
+                    </div>
 
                     <p className="text-sm text-gray-600">
                       Quantity Requested: {request.quantityRequested} {request.purchase?.unit}
@@ -102,21 +118,6 @@ const RequestPage = () => {
                     <p className="text-xs text-gray-500">
                       {new Date(request.createdAt).toLocaleDateString()}
                     </p>
-
-                    <span
-                      className={`inline-block px-2 py-1 text-xs rounded-full ${request.status === RequestStatus.REQUEST
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : request.status === RequestStatus.ACCEPT
-                            ? 'bg-green-100 text-green-800'
-                            : request.status === RequestStatus.REJECT
-                              ? 'bg-red-100 text-red-800'
-                              : request.status === RequestStatus.IN_TRANSIT
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-gray-100 text-gray-800'
-                        }`}
-                    >
-                      {request.status.replace('_', ' ')}
-                    </span>
                   </div>
 
                   {request.status === RequestStatus.REQUEST && (
@@ -187,7 +188,8 @@ const RequestPage = () => {
         title={`Confirm ${actionType}`}
         message={`Are you sure you want to ${actionType.toLowerCase()} this request?`}
         onConfirm={handleAction}
-        variant={actionType === RequestStatus.REJECT ? 'danger' : 'primary'}
+        confirmLabel={actionType}
+        variant={actionType === RequestStatus.REJECT ? 'danger' : 'info'}
       />
     </div>
   );
