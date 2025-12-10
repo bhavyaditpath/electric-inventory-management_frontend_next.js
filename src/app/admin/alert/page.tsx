@@ -148,7 +148,7 @@ export default function AdminAlertsPage() {
     setIsSubmitting(true);
     try {
       const response = await alertApi.resolve(selectedAlert.id);
-      if (response.success) {
+      if (response) {
         showSuccess('Alert resolved successfully');
         setAlerts(prev =>
           prev.map(alert =>
@@ -176,7 +176,7 @@ export default function AdminAlertsPage() {
     setIsSubmitting(true);
     try {
       const response = await alertApi.dismiss(selectedAlert.id);
-      if (response.success) {
+      if (response) {
         showSuccess('Alert dismissed successfully');
         setAlerts(prev =>
           prev.map(alert =>

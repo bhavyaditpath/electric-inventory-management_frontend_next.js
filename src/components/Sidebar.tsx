@@ -32,7 +32,7 @@ const menuItems: MenuItem[] = [
   { name: "Purchase", href: "/admin/purchase", icon: ShoppingBagIcon },
   { name: "Request", href: "/admin/request", icon: ClipboardDocumentListIcon },
   { name: "Reports", href: "/admin/reports", icon: DocumentChartBarIcon },
-  { name: "Sales", href: "/admin/sales", icon: ChartBarIcon },
+  // { name: "Sales", href: "/admin/sales", icon: ChartBarIcon },
   { name: "Alerts", href: "/admin/alert", icon: ExclamationTriangleIcon },
 ];
 
