@@ -15,6 +15,15 @@ export interface User {
     isRemoved: boolean;
 }
 
+// Generic pagination response interface for reuse across modules
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: string;
+  pageSize: string;
+  totalPages: number;
+}
+
 export interface PurchaseResponseDto {
   id: number;
   productName: string;

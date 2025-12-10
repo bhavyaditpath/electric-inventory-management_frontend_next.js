@@ -24,11 +24,13 @@ export interface DataTableProps<T = any> {
   actions?: (row: T, index: number) => React.ReactNode;
   onRowClick?: (row: T, index: number) => void;
   moduleName?: string; // To identify which module is using the table
-  // Pagination props
   pagination?: boolean;
   pageSize?: number;
   currentPage?: number;
   onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  totalItems?: number; // For server-side pagination
+  serverSide?: boolean; // Enable server-side pagination mode
   showPageSizeSelector?: boolean;
   pageSizeOptions?: number[];
 }
@@ -50,6 +52,9 @@ export default function DataTable<T extends Record<string, any>>({
   pageSize: initialPageSize = 10,
   currentPage: initialCurrentPage = 1,
   onPageChange,
+  onPageSizeChange,
+  totalItems: totalItemsProp,
+  serverSide = false,
   showPageSizeSelector = false,
   pageSizeOptions = [5, 10, 25, 50],
 }: DataTableProps<T>) {
@@ -71,12 +76,12 @@ export default function DataTable<T extends Record<string, any>>({
     });
   }, [data, sortColumn, sortDirection]);
 
-  // Pagination logic
-  const totalItems = sortedData.length;
+  // Pagination logic - supports both client-side and server-side
+  const totalItems = serverSide && totalItemsProp !== undefined ? totalItemsProp : sortedData.length;
   const totalPages = Math.ceil(totalItems / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedData = pagination ? sortedData.slice(startIndex, endIndex) : sortedData;
+  const paginatedData = pagination ? (serverSide ? sortedData : sortedData.slice(startIndex, endIndex)) : sortedData;
 
   // Reset to first page when data changes or page size changes
   useMemo(() => {
@@ -93,6 +98,7 @@ export default function DataTable<T extends Record<string, any>>({
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize);
     setCurrentPage(1); // Reset to first page
+    onPageSizeChange?.(newPageSize);
   };
 
   const handleSort = (columnKey: string) => {

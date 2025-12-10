@@ -7,6 +7,7 @@ import { branchApi } from "@/Services/branch.api";
 import Modal from "../../../components/Modal";
 import ConfirmModal from "../../../components/ConfirmModal";
 import { showSuccess, showError } from "@/Services/toast.service";
+import { PaginatedResponse } from "@/types/api-types";
 
 interface Branch {
   id: number;
@@ -79,33 +80,61 @@ export default function BranchesPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const loadBranches = useCallback(async () => {
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalRecords, setTotalRecords] = useState(0);
+
+  const loadBranches = useCallback(async (page: number = currentPage, pageSizeValue: number = pageSize, search: string = searchTerm) => {
     setLoading(true);
     try {
-      const response = await branchApi.getAll();
-      if (response.success && Array.isArray(response.data)) {
-        setBranches(response.data as Branch[]);
+      const response = await branchApi.getAll({
+        page,
+        pageSize: pageSizeValue,
+        search: search.trim() || undefined
+      });
+      if (response.success) {
+        const data = response.data;
+        // Data is always paginated from server
+        const paginatedData = data as PaginatedResponse<Branch>;
+        setBranches(paginatedData.items);
+        setTotalRecords(paginatedData.total);
       } else {
-        throw new Error('Invalid response format');
+        throw new Error('API response indicates failure');
       }
     } catch (error) {
       console.error('Error loading branches:', error);
+      setBranches([]);
+      setTotalRecords(0);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage, pageSize, searchTerm]);
 
-  const filteredBranches = useMemo(() => {
-    return branches.filter(branch =>
-      branch.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [branches, searchTerm]);
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setCurrentPage(1); // Reset to first page when searching
+    loadBranches(1, pageSize, value);
+  }, [pageSize, loadBranches]);
+
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    loadBranches(page, pageSize, searchTerm);
+  }, [pageSize, searchTerm, loadBranches]);
+
+  const handlePageSizeChange = useCallback((newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset to first page
+    loadBranches(1, newPageSize, searchTerm);
+  }, [searchTerm, loadBranches]);
+
   const firstLoad = useRef(false);
 
   useEffect(() => {
     if (!firstLoad.current) {
       firstLoad.current = true;
-      loadBranches();
+      loadBranches(1, 10, '');
     }
   }, [loadBranches]);
 
@@ -134,7 +163,7 @@ export default function BranchesPage() {
       const response = await branchApi.delete(deletingBranch.id);
       if (response.success) {
         showSuccess(response.message || "Branch deleted successfully");
-        await loadBranches();
+        await loadBranches(currentPage, pageSize, searchTerm);
         setShowDeleteModal(false);
         setDeletingBranch(null);
       } else {
@@ -146,7 +175,7 @@ export default function BranchesPage() {
     } finally {
       setIsDeleting(false);
     }
-  }, [deletingBranch, loadBranches]);
+  }, [deletingBranch, currentPage, pageSize, searchTerm, loadBranches]);
 
   const validateForm = useCallback(() => {
     const newErrors = { name: '', phone: '' };
@@ -191,7 +220,7 @@ export default function BranchesPage() {
         showSuccess(response.message || `Branch ${modalMode === 'create' ? 'created' : 'updated'} successfully`);
         setShowModal(false);
         setEditingBranch(null);
-        await loadBranches();
+        await loadBranches(currentPage, pageSize, searchTerm);
       } else {
         showError(response?.message || `Error ${modalMode === 'create' ? 'creating' : 'updating'} branch`);
       }
@@ -201,7 +230,7 @@ export default function BranchesPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [modalMode, editingBranch, formData, validateForm, loadBranches]);
+  }, [modalMode, editingBranch, formData, validateForm, currentPage, pageSize, searchTerm, loadBranches]);
 
   const handleCreateBranch = useCallback(() => {
     setModalMode('create');
@@ -248,7 +277,7 @@ export default function BranchesPage() {
               type="text"
               placeholder="Search by branch name..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
               className="w-full md:w-auto px-4 py-2 border border-gray-500 rounded-md focus:outline-none text-gray-900"
             />
             <button
@@ -264,7 +293,7 @@ export default function BranchesPage() {
       <div className="">
         <div className="p-0">
           <DataTable
-            data={filteredBranches}
+            data={branches}
             columns={columns}
             loading={loading}
             emptyMessage="No branches found"
@@ -274,7 +303,12 @@ export default function BranchesPage() {
             hover={true}
             size="md"
             pagination={true}
-            pageSize={10}
+            serverSide={true}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalItems={totalRecords}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
             showPageSizeSelector={true}
             pageSizeOptions={[5, 10, 25, 50]}
           />

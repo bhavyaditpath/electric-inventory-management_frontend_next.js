@@ -1,7 +1,21 @@
 import { apiClient } from "./api";
 
+export interface PaginationParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+}
+
 export const branchApi = {
-  getAll: () => apiClient.get('/branch'),
+  getAll: (params?: PaginationParams) => {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.pageSize) searchParams.append('pageSize', params.pageSize.toString());
+    if (params?.search) searchParams.append('search', params.search);
+    
+    const queryString = searchParams.toString();
+    return apiClient.get(`/branch${queryString ? `?${queryString}` : ''}`);
+  },
   getById: (id: number) => apiClient.get(`/branch/${id}`),
   create: (branchData: { name: string; address: string; phone: string }) =>
     apiClient.post('/branch', branchData),
