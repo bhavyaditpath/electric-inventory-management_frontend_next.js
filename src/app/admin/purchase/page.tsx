@@ -11,7 +11,7 @@ import { exportPurchasesToPDF } from '../../../utils/pdfExport';
 import { useAuth } from '../../../contexts/AuthContext';
 // import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
-const PurchasePage: React.FC = () => {
+const PurchasePage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');

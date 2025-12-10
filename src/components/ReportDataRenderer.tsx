@@ -5,7 +5,7 @@ interface ReportDataRendererProps {
   title?: string;
 }
 
-const ReportDataRenderer: React.FC<ReportDataRendererProps> = ({ data, title }) => {
+const ReportDataRenderer = ({ data, title }: ReportDataRendererProps) => {
   const isIsoDate = (value: string) =>
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value);
 

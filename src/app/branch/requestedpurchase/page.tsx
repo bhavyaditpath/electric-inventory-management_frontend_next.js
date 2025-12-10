@@ -7,7 +7,7 @@ import { RequestStatus } from '../../../types/enums';
 import { showSuccess, showError } from '../../../Services/toast.service';
 import { MagnifyingGlassIcon, CubeIcon, CheckCircleIcon, TruckIcon, XCircleIcon, ClockIcon } from '@heroicons/react/24/outline';
 
-const RequestedPurchasePage: React.FC = () => {
+const RequestedPurchasePage = () => {
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [requests, setRequests] = useState<RequestResponseDto[]>([]);
   const [searchTerm, setSearchTerm] = useState('');

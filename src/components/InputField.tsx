@@ -10,7 +10,7 @@ interface InputFieldProps {
   error?: string;
 }
 
-const InputField: React.FC<InputFieldProps> = ({
+const InputField = ({
   label,
   type = 'text',
   value,
@@ -18,7 +18,7 @@ const InputField: React.FC<InputFieldProps> = ({
   step,
   name,
   error,
-}) => {
+}: InputFieldProps) => {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">

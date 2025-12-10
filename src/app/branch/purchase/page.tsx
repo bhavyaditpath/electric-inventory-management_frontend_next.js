@@ -12,7 +12,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { exportPurchasesToPDF } from '@/utils/pdfExport';
 // import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
-const PurchasePage: React.FC = () => {
+const PurchasePage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
