@@ -9,6 +9,7 @@ import { requestApi } from '../../../Services/request.service';
 import { PurchaseDto, PurchaseResponseDto } from '../../../types/api-types';
 import { showSuccess, showError } from '../../../Services/toast.service';
 import { useAuth } from '../../../contexts/AuthContext';
+import { exportPurchasesToPDF } from '@/utils/pdfExport';
 // import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 const PurchasePage: React.FC = () => {
@@ -235,7 +236,7 @@ const PurchasePage: React.FC = () => {
 
 
       const requestResponse = await requestApi.createRequest({
-        requestingUserId,   
+        requestingUserId,
         adminUserId,
         purchaseId: purchaseIdToUse,
         quantityRequested: Number(formData.quantity),
@@ -392,7 +393,16 @@ const PurchasePage: React.FC = () => {
 
         {/* HISTORY */}
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900">Recent Purchases</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">Recent Purchases</h2>
+            <button
+              onClick={() => exportPurchasesToPDF(purchases, user?.branch || 'All Branches')}
+              disabled={!purchases || purchases.length === 0}
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Export to PDF
+            </button>
+          </div>
 
           <div className="space-y-4 max-h-96 overflow-y-auto">
             {!purchases || purchases.length === 0 ? (
@@ -405,7 +415,7 @@ const PurchasePage: React.FC = () => {
                       <h3 className="font-medium text-gray-600">{purchase.productName}</h3>
                       <p className="text-sm text-gray-600">{purchase.brand}</p>
                       <p className="text-sm text-gray-600">
-                        {purchase.quantity} {purchase.unit} × ₹{purchase.pricePerUnit} = ₹{purchase.totalPrice}
+                        {purchase.quantity} {purchase.unit} × Rs {purchase.pricePerUnit} = Rs {purchase.totalPrice}
                       </p>
                       <p className="text-xs text-gray-500">
                         {new Date(purchase.createdAt).toLocaleDateString()}
