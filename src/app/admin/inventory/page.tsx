@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import DataTable from "../../../components/DataTable";
 import ConfirmModal from "../../../components/ConfirmModal";
 import ColumnCustomizer from "../../../components/ColumnCustomizer";
+import { useColumnCustomization } from "../../../hooks/useColumnCustomization";
 import { showError, showSuccess } from "../../../Services/toast.service";
 import { inventoryApi } from "@/Services/inventory.service";
 // import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
@@ -169,53 +170,8 @@ export default function BranchInventoryPage() {
     },
   ];
 
-  // Function to serialize columns for storage
-  const serializeColumns = (cols: any[]) => {
-    return {
-      columnOrder: cols.map(col => col.key),
-      hiddenColumns: cols.filter(col => col.className?.includes('hidden')).map(col => col.key)
-    };
-  };
-
-  // Function to deserialize columns from storage
-  const deserializeColumns = (config: any) => {
-    return config.columnOrder.map((key: string) => {
-      const originalCol = columns.find(col => col.key === key);
-      if (originalCol) {
-        const colAny = originalCol as any;
-        return {
-          ...originalCol,
-          className: config.hiddenColumns.includes(key) ? `${colAny.className || ''} hidden` : (colAny.className || '').replace('hidden', '')
-        };
-      }
-      return originalCol;
-    }).filter(Boolean);
-  };
-
-  const [tableColumns, setTableColumns] = useState(() => {
-    // Try to load saved column configuration from localStorage
-    if (typeof window !== 'undefined') {
-      const savedConfig = localStorage.getItem('adminInventoryColumnConfig');
-      if (savedConfig) {
-        try {
-          const config = JSON.parse(savedConfig);
-          return deserializeColumns(config);
-        } catch (error) {
-          console.error('Failed to parse saved column config:', error);
-        }
-      }
-    }
-    return columns;
-  });
-
-  const handleColumnsChange = useCallback((updatedColumns: any[]) => {
-    setTableColumns(updatedColumns);
-    // Save column configuration to localStorage
-    if (typeof window !== 'undefined') {
-      const config = serializeColumns(updatedColumns);
-      localStorage.setItem('adminInventoryColumnConfig', JSON.stringify(config));
-    }
-  }, [columns]);
+  // Use the reusable hook for column customization persistence
+  const { tableColumns, handleColumnsChange } = useColumnCustomization(columns, 'adminInventoryColumnConfig');
 
   return (
     <div className="p-6">
@@ -247,7 +203,7 @@ export default function BranchInventoryPage() {
         <ColumnCustomizer
           visible={showCustomizer}
           onClose={() => setShowCustomizer(false)}
-          columns={columns}
+          columns={tableColumns}
           onApply={handleColumnsChange}
           omitColumns={["productName"]}
         />

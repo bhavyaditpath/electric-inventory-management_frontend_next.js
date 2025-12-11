@@ -33,6 +33,7 @@ export default function ColumnCustomizer<T>({
   useEffect(() => {
     if (visible) {
       // Initialize columns when dialog becomes visible
+      // Use the current order from columns, but get visibility from className
       const initialTotalColumns: CustomizableColumn<T>[] = columns
         .filter(col => !omitColumns.includes(col.key as string))
         .map(col => ({
@@ -42,7 +43,15 @@ export default function ColumnCustomizer<T>({
           isHidden: col.className?.includes('hidden')
         }));
 
-      const initialSelectedColumns = initialTotalColumns.filter(col => col.isChecked);
+      // Preserve the current order from the table by sorting selected columns
+      // according to their position in the original columns array
+      const initialSelectedColumns = initialTotalColumns
+        .filter(col => col.isChecked)
+        .sort((a, b) => {
+          const aIndex = columns.findIndex(col => col.key === a.key);
+          const bIndex = columns.findIndex(col => col.key === b.key);
+          return aIndex - bIndex;
+        });
 
       setTotalColumns(initialTotalColumns);
       setSelectedColumns(initialSelectedColumns);
