@@ -164,7 +164,7 @@ const RequestPage = () => {
                           setActionType(RequestStatus.ACCEPT);
                           setShowConfirmAction(true);
                         }}
-                        className="btn btn-success btn-sm"
+                          className="p-1 text-green-600 hover:text-green-800"
                         title="Accept"
                       >
                         <CheckIcon className="h-4 w-4" />
@@ -176,7 +176,7 @@ const RequestPage = () => {
                           setActionType(RequestStatus.REJECT);
                           setShowConfirmAction(true);
                         }}
-                        className="btn btn-danger btn-sm"
+                          className="p-1 text-red-600 hover:text-red-800"
                         title="Reject"
                       >
                         <XMarkIcon className="h-4 w-4" />

@@ -72,7 +72,7 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
   }, [mobileSearchOpen]);
 
   return (
-    <nav className="h-16 bg-white shadow-md z-30 relative">
+    <nav className="h-16 bg-white shadow-md z-30 sticky top-0">
       <div className="h-full px-4 lg:px-6 flex items-center justify-between">
         {/* Left section */}
         <div className="flex items-center gap-2 lg:gap-4">
