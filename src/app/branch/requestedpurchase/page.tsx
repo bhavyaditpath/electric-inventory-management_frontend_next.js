@@ -85,12 +85,14 @@ const RequestedPurchasePage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Requested Purchases</h1>
-        <div className="text-sm text-gray-600">
-          {filteredRequests.length} request{filteredRequests.length !== 1 ? 's' : ''}
-        </div>
+    <div className="p-6">
+      <div className="mb-6">
+        <h1 className="flex items-center text-3xl font-bold text-gray-900">
+          <CubeIcon className="h-7 w-7 mr-2 text-gray-600" />
+          Requested Purchases
+        </h1>
+
+        <p className="text-gray-600 mt-2">Track the status of your purchase requests</p>
       </div>
 
       {/* Search Bar */}
@@ -104,22 +106,15 @@ const RequestedPurchasePage = () => {
             placeholder="Search by product name or status..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            className="form-input pl-10"
           />
         </div>
       </div>
 
       {/* Requests List */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-            <CubeIcon className="h-6 w-6 mr-2 text-gray-600" />
-            Requested Purchase Items
-          </h2>
-        </div>
-
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+      <div className="card">
+        <div className="p-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto">
             {loadingRequests ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

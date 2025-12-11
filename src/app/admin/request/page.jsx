@@ -5,12 +5,12 @@ import ConfirmModal from '../../../components/ConfirmModal';
 import { requestApi } from '../../../Services/request.service';
 import { RequestStatus } from '../../../types/enums';
 import { showSuccess, showError } from '../../../Services/toast.service';
-import { TruckIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon,TruckIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 const RequestPage = () => {
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [requests, setRequests] = useState([]);
-
+  const [searchTerm, setSearchTerm] = useState('');
   const [showConfirmAction, setShowConfirmAction] = useState(false);
   const [actionRequest, setActionRequest] = useState(null);
   const [actionType, setActionType] = useState('');
@@ -71,10 +71,30 @@ const RequestPage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8 text-gray-900">Request Management</h1>
+    <div className="p-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Request Management</h1>
+        <p className="text-gray-600 mt-2">Manage and process branch requests</p>
+      </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-md">
+      {/* Search Bar */}
+      <div className="mb-6">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search by product name or status..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="form-input pl-10"
+          />
+        </div>
+      </div>
+
+
+      <div className="card">
         <h2 className="text-xl font-semibold mb-4 text-gray-900">All Requests</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
@@ -93,14 +113,14 @@ const RequestPage = () => {
                       </h3>
                       <span
                         className={`inline-block px-2 py-1 text-xs rounded-full ${request.status === RequestStatus.REQUEST
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : request.status === RequestStatus.ACCEPT
-                              ? 'bg-green-100 text-green-800'
-                              : request.status === RequestStatus.REJECT
-                                ? 'bg-red-100 text-red-800'
-                                : request.status === RequestStatus.IN_TRANSIT
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-gray-100 text-gray-800'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : request.status === RequestStatus.ACCEPT
+                            ? 'bg-green-100 text-green-800'
+                            : request.status === RequestStatus.REJECT
+                              ? 'bg-red-100 text-red-800'
+                              : request.status === RequestStatus.IN_TRANSIT
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-gray-100 text-gray-800'
                           }`}
                       >
                         {request.status.replace('_', ' ')}
@@ -128,7 +148,7 @@ const RequestPage = () => {
                           setActionType(RequestStatus.ACCEPT);
                           setShowConfirmAction(true);
                         }}
-                        className="p-1 text-green-600 hover:text-green-800"
+                        className="btn btn-success btn-sm"
                         title="Accept"
                       >
                         <CheckIcon className="h-4 w-4" />
@@ -140,7 +160,7 @@ const RequestPage = () => {
                           setActionType(RequestStatus.REJECT);
                           setShowConfirmAction(true);
                         }}
-                        className="p-1 text-red-600 hover:text-red-800"
+                        className="btn btn-danger btn-sm"
                         title="Reject"
                       >
                         <XMarkIcon className="h-4 w-4" />
@@ -155,7 +175,7 @@ const RequestPage = () => {
                         setActionType(RequestStatus.IN_TRANSIT);
                         setShowConfirmAction(true);
                       }}
-                      className="p-1 text-blue-600 hover:text-blue-800"
+                      className="btn btn-primary btn-sm"
                       title="Mark In Transit"
                     >
                       <TruckIcon className="h-4 w-4" />
@@ -169,7 +189,7 @@ const RequestPage = () => {
                         setActionType(RequestStatus.DELIVERED);
                         setShowConfirmAction(true);
                       }}
-                      className="p-1 text-purple-600 hover:text-purple-800"
+                      className="btn btn-secondary btn-sm"
                       title="Mark Delivered"
                     >
                       <CheckIcon className="h-4 w-4" />

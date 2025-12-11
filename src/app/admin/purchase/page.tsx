@@ -197,12 +197,15 @@ const PurchasePage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8 text-gray-900">Purchase Management</h1>
+    <div className="p-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Purchase Management</h1>
+        <p className="text-gray-600 mt-2">Record and manage inventory purchases</p>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Purchase Form */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="card">
           <h2 className="text-xl font-semibold mb-4 text-gray-900">
             {editingPurchase ? 'Edit Purchase' : 'Record New Purchase'}
           </h2>
@@ -289,7 +292,7 @@ const PurchasePage = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                className="btn btn-primary flex-1"
               >
                 {loading ? (editingPurchase ? 'Updating...' : 'Recording...') : (editingPurchase ? 'Update Purchase' : 'Record Purchase')}
               </button>
@@ -297,7 +300,7 @@ const PurchasePage = () => {
                 <button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700"
+                  className="btn btn-outline flex-1"
                 >
                   Cancel Edit
                 </button>
@@ -313,7 +316,7 @@ const PurchasePage = () => {
             <button
               onClick={() => exportPurchasesToPDF(purchases, user?.branch || 'All Branches')}
               disabled={!purchases || purchases.length === 0}
-              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn btn-secondary"
             >
               Export to PDF
             </button>

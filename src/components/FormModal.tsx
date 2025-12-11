@@ -1,14 +1,15 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import React, { useState, ReactNode } from "react";
 import Modal from "./Modal";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
 interface FormModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: Record<string, any>) => Promise<void>;
   submitLabel?: string;
   cancelLabel?: string;
   size?: "sm" | "md" | "lg" | "xl";
@@ -26,7 +27,7 @@ export default function FormModal({
   size = "md",
   isSubmitting = false,
 }: FormModalProps) {
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<Record<string, any>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +47,29 @@ export default function FormModal({
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === "number" ? parseFloat(value) || 0 : value,
+    });
+  };
+
+  const registerField = (name: string) => {
+    return {
+      name,
+      value: formData[name] || "",
+      onChange: handleInputChange,
+    };
+  };
+
+  const setFieldValue = (name: string, value: any) => {
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -53,32 +77,29 @@ export default function FormModal({
       title={title}
       size={size}
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-4">
           {children}
         </div>
 
-        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+        <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-xl">
           <button
             type="button"
             onClick={handleClose}
             disabled={isSubmitting}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            className="btn btn-outline"
           >
             {cancelLabel}
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn btn-primary"
           >
             {isSubmitting ? (
               <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Saving...
+                <span className="loading-spinner mr-2"></span>
+                {submitLabel}...
               </span>
             ) : (
               submitLabel
@@ -94,9 +115,9 @@ export default function FormModal({
 interface FormFieldProps {
   label: string;
   name: string;
-  type?: string;
+  type?: "text" | "number" | "email" | "password" | "select" | "textarea";
   value?: any;
-  onChange?: (value: any) => void;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
   placeholder?: string;
   required?: boolean;
   error?: string;
@@ -104,6 +125,7 @@ interface FormFieldProps {
   step?: string;
   min?: string | number;
   max?: string | number;
+  rows?: number;
 }
 
 export function FormField({
@@ -119,80 +141,73 @@ export function FormField({
   step,
   min,
   max,
+  rows = 4,
 }: FormFieldProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    onChange?.(e.target.value);
+    onChange?.(e);
   };
 
-  const baseClasses = "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
-  const errorClasses = error ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "";
+  const renderInput = () => {
+    switch (type) {
+      case "textarea":
+        return (
+          <textarea
+            id={name}
+            name={name}
+            value={value || ""}
+            onChange={handleChange}
+            placeholder={placeholder}
+            required={required}
+            rows={rows}
+            className="form-input"
+          />
+        );
 
-  if (type === "textarea") {
-    return (
-      <div>
-        <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
-        <textarea
-          id={name}
-          name={name}
-          value={value || ""}
-          onChange={handleChange}
-          placeholder={placeholder}
-          required={required}
-          rows={4}
-          className={`${baseClasses} ${errorClasses}`}
-        />
-        {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
-      </div>
-    );
-  }
+      case "select":
+        return (
+          <select
+            id={name}
+            name={name}
+            value={value || ""}
+            onChange={handleChange}
+            required={required}
+            className="form-input"
+          >
+            <option value="">Select {label.toLowerCase()}</option>
+            {options?.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        );
 
-  if (type === "select" && options) {
-    return (
-      <div>
-        <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
-        <select
-          id={name}
-          name={name}
-          value={value || ""}
-          onChange={handleChange}
-          required={required}
-          className={`${baseClasses} ${errorClasses}`}
-        >
-          <option value="">Select {label.toLowerCase()}</option>
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
-      </div>
-    );
-  }
+      default:
+        return (
+          <input
+            id={name}
+            name={name}
+            type={type}
+            value={value || ""}
+            onChange={handleChange}
+            placeholder={placeholder}
+            required={required}
+            step={step}
+            min={min}
+            max={max}
+            className="form-input"
+          />
+        );
+    }
+  };
 
   return (
-    <div>
-      <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
-        {label} {required && <span className="text-red-500">*</span>}
+    <div className="space-y-2">
+      <label htmlFor={name} className="block text-sm font-medium text-gray-700">
+        {label} {required && <span className="text-danger">*</span>}
       </label>
-      <input
-        id={name}
-        name={name}
-        type={type}
-        value={value || ""}
-        onChange={handleChange}
-        placeholder={placeholder}
-        required={required}
-        step={step}
-        min={min}
-        max={max}
-        className={`${baseClasses} ${errorClasses}`}
-      />
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {renderInput()}
+      {error && <p className="text-xs text-danger mt-1">{error}</p>}
     </div>
   );
 }
