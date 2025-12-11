@@ -324,15 +324,16 @@ const PurchasePage = () => {
               error={errors.pricePerUnit}
             />
 
-            <InputField
-              label="Total Price"
-              type="number"
-              value={formData.totalPrice}
-              onChange={handleInputChange}
-              name="totalPrice"
-              step="0.01"
-              error={errors.totalPrice}
-            />
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Total Price</label>
+              <input
+                type="text"
+                value={`Rs ${formData.totalPrice}`}
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-700 cursor-not-allowed"
+              />
+              {errors.totalPrice && <p className="text-red-500 text-sm mt-1">{errors.totalPrice}</p>}
+            </div>
 
             <InputField
               label="Low Stock Alert Threshold"
@@ -397,7 +398,7 @@ const PurchasePage = () => {
         {/* HISTORY */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Recent Purchases</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Recent Purchases <span className="text-sm font-normal text-gray-500">(last 3 days)</span></h2>
             <button
               onClick={() => exportPurchasesToPDF(purchases, user?.branch || 'All Branches')}
               disabled={!purchases || purchases.length === 0}

@@ -5,7 +5,7 @@ import ConfirmModal from '../../../components/ConfirmModal';
 import { requestApi } from '../../../Services/request.service';
 import { RequestStatus } from '../../../types/enums';
 import { showSuccess, showError } from '../../../Services/toast.service';
-import { MagnifyingGlassIcon,TruckIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { CubeIcon, MagnifyingGlassIcon, TruckIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 const RequestPage = () => {
   const [loadingRequests, setLoadingRequests] = useState(false);
@@ -43,11 +43,19 @@ const RequestPage = () => {
     }
   }, [loadRequests]);
 
+  // Filter requests based on search term
+  const filteredRequests = requests.filter(request =>
+    request.purchase?.productName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    request.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    request.requestingUser?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    request.adminUser?.username?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   // API call every 5000 millisecond
   // useEffect(() => {
   //   const interval = setInterval(loadRequests, 5000);
   //   return () => clearInterval(interval);
-  // }, [loadRequests]);
+  // }, [loadRequests, searchTerm]);
 
   const handleAction = async () => {
     if (!actionRequest) return;
@@ -73,7 +81,10 @@ const RequestPage = () => {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Request Management</h1>
+        <h1 className="flex items-center text-3xl font-bold text-gray-900">
+          <CubeIcon className="h-7 w-7 mr-2 text-gray-600" />
+          Requested Purchases
+        </h1>
         <p className="text-gray-600 mt-2">Manage and process branch requests</p>
       </div>
 
@@ -81,14 +92,15 @@ const RequestPage = () => {
       <div className="mb-6">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+            <MagnifyingGlassIcon className="h-5 w-5 text-gray-500" />
           </div>
           <input
             type="text"
-            placeholder="Search by product name or status..."
+            placeholder="Search requests by product, status, or user..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="form-input pl-10"
+            className="form-input pl-10 pr-4 py-2 text-gray-700"
+            aria-label="Search requests"
           />
         </div>
       </div>
@@ -97,13 +109,17 @@ const RequestPage = () => {
       <div className="card">
         <h2 className="text-xl font-semibold mb-4 text-gray-900">All Requests</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto">
           {loadingRequests ? (
             <p className="text-gray-500">Loading requests...</p>
-          ) : !requests.length ? (
-            <p className="text-gray-500">No requests found.</p>
+          ) : !filteredRequests.length ? (
+            <div className="text-center py-8 col-span-full">
+              <p className="text-gray-500">
+                {searchTerm ? 'No requests match your search.' : 'No requests found.'}
+              </p>
+            </div>
           ) : (
-            requests.map(request => (
+            filteredRequests.map(request => (
               <div key={request.id} className="border border-gray-200 rounded-lg p-4">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">

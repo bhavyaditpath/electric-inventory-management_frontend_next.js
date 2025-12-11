@@ -281,13 +281,13 @@ export default function UserPage() {
                         <p className="text-gray-600 mt-2">Manage all Users in the system</p>
                     </div>
                     <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4 mt-4 md:mt-0">
-                        <input
+                        {/* <input
                             type="text"
                             placeholder="Search by username..."
                             value={searchTerm}
                             onChange={handleSearchChange}
                             className="w-full md:w-auto px-4 py-2 border border-gray-500 rounded-md focus:outline-none text-gray-900"
-                        />
+                        /> */}
                         <button
                             onClick={handleCreateUser}
                             className="w-full md:w-auto bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors cursor-pointer"

@@ -99,20 +99,22 @@ const RequestedPurchasePage = () => {
       <div className="mb-6">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+            <MagnifyingGlassIcon className="h-5 w-5 text-gray-500" />
           </div>
           <input
             type="text"
-            placeholder="Search by product name or status..."
+            placeholder="Search requests by product, status, or user..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="form-input pl-10"
+            className="form-input pl-10 pr-4 py-2 text-gray-700"
+            aria-label="Search requests"
           />
         </div>
       </div>
 
       {/* Requests List */}
       <div className="card">
+        <h2 className="text-xl font-semibold mb-4 text-gray-900">All Requests</h2>
         <div className="p-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto">
             {loadingRequests ? (
