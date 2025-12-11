@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import DataTable from "../../../components/DataTable";
 import ConfirmModal from "../../../components/ConfirmModal";
+import ColumnCustomizer from "../../../components/ColumnCustomizer";
 import { showError, showSuccess } from "../../../Services/toast.service";
 import { inventoryApi } from "@/Services/inventory.service";
 // import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
@@ -30,6 +31,7 @@ export default function BranchInventoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showCustomizer, setShowCustomizer] = useState(false);
 
   const loadInventory = useCallback(async () => {
     try {
@@ -159,29 +161,108 @@ export default function BranchInventoryPage() {
     },
   ];
 
+  // Function to serialize columns for storage
+  const serializeColumns = (cols: any[]) => {
+    return {
+      columnOrder: cols.map(col => col.key),
+      hiddenColumns: cols.filter(col => col.className?.includes('hidden')).map(col => col.key)
+    };
+  };
+
+  // Function to deserialize columns from storage
+  const deserializeColumns = (config: any) => {
+    return config.columnOrder.map((key: string) => {
+      const originalCol = columns.find(col => col.key === key);
+      if (originalCol) {
+        const colAny = originalCol as any;
+        return {
+          ...originalCol,
+          className: config.hiddenColumns.includes(key) ? `${colAny.className || ''} hidden` : (colAny.className || '').replace('hidden', '')
+        };
+      }
+      return originalCol;
+    }).filter(Boolean);
+  };
+
+  const [tableColumns, setTableColumns] = useState(() => {
+    // Try to load saved column configuration from localStorage
+    if (typeof window !== 'undefined') {
+      const savedConfig = localStorage.getItem('branchInventoryColumnConfig');
+      if (savedConfig) {
+        try {
+          const config = JSON.parse(savedConfig);
+          return deserializeColumns(config);
+        } catch (error) {
+          console.error('Failed to parse saved column config:', error);
+        }
+      }
+    }
+    return columns;
+  });
+
+  const handleColumnsChange = useCallback((updatedColumns: any[]) => {
+    setTableColumns(updatedColumns);
+    // Save column configuration to localStorage
+    if (typeof window !== 'undefined') {
+      const config = serializeColumns(updatedColumns);
+      localStorage.setItem('branchInventoryColumnConfig', JSON.stringify(config));
+    }
+  }, [columns]);
   return (
     <div className="p-6">
       <div className="mb-6">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center">
+        {/* Header + Controls Row */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+          {/* Title & Subtitle */}
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Branch Inventory</h1>
-            <p className="text-gray-600 mt-2">View purchased items and current stock levels for this branch</p>
+            <p className="text-gray-600 mt-2">
+              View purchased items and current stock levels for this branch
+            </p>
           </div>
-          <div className="mt-4 md:mt-0">
-            <input
+
+          {/* Search + Customize Button (Right Side) */}
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
+
+            {/* Search Input */}
+            {/* <input
               type="text"
               placeholder="Search by product name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-auto"
-            />
+              className="px-4 py-2 border border-gray-300 rounded-md 
+                  focus:outline-none focus:ring-2 focus:ring-blue-500 
+                  w-full md:w-auto"
+            /> */}
+
+            {/* Customize Columns Button */}
+            <button
+              onClick={() => setShowCustomizer(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md 
+                   hover:bg-blue-700 focus:outline-none focus:ring-2 
+                   focus:ring-blue-500 flex items-center gap-2"
+            >
+              <span className="text-sm font-medium">Customize Columns</span>
+            </button>
           </div>
+
         </div>
+
+        {/* Column Customizer Dialog */}
+        <ColumnCustomizer
+          visible={showCustomizer}
+          onClose={() => setShowCustomizer(false)}
+          columns={columns}
+          onApply={handleColumnsChange}
+          omitColumns={["productName"]}
+        />
       </div>
+
 
       <DataTable
         data={filteredInventory}
-        columns={columns}
+        columns={tableColumns}
         loading={loading}
         emptyMessage="No inventory items found"
         moduleName="Branch Inventory"
@@ -192,8 +273,10 @@ export default function BranchInventoryPage() {
         striped={true}
         hover={true}
         size="md"
-        // actions={actions}
+      // actions={actions}
       />
+
+
 
       {/* Stock Alert Summary */}
       {filteredInventory.length > 0 && (

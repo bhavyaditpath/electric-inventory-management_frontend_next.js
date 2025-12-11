@@ -65,3 +65,30 @@ body {
   opacity: 0;
   transition: opacity 0.2s ease;
 }
+
+/* Column Customizer Dialog */
+.column-customizer-dialog {
+  backdrop-filter: blur(4px);
+}
+
+.column-customizer-dialog .drag-item {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.column-customizer-dialog .drag-item.dragging {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.column-customizer-dialog .drag-handle {
+  cursor: grab;
+}
+
+.column-customizer-dialog .drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Smooth transitions for checkboxes */
+.column-customizer-checkbox {
+  transition: all 0.2s ease;
+}

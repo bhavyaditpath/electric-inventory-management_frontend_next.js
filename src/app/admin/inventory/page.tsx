@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import DataTable from "../../../components/DataTable";
 import ConfirmModal from "../../../components/ConfirmModal";
+import ColumnCustomizer from "../../../components/ColumnCustomizer";
 import { showError, showSuccess } from "../../../Services/toast.service";
 import { inventoryApi } from "@/Services/inventory.service";
 // import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
@@ -28,6 +29,7 @@ export default function BranchInventoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showCustomizer, setShowCustomizer] = useState(false);
 
   const loadInventory = useCallback(async () => {
     try {
@@ -167,17 +169,94 @@ export default function BranchInventoryPage() {
     },
   ];
 
+  // Function to serialize columns for storage
+  const serializeColumns = (cols: any[]) => {
+    return {
+      columnOrder: cols.map(col => col.key),
+      hiddenColumns: cols.filter(col => col.className?.includes('hidden')).map(col => col.key)
+    };
+  };
+
+  // Function to deserialize columns from storage
+  const deserializeColumns = (config: any) => {
+    return config.columnOrder.map((key: string) => {
+      const originalCol = columns.find(col => col.key === key);
+      if (originalCol) {
+        const colAny = originalCol as any;
+        return {
+          ...originalCol,
+          className: config.hiddenColumns.includes(key) ? `${colAny.className || ''} hidden` : (colAny.className || '').replace('hidden', '')
+        };
+      }
+      return originalCol;
+    }).filter(Boolean);
+  };
+
+  const [tableColumns, setTableColumns] = useState(() => {
+    // Try to load saved column configuration from localStorage
+    if (typeof window !== 'undefined') {
+      const savedConfig = localStorage.getItem('adminInventoryColumnConfig');
+      if (savedConfig) {
+        try {
+          const config = JSON.parse(savedConfig);
+          return deserializeColumns(config);
+        } catch (error) {
+          console.error('Failed to parse saved column config:', error);
+        }
+      }
+    }
+    return columns;
+  });
+
+  const handleColumnsChange = useCallback((updatedColumns: any[]) => {
+    setTableColumns(updatedColumns);
+    // Save column configuration to localStorage
+    if (typeof window !== 'undefined') {
+      const config = serializeColumns(updatedColumns);
+      localStorage.setItem('adminInventoryColumnConfig', JSON.stringify(config));
+    }
+  }, [columns]);
 
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Global Inventory Overview</h1>
-        <p className="text-gray-600 mt-2">View purchased items and current stock levels across all branches</p>
+        {/* Header + Button Row */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+
+          {/* Title & Subtitle */}
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Global Inventory Overview</h1>
+            <p className="text-gray-600 mt-2">
+              View purchased items and current stock levels across all branches
+            </p>
+          </div>
+
+          {/* Button */}
+          <div className="mt-4 md:mt-0">
+            <button
+              onClick={() => setShowCustomizer(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 
+                   focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center gap-2"
+            >
+              <span className="text-sm font-medium">Customize Columns</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Column Customizer Dialog */}
+        <ColumnCustomizer
+          visible={showCustomizer}
+          onClose={() => setShowCustomizer(false)}
+          columns={columns}
+          onApply={handleColumnsChange}
+          omitColumns={["productName"]}
+        />
       </div>
+
 
       <DataTable
         data={filteredInventory}
-        columns={columns}
+        columns={tableColumns}
         loading={loading}
         emptyMessage="No inventory items found"
         moduleName="Global Inventory Overview"
@@ -190,6 +269,8 @@ export default function BranchInventoryPage() {
         size="md"
       // actions={actions}
       />
+
+
 
       {/* Stock Alert Summary */}
       {filteredInventory.length > 0 && (
