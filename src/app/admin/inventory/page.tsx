@@ -8,6 +8,7 @@ import { useColumnCustomization } from "../../../hooks/useColumnCustomization";
 import { showError, showSuccess } from "../../../Services/toast.service";
 import { inventoryApi } from "@/Services/inventory.service";
 import { purchaseApi } from "@/Services/purchase.service";
+import { useSearchParams } from "next/navigation";
 
 export interface InventoryItem {
   id: string;
@@ -23,6 +24,9 @@ export interface InventoryItem {
 }
 
 export default function BranchInventoryPage() {
+  const searchParams = useSearchParams();
+  const urlSearch = searchParams.get("search") || ""; // <-- get global search from navbar
+  const [searchTerm, setSearchTerm] = useState(urlSearch); // <-- APPLY IT HERE
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -33,7 +37,6 @@ export default function BranchInventoryPage() {
   const [totalRecords, setTotalRecords] = useState(0);
   const [sortBy, setSortBy] = useState<string>("productName");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [searchTerm, setSearchTerm] = useState("");
 
   const loadInventory = useCallback(async (
     page = currentPage,
@@ -74,15 +77,14 @@ export default function BranchInventoryPage() {
     }
   }, [currentPage, pageSize, searchTerm, sortBy, sortOrder]);
 
-
   const firstLoad = useRef(false);
 
   useEffect(() => {
     if (!firstLoad.current) {
       firstLoad.current = true;
-      loadInventory();
+      loadInventory(1, pageSize, urlSearch);
     }
-  }, [loadInventory]);
+  }, [loadInventory, urlSearch]);
 
   const handlePageChange = useCallback(
     (page: number) => {
@@ -131,7 +133,7 @@ export default function BranchInventoryPage() {
       key: "branch",
       header: "Branch",
       sortable: true,
-      render: (value: any) => value?.name || 'N/A',
+      render: (value: any) => value?.name || "N/A",
     },
     {
       key: "currentQuantity",
@@ -165,9 +167,7 @@ export default function BranchInventoryPage() {
       render: (value: number, row: InventoryItem) => (
         <span
           className={
-            row.currentQuantity <= value
-              ? "text-red-600 font-medium"
-              : "text-gray-600"
+            row.currentQuantity <= value ? "text-red-600 font-medium" : "text-gray-600"
           }
         >
           {value} {row.unit}
@@ -181,8 +181,7 @@ export default function BranchInventoryPage() {
       key: "lastPurchaseDate",
       header: "Last Purchase",
       sortable: true,
-      render: (value: string) =>
-        new Date(value).toLocaleDateString("en-IN"),
+      render: (value: string) => new Date(value).toLocaleDateString("en-IN"),
     },
   ];
 
@@ -250,33 +249,29 @@ export default function BranchInventoryPage() {
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-            {/* LOW STOCK */}
             <div className="bg-red-50 p-3 rounded border-l-4 border-red-500">
               <div className="text-red-800 font-medium">Low Stock Items</div>
               <div className="text-red-600 text-2xl font-bold">
-                {inventory.filter(i => i.currentQuantity <= i.lowStockThreshold).length}
+                {inventory.filter((i) => i.currentQuantity <= i.lowStockThreshold).length}
               </div>
             </div>
 
-            {/* WARNING */}
             <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-500">
               <div className="text-yellow-800 font-medium">Warning Level</div>
               <div className="text-yellow-600 text-2xl font-bold">
-                {inventory.filter(i =>
-                  i.currentQuantity > i.lowStockThreshold &&
-                  i.currentQuantity <= i.lowStockThreshold * 2
+                {inventory.filter(
+                  (i) =>
+                    i.currentQuantity > i.lowStockThreshold &&
+                    i.currentQuantity <= i.lowStockThreshold * 2
                 ).length}
               </div>
             </div>
 
-            {/* GOOD */}
             <div className="bg-green-50 p-3 rounded border-l-4 border-green-500">
               <div className="text-green-800 font-medium">Good Stock</div>
               <div className="text-green-600 text-2xl font-bold">
-                {inventory.filter(i =>
-                  i.currentQuantity > i.lowStockThreshold * 2
-                ).length}
+                {inventory.filter((i) => i.currentQuantity > i.lowStockThreshold * 2)
+                  .length}
               </div>
             </div>
 

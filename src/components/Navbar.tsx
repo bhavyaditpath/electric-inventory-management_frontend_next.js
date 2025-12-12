@@ -30,7 +30,7 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      const itemsPath = user?.role === UserRole.ADMIN ? NAVIGATION.admin.items : NAVIGATION.branch.items;
+      const itemsPath = user?.role === UserRole.ADMIN ? NAVIGATION.admin.inventory : NAVIGATION.branch.inventory;
       router.push(`${itemsPath}?search=${encodeURIComponent(searchQuery.trim())}`);
       if (isMobile) {
         setMobileSearchOpen(false);
