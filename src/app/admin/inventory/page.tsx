@@ -23,7 +23,7 @@ export interface InventoryItem {
   totalPurchased: number;
 }
 
-export default function BranchInventoryPage() {
+export default function AdminInventoryPage() {
   const searchParams = useSearchParams();
   const urlSearch = searchParams.get("search") || ""; // <-- get global search from navbar
   const [searchTerm, setSearchTerm] = useState(urlSearch); // <-- APPLY IT HERE
