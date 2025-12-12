@@ -19,17 +19,28 @@ export function useColumnCustomization<T>(initialColumns: T[], storageKey: strin
 
   // Function to deserialize columns from storage
   const deserializeColumns = (config: any) => {
-    return config.columnOrder.map((key: string) => {
-      const originalCol = initialColumns.find(col => (col as any).key === key);
-      if (originalCol) {
-        const colAny = originalCol as any;
-        return {
-          ...originalCol,
-          className: config.hiddenColumns.includes(key) ? `${colAny.className || ''} hidden` : (colAny.className || '').replace('hidden', '')
-        };
-      }
-      return originalCol;
-    }).filter(Boolean);
+    const seen = new Set();
+
+    return config.columnOrder
+      .filter((key: string) => {
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .map((key: string) => {
+        const originalCol = initialColumns.find(col => (col as any).key === key);
+        if (originalCol) {
+          const colAny = originalCol as any;
+          return {
+            ...originalCol,
+            className: config.hiddenColumns.includes(key)
+              ? `${colAny.className || ''} hidden`
+              : (colAny.className || '').replace('hidden', '')
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
   };
 
   const [tableColumns, setTableColumns] = useState(() => {
