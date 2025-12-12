@@ -64,11 +64,11 @@ export default function DashboardPage() {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    
+
     return purchases.filter(purchase => {
       const purchaseDate = new Date(purchase.createdAt);
-      return purchaseDate.getMonth() === currentMonth && 
-             purchaseDate.getFullYear() === currentYear;
+      return purchaseDate.getMonth() === currentMonth &&
+        purchaseDate.getFullYear() === currentYear;
     });
   };
 
@@ -84,18 +84,26 @@ export default function DashboardPage() {
       const purchaseResponse = await purchaseApi.getPurchases();
       const requestResponse = await requestApi.getRequests();
 
-      // Process inventory data - following admin/inventory pattern
       let totalInventory = 0;
-      if (Array.isArray(inventoryResponse)) {
-        const inventories = inventoryResponse as Inventory[];
-        totalInventory = inventories.reduce((sum: number, item: Inventory) => sum + item.currentQuantity, 0);
-      } else if (inventoryResponse.success && inventoryResponse.data) {
-        const inventories = inventoryResponse.data as Inventory[];
-        if (Array.isArray(inventories)) {
-          totalInventory = inventories.reduce((sum: number, item: Inventory) => sum + item.currentQuantity, 0);
-        }
-      }
 
+      if (inventoryResponse?.data) {
+        const inv = inventoryResponse.data;
+        let items: any[] = [];
+        if (inv.items && Array.isArray(inv.items)) {
+          items = inv.items;
+        }
+        else if (Array.isArray(inv)) {
+          items = inv;
+        }
+        const normalized = items.map(item => ({
+          ...item,
+          lastPurchaseDate: new Date(item.lastPurchaseDate),
+        }));
+
+        totalInventory = normalized.reduce((sum, item) => sum + Number(item.currentQuantity), 0);
+      } else {
+        totalInventory = 0;
+      }
       // Process branch data - following admin/branches pattern
       let activeBranches = 0;
       if (branchResponse.success && Array.isArray(branchResponse.data)) {
@@ -107,7 +115,7 @@ export default function DashboardPage() {
       // Process purchase data for monthly sales
       let monthlySales = 0;
       let allPurchases: PurchaseResponseDto[] = [];
-      
+
       if (Array.isArray(purchaseResponse)) {
         allPurchases = purchaseResponse as PurchaseResponseDto[];
       } else if (purchaseResponse.success && purchaseResponse.data) {
@@ -169,7 +177,7 @@ export default function DashboardPage() {
       recentActivity.sort((a, b) => {
         const timeA = a.timestamp.replace('ago', '').trim();
         const timeB = b.timestamp.replace('ago', '').trim();
-        
+
         // Simple sorting - in production, you'd want more sophisticated time parsing
         return timeA.localeCompare(timeB);
       });
@@ -201,7 +209,7 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600 mt-2">Welcome to the Electric Inventory Management System</p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
@@ -224,7 +232,7 @@ export default function DashboardPage() {
         </div>
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-800">{error}</p>
-          <button 
+          <button
             onClick={fetchDashboardData}
             className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
           >
@@ -266,7 +274,7 @@ export default function DashboardPage() {
       <div className="mt-8 bg-white rounded-lg shadow p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-900">Recent Activity</h2>
-          <button 
+          <button
             onClick={fetchDashboardData}
             className="text-sm text-blue-600 hover:text-blue-800"
           >

@@ -33,11 +33,25 @@ export default function BranchDashboardPage() {
           alertApi.getByBranch(user.branchId, AlertStatus.ACTIVE),
         ]);
 
-        if (inventoryRes.success && inventoryRes.data) {
-          setInventory((inventoryRes.data as Inventory[]).filter(item => item.branchId === user.branchId));
-        } else if (Array.isArray(inventoryRes)) {
-          // Handle case where API returns array directly
-          setInventory((inventoryRes as Inventory[]).filter(item => item.branchId === user.branchId));
+        if (inventoryRes?.data) {
+          const inv = inventoryRes.data;
+
+          let items: any[] = [];
+
+          if (inv.items && Array.isArray(inv.items)) {
+            items = inv.items;
+          } else if (Array.isArray(inv)) {
+            items = inv;
+          }
+
+          const normalized = items
+            .filter(item => item.branchId === user.branchId)
+            .map(item => ({
+              ...item,
+              lastPurchaseDate: new Date(item.lastPurchaseDate),
+            }));
+
+          setInventory(normalized);
         }
         if (purchasesRes.success && purchasesRes.data) {
           setPurchases((purchasesRes.data as PurchaseResponseDto[]).filter(purchase => purchase.branchId === user.branchId));
@@ -72,7 +86,7 @@ export default function BranchDashboardPage() {
   const todaysPurchases = purchases.filter(purchase => {
     const purchaseDate = new Date(purchase.createdAt);
     purchaseDate.setHours(0, 0, 0, 0);
-    return purchaseDate.getTime() === today.getTime(); 
+    return purchaseDate.getTime() === today.getTime();
   });
   const todaysSales = todaysPurchases.reduce((sum, purchase) => sum + purchase.totalPrice, 0);
   const activeAlertsCount = activeAlerts.length;
