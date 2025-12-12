@@ -214,7 +214,7 @@ const PurchasePage = () => {
         showSuccess("Purchase updated");
       } else {
         purchaseRecord = await purchaseApi.recordPurchase(formData);
-        debugger
+        
         if (!purchaseRecord) {
           showError("Failed to record purchase");
           setLoading(false);

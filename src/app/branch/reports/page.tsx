@@ -148,13 +148,13 @@ export default function ReportsPage() {
     setIsSubmitting(true);
     try {
       const response = await reportsApi.createPreference(formData);
-      if (response) {
+      if (response.success) {
         showSuccess(response.message || 'Preference created successfully');
         fetchPreferences();
         setShowPreferenceModal(false);
         resetForm();
       } else {
-        showError(response || 'Failed to create preference');
+        showError(response.message || 'Failed to create preference');
       }
     } catch (error) {
       showError('Error creating preference');
@@ -168,13 +168,13 @@ export default function ReportsPage() {
     setIsSubmitting(true);
     try {
       const response = await reportsApi.updatePreference(editingPreference.id, formData);
-      if (response) {
+      if (response.success) {
         showSuccess(response.message || 'Preference updated successfully');
         fetchPreferences();
         setEditingPreference(null);
         resetForm();
       } else {
-        showError(response || 'Failed to update preference');
+        showError(response.message || 'Failed to update preference');
       }
     } catch (error) {
       showError('Error updating preference');
