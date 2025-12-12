@@ -13,9 +13,6 @@ export const exportPurchasesToPDF = (
 
   const pageWidth = doc.internal.pageSize.getWidth();
 
-  // ---------------------------------------------------------------------
-  // HEADER SECTION (Blue Bar)
-  // ---------------------------------------------------------------------
   doc.setFillColor(41, 128, 185);
   doc.rect(0, 0, pageWidth, 30, "F");
 
@@ -40,9 +37,6 @@ export const exportPurchasesToPDF = (
 
   let y = 40;
 
-  // ---------------------------------------------------------------------
-  // SUMMARY CARDS
-  // ---------------------------------------------------------------------
   const cardWidth = (pageWidth - 28) / 2;
   const cardHeight = 22;
 
@@ -93,9 +87,6 @@ export const exportPurchasesToPDF = (
 
   y += cardHeight * 2 + 14;
 
-  // ---------------------------------------------------------------------
-  // TABLE SECTION
-  // ---------------------------------------------------------------------
   const tableData = purchases.map((p) => [
     p.productName,
     p.brand,
@@ -136,9 +127,6 @@ export const exportPurchasesToPDF = (
     },
   });
 
-  // ---------------------------------------------------------------------
-  // FOOTER WITH PAGE NUMBERS
-  // ---------------------------------------------------------------------
   const pageCount = (doc as any).internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
@@ -155,6 +143,5 @@ export const exportPurchasesToPDF = (
     );
   }
 
-  // SAVE
   doc.save(`Purchase_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
 };

@@ -13,14 +13,44 @@ export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [isTokenValid, setIsTokenValid] = useState<boolean | null>(null);
 
   const router = useRouter();
 
   useEffect(() => {
-    if (!token) {
-      setError("Invalid or missing reset token.");
+    async function checkTokenValidity() {
+      if (!token) {
+        setIsTokenValid(false);
+        return;
+      }
+
+      try {
+        const response = await authApi.validateResetToken({ token });
+
+        if (response.success) {
+          setIsTokenValid(true);
+        } else {
+          // If token validation fails, redirect to session expired page
+          if (response.message && typeof response.message === 'string' && response.message.toLowerCase().includes("expired")) {
+            router.push("/auth/session-expired");
+            return;
+          }
+          // For other validation errors, show error message
+          setIsTokenValid(false);
+        }
+      } catch (err) {
+        console.error("Token validation error:", err);
+        // If there's an error during validation, redirect to session expired
+        if (err instanceof Error && err.message.toLowerCase().includes("expired")) {
+          router.push("/auth/session-expired");
+          return;
+        }
+        setIsTokenValid(false);
+      }
     }
-  }, [token]);
+
+    checkTokenValidity();
+  }, [token, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,6 +88,23 @@ export default function ResetPasswordPage() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  // Show loading state while checking token
+  if (isTokenValid === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+        <div className="backdrop-blur-xl bg-white/80 border border-gray-200 p-10 rounded-2xl shadow-2xl w-full max-w-md text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Validating reset token...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If token is not valid, don't show anything - the useEffect will handle redirection
+  if (isTokenValid === false) {
+    return null;
   }
 
   return (
