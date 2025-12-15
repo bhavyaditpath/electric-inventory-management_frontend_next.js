@@ -5,7 +5,7 @@ import ConfirmModal from '../../../components/ConfirmModal';
 import { requestApi } from '../../../Services/request.service';
 import { RequestStatus } from '../../../types/enums';
 import { showSuccess, showError } from '../../../Services/toast.service';
-import { CubeIcon, MagnifyingGlassIcon, TruckIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { CubeIcon, MagnifyingGlassIcon, TruckIcon, CheckIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 const RequestPage = () => {
   const [loadingRequests, setLoadingRequests] = useState(false);
@@ -14,26 +14,42 @@ const RequestPage = () => {
   const [showConfirmAction, setShowConfirmAction] = useState(false);
   const [actionRequest, setActionRequest] = useState(null);
   const [actionType, setActionType] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   // ✔ Load requests
-  const loadRequests = useCallback(async () => {
+  const loadRequests = useCallback(async (currentPage = page, currentPageSize = pageSize) => {
     try {
       setLoadingRequests(true);
-      const response = await requestApi.getRequests();
+      const response = await requestApi.getRequests({ page: currentPage, pageSize: currentPageSize });
 
       if (response.success) {
-        setRequests(Array.isArray(response.data) ? response.data : []);
+        const data = response.data;
+        setRequests(Array.isArray(data.items) ? data.items : []);
+        setTotal(data.total || 0);
+        setTotalPages(data.totalPages || 0);
       } else {
         showError(response.message || 'Failed to load requests');
         setRequests([]);
+        setTotal(0);
+        setTotalPages(0);
       }
     } catch (err) {
       console.error('Failed to load requests:', err);
       setRequests([]);
+      setTotal(0);
+      setTotalPages(0);
     } finally {
       setLoadingRequests(false);
     }
-  }, []);
+  }, [page, pageSize]);
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    loadRequests(newPage, pageSize);
+  };
 
   const firstLoad = useRef(false);
   useEffect(() => {
@@ -217,6 +233,34 @@ const RequestPage = () => {
           )}
         </div>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <div className="text-sm text-gray-700">
+            Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, total)} of {total} results
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page <= 1}
+              className="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeftIcon className="h-5 w-5" />
+            </button>
+            <span className="text-sm text-gray-700">
+              Page {page} of {totalPages}
+            </span>
+            <button
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page >= totalPages}
+              className="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronRightIcon className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       <ConfirmModal
         isOpen={showConfirmAction}

@@ -60,7 +60,8 @@ export default function BranchDashboardPage() {
           setPurchases((purchasesRes as PurchaseResponseDto[]).filter(purchase => purchase.branchId === user.branchId));
         }
         if (requestsRes.success && requestsRes.data) {
-          setRequests(requestsRes.data as RequestResponseDto[]);
+          const data = requestsRes.data as { items?: RequestResponseDto[] };
+          setRequests(data.items || []);
         }
         if (alertsRes.success && alertsRes.data) {
           setActiveAlerts(alertsRes.data as StockAlert[]);
