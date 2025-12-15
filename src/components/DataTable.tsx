@@ -438,11 +438,11 @@ export default function DataTable<T extends Record<string, any>>({
       <PaginationControls />
 
       {/* Module Info (for debugging/development) */}
-      {moduleName && process.env.NODE_ENV === "development" && (
+      {/* {moduleName && process.env.NODE_ENV === "development" && (
         <div className="text-xs text-gray-400 mt-2 px-2">
           Table rendered by: {moduleName}
         </div>
-      )}
+      )} */}
     </div>
   );
 }
