@@ -1,11 +1,12 @@
 'use client';
 
-import { MagnifyingGlassIcon, BellIcon, UserIcon, ArrowRightOnRectangleIcon, ChevronDownIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, UserIcon, ArrowRightOnRectangleIcon, ChevronDownIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { useState, useEffect, useRef } from 'react';
 import { NAVIGATION } from '../app/Constants/navigation.constants';
 import { useRouter } from 'next/navigation';
 import { UserRole } from '../types/enums';
+import NotificationDropdown from './NotificationDropdown';
 
 interface NavbarProps {
   sidebarOpen: boolean;
@@ -120,10 +121,7 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
           )}
 
           {/* Notifications */}
-          <button className="relative p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer">
-            <BellIcon className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
+          <NotificationDropdown />
 
           {/* User dropdown */}
           <div className="relative" ref={dropdownRef}>
