@@ -120,7 +120,7 @@ export default function NotificationsPage() {
                       {notification.message}
                     </p>
                     <p className="text-xs text-slate-400 mt-1">
-                      {new Date(notification.timestamp).toLocaleString()}
+                      {new Date(notification.createdAt).toLocaleString()}
                     </p>
                   </div>
                   <div className="ml-2">

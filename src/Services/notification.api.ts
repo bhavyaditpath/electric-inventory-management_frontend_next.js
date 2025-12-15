@@ -5,7 +5,7 @@ export interface Notification {
   title: string;
   message: string;
   type: 'user' | 'branch';
-  timestamp: string;
+  createdAt: string;
   read: boolean;
   userId?: string;
   branchId?: string;
