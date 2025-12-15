@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authApi } from "@/Services/auth.api";
+import { LockClosedIcon, EyeIcon, EyeSlashIcon, } from "@heroicons/react/24/outline";
+
 
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
@@ -14,6 +16,8 @@ export default function ResetPasswordPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isTokenValid, setIsTokenValid] = useState<boolean | null>(null);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const router = useRouter();
 
@@ -150,25 +154,34 @@ export default function ResetPasswordPage() {
               <div className="relative">
                 <input
                   id="newPassword"
-                  type="password"
+                  type={showNewPassword ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-3 pl-10 rounded-lg bg-white border border-gray-300 
-                  focus:outline-none text-gray-700"
+                  className="w-full px-4 py-3 pl-10 pr-10 rounded-lg bg-white border border-gray-300
+      focus:outline-none text-gray-700"
                   placeholder="Enter new password"
                   required
                   disabled={isLoading}
                 />
 
+                {/* Lock Icon */}
                 <span className="absolute inset-y-0 left-3 flex items-center text-gray-500">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"
-                    viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round"
-                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round"
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.944 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.944-9.542-7z" />
-                  </svg>
+                  <LockClosedIcon className="w-5 h-5" />
                 </span>
+
+                {/* Eye Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+                  disabled={isLoading}
+                >
+                  {showNewPassword ? (
+                    <EyeSlashIcon className="w-5 h-5" />
+                  ) : (
+                    <EyeIcon className="w-5 h-5" />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -181,25 +194,34 @@ export default function ResetPasswordPage() {
               <div className="relative">
                 <input
                   id="confirmPassword"
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 pl-10 rounded-lg bg-white border border-gray-300 
-                  focus:outline-none text-gray-700"
+                  className="w-full px-4 py-3 pl-10 pr-10 rounded-lg bg-white border border-gray-300
+      focus:outline-none text-gray-700"
                   placeholder="Confirm new password"
                   required
                   disabled={isLoading}
                 />
 
+                {/* Lock Icon */}
                 <span className="absolute inset-y-0 left-3 flex items-center text-gray-500">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"
-                    viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round"
-                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round"
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.944 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.944-9.542-7z" />
-                  </svg>
+                  <LockClosedIcon className="w-5 h-5" />
                 </span>
+
+                {/* Eye Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+                  disabled={isLoading}
+                >
+                  {showConfirmPassword ? (
+                    <EyeSlashIcon className="w-5 h-5" />
+                  ) : (
+                    <EyeIcon className="w-5 h-5" />
+                  )}
+                </button>
               </div>
             </div>
 
