@@ -45,13 +45,43 @@ export default function NotificationsPage() {
     }
   };
 
+  const markAllAsRead = async () => {
+    try {
+      const response = await notificationApi.markAllAsRead();
+      if (response.success) {
+        // Refetch notifications to update read status
+        const fetchResponse = await notificationApi.getAll(activeTab);
+        if (fetchResponse.success && fetchResponse.data) {
+          setNotifications(fetchResponse.data.data || []);
+        }
+      } else {
+        console.error('Failed to mark all notifications as read:', response.message);
+      }
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
+  };
+
   const filteredNotifications = activeTab === 'user'
     ? notifications.filter((n: Notification) => n.type === 'user')
     : notifications.filter((n: Notification) => n.type === 'branch');
 
+  const unreadCount = filteredNotifications.filter(n => !n.read).length;
+
   return (
     <div className="p-4 lg:p-6">
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">Notifications</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-slate-800">
+          Notifications
+          <span className="text-slate-500 text-lg ml-2">({unreadCount} unread)</span>
+        </h1>
+        <button
+          onClick={markAllAsRead}
+          className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-all"
+        >
+          Mark All as Read
+        </button>
+      </div>
 
       <div className="flex border-b border-slate-200 mb-6">
         <button

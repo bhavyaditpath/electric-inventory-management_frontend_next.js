@@ -24,11 +24,9 @@ export default function NotificationDropdown() {
         
         // Fetch latest notifications
         const response = await notificationApi.getLatest(5);
-        console.log('Latest notifications response:', response);
         
         if (response.success && response.data) {
           setNotifications(response.data.data || []);
-          setUnreadCount(response.data.data?.filter(n => !n.read).length || 0);
         } else {
           console.error('Failed to fetch notifications:', response.message);
         }
@@ -40,6 +38,24 @@ export default function NotificationDropdown() {
     };
 
     fetchNotifications();
+  }, []);
+
+  // Fetch unread count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const response = await notificationApi.getUnreadCount();
+        if (response.success && response.data) {
+          setUnreadCount(response.data.unreadCount);
+        } else {
+          console.error('Failed to fetch unread count:', response.message);
+        }
+      } catch (error) {
+        console.error('Error fetching unread count:', error);
+      }
+    };
+
+    fetchUnreadCount();
   }, []);
 
   const toggleDropdown = () => {
