@@ -104,18 +104,20 @@ const RequestedPurchasePage = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Requested Purchases</h1>
-            <p className="text-gray-600 mt-1">Track the status of your purchase requests</p>
+        <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+          <div className="flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Requested Purchases</h1>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">Track the status of your purchase requests</p>
           </div>
-          <button
-            onClick={() => window.location.reload()}
-            className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <ArrowPathIcon className="w-4 h-4 mr-2 text-gray-600" />
-            <span className="text-gray-700">Refresh</span>
-          </button>
+          <div className="flex justify-center lg:justify-end">
+            <button
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center px-3 py-2 sm:px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
+            >
+              <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2 text-gray-600" />
+              <span className="text-gray-700">Refresh</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -148,7 +150,7 @@ const RequestedPurchasePage = () => {
         </div>
 
         <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {loadingRequests ? (
               <div className="col-span-full flex justify-center py-12">
                 <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
@@ -169,12 +171,12 @@ const RequestedPurchasePage = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className="flex-1">
-                        <div className="flex items-center space-x-3">
-                          <h3 className="text-lg font-semibold text-gray-900">
+                        <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                             {request.purchase?.productName || 'Unknown Product'}
                           </h3>
                           <span
-                            className={`px-3 py-1 text-xs font-medium rounded-full ${request.status === RequestStatus.REQUEST
+                            className={`px-2 py-1 sm:px-3 text-xs font-medium rounded-full self-start sm:self-auto ${request.status === RequestStatus.REQUEST
                               ? 'bg-amber-100 text-amber-800'
                               : request.status === RequestStatus.IN_TRANSIT
                                 ? 'bg-sky-100 text-sky-800'

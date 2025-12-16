@@ -140,7 +140,7 @@ export default function BranchDashboardPage() {
 
   if (loading) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="p-6 bg-gray-50 ">
         <div className="mb-6">
           <div className="h-8 bg-gray-200 rounded w-48 mb-2 animate-pulse"></div>
           <div className="h-4 bg-gray-200 rounded w-80 animate-pulse"></div>
@@ -161,7 +161,7 @@ export default function BranchDashboardPage() {
 
   if (error) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="p-6 bg-gray-50 ">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Branch Dashboard</h1>
         </div>
@@ -184,7 +184,7 @@ export default function BranchDashboardPage() {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-gray-50 ">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
