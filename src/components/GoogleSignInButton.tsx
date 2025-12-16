@@ -18,7 +18,7 @@ export default function GoogleSignInButton() {
         hover:bg-gray-50 active:bg-gray-100
         transition-all duration-200
         shadow-sm hover:shadow-md
-        font-medium text-gray-700
+        font-medium text-gray-700 cursor-pointer
       "
     >
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-5 h-5">

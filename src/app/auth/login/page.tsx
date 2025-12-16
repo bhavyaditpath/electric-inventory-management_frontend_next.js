@@ -7,7 +7,7 @@ import { tokenManager } from "@/Services/token.management.service";
 import { authApi } from "@/Services/auth.api";
 import { useAuth } from "@/contexts/AuthContext";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
-import { LockClosedIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -31,180 +31,139 @@ export default function LoginPage() {
         tokenManager.setToken(response.data.access_token);
 
         const decoded = tokenManager.decodeToken(response.data.access_token);
-        if (decoded) {
-          const userData = {
-            id: decoded.sub || 0,
-            username: decoded.username || "",
-            role: (decoded.role as UserRole) || UserRole.BRANCH,
-            branchId: decoded.branchId || 0,
-          };
-          login(response.data.access_token, userData);
+        if (!decoded) throw new Error("Invalid token");
 
-          if (userData.role === UserRole.ADMIN) {
-            router.push("/admin/dashboard");
-          } else if (userData.role === UserRole.BRANCH) {
-            router.push("/branch/dashboard");
-          } else {
-            setError("Invalid user role");
-            tokenManager.removeToken();
-          }
-        } else {
-          setError("Invalid token");
-          tokenManager.removeToken();
-        }
+        const userData = {
+          id: decoded.sub || 0,
+          username: decoded.username || "",
+          role: (decoded.role as UserRole) || UserRole.BRANCH,
+          branchId: decoded.branchId || 0,
+        };
+
+        login(response.data.access_token, userData);
+
+        router.push(
+          userData.role === UserRole.ADMIN
+            ? "/admin/dashboard"
+            : "/branch/dashboard"
+        );
       } else {
         setError(response.message || "Login failed");
       }
     } catch (err) {
       setError("Network error. Please try again.");
-      console.error("Login error:", err);
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <div className="backdrop-blur-xl bg-white/80 border border-gray-200 p-10 rounded-2xl shadow-2xl w-full max-w-md">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-slate-100">
+      {/* LEFT */}
+      <div className="hidden lg:flex flex-col justify-center px-20 bg-gradient-to-br from-blue-700 to-indigo-800 text-white">
+        <h1 className="text-4xl font-bold mb-6">Electric Inventory</h1>
+        <p className="text-blue-100 max-w-md">
+          Manage inventory, purchases, alerts, and branch operations securely.
+        </p>
+      </div>
 
-        {/* Logo + Title */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-extrabold text-gray-800 tracking-wide">
-            Electric Inventory
-          </h1>
-          <p className="text-gray-500 mt-2 text-lg">Sign in to continue</p>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleLogin} className="space-y-6">
+      {/* RIGHT */}
+      <div className="flex items-center justify-center px-6">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-10">
+          <h2 className="text-3xl font-semibold text-gray-800 mb-2">
+            Sign in
+          </h2>
+          <p className="text-gray-500 mb-6">
+            Enter your credentials to continue
+          </p>
 
           {error && (
-            <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-md text-sm">
+            <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           )}
 
-          {/* Username */}
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-              Username
-            </label>
-            <div className="relative">
+          <form onSubmit={handleLogin} className="space-y-6">
+            {/* Username */}
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Username
+              </label>
               <input
-                id="username"
+                className="w-full p-3 pl-5 rounded-lg bg-white border border-gray-300 
+                focus:outline-none focus:ring-2 focus:ring-blue-400 text-black"
+                placeholder="Enter your username"
+                
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 pl-10 rounded-lg bg-white border border-gray-300 
+                disabled={isLoading}
+              />
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                  className="w-full p-3 pl-5 rounded-lg bg-white border border-gray-300 
                 focus:outline-none focus:ring-2 focus:ring-blue-400 text-black"
-                placeholder="Enter your username"
-                required
-                disabled={isLoading}
-              />
-              <span className="absolute inset-y-0 left-3 flex items-center text-gray-500">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"
-                  viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round"
-                    d="M5.121 17.804A4 4 0 018.999 16h6a4 4 0 013.878 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </span>
-            </div>
-          </div>
+                  placeholder="Enter your password"
+                />
 
-          {/* Password */}
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-3 text-gray-400 cursor-pointer"
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="w-5 h-5" />
+                  ) : (
+                    <EyeIcon className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
 
-            <div className="relative">
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 pl-10 pr-10 rounded-lg bg-white border border-gray-300
-      focus:outline-none focus:ring-2 focus:ring-blue-400 text-black"
-                placeholder="Enter your password"
-                required
-                disabled={isLoading}
-              />
-
-              <span className="absolute inset-y-0 left-3 flex items-center text-gray-500">
-                <LockClosedIcon className="w-5 h-5" />
-              </span>
-
-              {/* Eye Toggle */}
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 cursor-pointer"
-                disabled={isLoading}
-              >
-                {showPassword ? (
-                  <EyeSlashIcon className="w-5 h-5" />
-                ) : (
-                  <EyeIcon className="w-5 h-5" />
-                )}
-              </button>
+              <div className="flex justify-end mt-2">
+                <button
+                  type="button"
+                  onClick={() => router.push("/auth/forgot-password")}
+                  className="text-sm text-blue-600 hover:underline cursor-pointer"
+                >
+                  Forgot password?
+                </button>
+              </div>
             </div>
 
-            {/* Forgot Password Link */}
-            <div className="flex justify-end mt-1">
-              <button
-                type="button"
-                onClick={() => router.push("/auth/forgot-password")}
-                className="text-sm text-blue-600 hover:underline cursor-pointer"
-              >
-                Forgot Password?
-              </button>
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 rounded-lg bg-blue-700 text-white
+              font-semibold hover:bg-blue-800 transition disabled:opacity-50 cursor-pointer m-0"
+            >
+              {isLoading ? "Signing in..." : "Sign In"}
+            </button>
+
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              </div>
             </div>
-          </div>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700
-            transition font-semibold text-white shadow-lg hover:shadow-xl
-            disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg"
-                  fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-30" cx="12" cy="12" r="10"
-                    stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-80" fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z"></path>
-                </svg>
-                Signing in...
-              </span>
-            ) : (
-              "Sign In"
-            )}
-          </button>
+            <GoogleSignInButton />
 
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
-            </div>
-          </div>
-
-          {/* Google Sign-In */}
-          <GoogleSignInButton
-          />
-        </form>
-
-        {/* Footer */}
-        <div className="mt-8 text-center">
-          <p className="text-gray-500 text-sm">
-            Electric Inventory Management System © {new Date().getFullYear()}
-          </p>
+          </form>
         </div>
       </div>
     </div>

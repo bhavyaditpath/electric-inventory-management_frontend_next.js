@@ -7,7 +7,7 @@ import { inventoryApi } from '@/Services/inventory.service';
 import { purchaseApi } from '@/Services/purchase.service';
 import { requestApi } from '@/Services/request.service';
 import { Inventory, PurchaseResponseDto, RequestResponseDto } from '@/types/api-types';
-import { AlertStatus } from '@/types/enums';
+import { AlertStatus, RequestStatus } from '@/types/enums';
 import { alertApi, StockAlert } from '@/Services/alert.api';
 
 export default function BranchDashboardPage() {
@@ -54,19 +54,19 @@ export default function BranchDashboardPage() {
           setInventory(normalized);
         }
         if (purchasesRes.success && purchasesRes.data) {
-          setPurchases((purchasesRes.data as PurchaseResponseDto[]).filter(purchase => purchase.branchId === user.branchId));
+          const purchases = Array.isArray(purchasesRes.data) ? purchasesRes.data : [];
+          setPurchases(purchases.filter(purchase => purchase.branchId === user.branchId));
         } else if (Array.isArray(purchasesRes)) {
-          // Handle case where API returns array directly
           setPurchases((purchasesRes as PurchaseResponseDto[]).filter(purchase => purchase.branchId === user.branchId));
         }
         if (requestsRes.success && requestsRes.data) {
           const data = requestsRes.data as { items?: RequestResponseDto[] };
-          setRequests(data.items || []);
+          const requests = Array.isArray(data.items) ? data.items : [];
+          setRequests(requests);
         }
-        if (alertsRes.success && alertsRes.data) {
+        if (alertsRes?.data && Array.isArray(alertsRes.data)) {
           setActiveAlerts(alertsRes.data as StockAlert[]);
         } else if (Array.isArray(alertsRes)) {
-          // Handle case where API returns array directly
           setActiveAlerts(alertsRes as StockAlert[]);
         }
       } catch (err) {
@@ -92,8 +92,9 @@ export default function BranchDashboardPage() {
   const todaysSales = todaysPurchases.reduce((sum, purchase) => sum + purchase.totalPrice, 0);
   const activeAlertsCount = activeAlerts.length;
 
-  const pendingOrders = requests.filter(request => request.status === 'Request').length;
-
+  const pendingOrders = requests.filter(
+    req => req.status === RequestStatus.REQUEST
+  ).length;
   const recentSales = purchases
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 3);
