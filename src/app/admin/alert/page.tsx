@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ExclamationTriangleIcon, CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import { ExclamationTriangleIcon, CheckCircleIcon, XCircleIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
 import DataTable from "../../../components/DataTable";
 import ConfirmModal from "../../../components/ConfirmModal";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -26,6 +26,7 @@ export default function AdminAlertsPage() {
   const { user } = useAuth();
   const [alerts, setAlerts] = useState<StockAlert[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isResolveModalOpen, setIsResolveModalOpen] = useState(false);
   const [isDismissModalOpen, setIsDismissModalOpen] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<StockAlert | null>(null);
@@ -42,12 +43,13 @@ export default function AdminAlertsPage() {
 
     try {
       setLoading(true);
+      setError(null);
       // Get alerts for the admin's branch
       const response = await alertApi.getByBranch(user.branchId, undefined, 1, 100);
       setAlerts((response as any).data || []);
-    } catch (error) {
-      console.error('Error fetching alerts:', error);
-      showError('Error fetching alerts');
+    } catch (err) {
+      console.error('Error fetching alerts:', err);
+      setError('Failed to load alerts data');
     } finally {
       setLoading(false);
     }
@@ -204,14 +206,14 @@ export default function AdminAlertsPage() {
         <>
           <button
             onClick={() => handleResolve(row)}
-            className="text-green-600 hover:text-green-900 p-1"
+            className="text-green-600 hover:text-green-900 p-1 transition-colors"
             title="Mark as Resolved"
           >
             <CheckCircleIcon className="w-4 h-4" />
           </button>
           <button
             onClick={() => handleDismiss(row)}
-            className="text-gray-600 hover:text-gray-900 p-1"
+            className="text-gray-600 hover:text-gray-900 p-1 transition-colors"
             title="Dismiss Alert"
           >
             <XCircleIcon className="w-4 h-4" />
@@ -221,129 +223,212 @@ export default function AdminAlertsPage() {
     </div>
   );
 
+  if (loading) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="mb-6">
+          <div className="h-8 bg-gray-200 rounded w-48 mb-2 animate-pulse"></div>
+          <div className="h-4 bg-gray-200 rounded w-80 animate-pulse"></div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
+              <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">Admin Alerts</h1>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <div className="flex items-center mb-3">
+            <ExclamationTriangleIcon className="w-6 h-6 text-red-600 mr-3" />
+            <p className="text-red-800 font-semibold">Error Loading Alerts</p>
+          </div>
+          <p className="text-red-700 mb-4">{error}</p>
+          <button
+            onClick={fetchAlerts}
+            className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            <ArrowPathIcon className="w-4 h-4 mr-2" />
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Admin Alerts</h1>
-        <p className="text-gray-600 mt-2">Monitor stock alerts across all branches</p>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Admin Alerts</h1>
+            <p className="text-gray-600 mt-1">Monitor stock alerts across all branches</p>
+          </div>
+          <button
+            onClick={fetchAlerts}
+            className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <ArrowPathIcon className="w-4 h-4 mr-2 text-gray-600" />
+            <span className="text-gray-700">Refresh</span>
+          </button>
+        </div>
       </div>
 
       {/* Alert Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <ExclamationTriangleIcon className="w-8 h-8 text-red-600 mr-3" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Critical Alerts Card */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-red-600">
-                {alerts.filter(a => a.priority === AlertPriority.CRITICAL).length}
-              </div>
-              <div className="text-sm text-red-700">Critical Alerts</div>
+              <p className="text-sm font-medium text-gray-600">Critical Alerts</p>
+              <p className="text-3xl font-bold text-red-600">{alerts.filter(a => a.priority === AlertPriority.CRITICAL).length}</p>
+              <p className="text-sm text-gray-500 mt-1">Immediate attention</p>
+            </div>
+            <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+              <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <ExclamationTriangleIcon className="w-8 h-8 text-orange-600 mr-3" />
+        {/* High Priority Card */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-orange-600">
-                {alerts.filter(a => a.priority === AlertPriority.HIGH).length}
-              </div>
-              <div className="text-sm text-orange-700">High Priority</div>
+              <p className="text-sm font-medium text-gray-600">High Priority</p>
+              <p className="text-3xl font-bold text-orange-600">{alerts.filter(a => a.priority === AlertPriority.HIGH).length}</p>
+              <p className="text-sm text-gray-500 mt-1">Urgent action needed</p>
+            </div>
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <ExclamationTriangleIcon className="w-6 h-6 text-orange-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <ExclamationTriangleIcon className="w-8 h-8 text-yellow-600 mr-3" />
+        {/* Active Alerts Card */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-yellow-600">
-                {activeAlerts.length}
-              </div>
-              <div className="text-sm text-yellow-700">Active Alerts</div>
+              <p className="text-sm font-medium text-gray-600">Active Alerts</p>
+              <p className="text-3xl font-bold text-yellow-600">{activeAlerts.length}</p>
+              <p className="text-sm text-gray-500 mt-1">Currently active</p>
+            </div>
+            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+              <ExclamationTriangleIcon className="w-6 h-6 text-yellow-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <CheckCircleIcon className="w-8 h-8 text-green-600 mr-3" />
+        {/* Resolved Alerts Card */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-green-600">
-                {resolvedAlerts.length}
-              </div>
-              <div className="text-sm text-green-700">Resolved</div>
+              <p className="text-sm font-medium text-gray-600">Resolved</p>
+              <p className="text-3xl font-bold text-green-600">{resolvedAlerts.length}</p>
+              <p className="text-sm text-gray-500 mt-1">Issues addressed</p>
             </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <XCircleIcon className="w-8 h-8 text-gray-600 mr-3" />
-            <div>
-              <div className="text-2xl font-bold text-gray-600">
-                {dismissedAlerts.length}
-              </div>
-              <div className="text-sm text-gray-700">Dismissed</div>
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <CheckCircleIcon className="w-6 h-6 text-green-600" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Active Alerts */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Active Alerts</h2>
-        <DataTable
-          data={activeAlerts}
-          columns={columns}
-          loading={loading}
-          emptyMessage="No active alerts"
-          actions={actions}
-          moduleName="Active Admin Alerts"
-          pagination={true}
-          pageSize={5}
-          showPageSizeSelector={false}
-          striped={true}
-          hover={true}
-          size="md"
-        />
-      </div>
+      {/* Alert Sections */}
+      <div className="space-y-8">
+        {/* Active Alerts */}
+        <div>
+          <div className="flex items-center mb-6">
+            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mr-4">
+              <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Active Alerts</h2>
+              <p className="text-sm text-gray-600">Alerts requiring immediate attention</p>
+            </div>
+          </div>
 
-      {/* Resolved Alerts */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Resolved Alerts</h2>
-        <DataTable
-          data={resolvedAlerts}
-          columns={columns}
-          loading={loading}
-          emptyMessage="No resolved alerts"
-          moduleName="Resolved Admin Alerts"
-          pagination={true}
-          pageSize={5}
-          showPageSizeSelector={false}
-          striped={true}
-          hover={true}
-          size="md"
-        />
-      </div>
+          <DataTable
+            data={activeAlerts}
+            columns={columns}
+            loading={loading}
+            emptyMessage="No active alerts"
+            actions={actions}
+            moduleName="Active Admin Alerts"
+            pagination={true}
+            pageSize={5}
+            showPageSizeSelector={true}
+            striped={true}
+            hover={true}
+            size="md"
+          />
+        </div>
 
-      {/* Dismissed Alerts */}
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Dismissed Alerts</h2>
-        <DataTable
-          data={dismissedAlerts}
-          columns={columns}
-          loading={loading}
-          emptyMessage="No dismissed alerts"
-          moduleName="Dismissed Admin Alerts"
-          pagination={true}
-          pageSize={5}
-          showPageSizeSelector={false}
-          striped={true}
-          hover={true}
-          size="md"
-        />
+        {/* Resolved Alerts */}
+        <div>
+          <div className="flex items-center mb-6">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+              <CheckCircleIcon className="w-6 h-6 text-green-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Resolved Alerts</h2>
+              <p className="text-sm text-gray-600">Alerts that have been addressed</p>
+            </div>
+          </div>
+
+          <DataTable
+            data={resolvedAlerts}
+            columns={columns}
+            loading={false}
+            emptyMessage="No resolved alerts"
+            moduleName="Resolved Admin Alerts"
+            pagination={true}
+            pageSize={5}
+            showPageSizeSelector={true}
+            striped={true}
+            hover={true}
+            size="md"
+          />
+        </div>
+
+        {/* Dismissed Alerts */}
+        <div>
+          <div className="flex items-center mb-6">
+            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
+              <XCircleIcon className="w-6 h-6 text-gray-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Dismissed Alerts</h2>
+              <p className="text-sm text-gray-600">Alerts that have been dismissed</p>
+            </div>
+          </div>
+
+          <DataTable
+            data={dismissedAlerts}
+            columns={columns}
+            loading={false}
+            emptyMessage="No dismissed alerts"
+            moduleName="Dismissed Admin Alerts"
+            pagination={true}
+            pageSize={5}
+            showPageSizeSelector={true}
+            striped={true}
+            hover={true}
+            size="md"
+          />
+        </div>
       </div>
 
       {/* Resolve Confirmation Modal */}

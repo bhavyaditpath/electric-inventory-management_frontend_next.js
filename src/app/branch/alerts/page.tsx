@@ -290,59 +290,89 @@ export default function BranchAlertsPage() {
         </div>
       </div>
 
-      {/* Active Alerts */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Active Alerts</h2>
-        <DataTable
-          data={activeAlerts}
-          columns={columns}
-          loading={loading}
-          emptyMessage="No active alerts"
-          actions={actions}
-          moduleName="Active Stock Alerts"
-          pagination={true}
-          pageSize={5}
-          showPageSizeSelector={false}
-          striped={true}
-          hover={true}
-          size="md"
-        />
-      </div>
+      {/* Alert Sections */}
+      <div className="space-y-8">
+        {/* Active Alerts */}
+        <div>
+          <div className="flex items-center mb-6">
+            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mr-4">
+              <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Active Alerts</h2>
+              <p className="text-sm text-gray-600">Alerts requiring immediate attention</p>
+            </div>
+          </div>
 
-      {/* Resolved Alerts */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Resolved Alerts</h2>
-        <DataTable
-          data={resolvedAlerts}
-          columns={columns}
-          loading={loading}
-          emptyMessage="No resolved alerts"
-          moduleName="Resolved Stock Alerts"
-          pagination={true}
-          pageSize={5}
-          showPageSizeSelector={false}
-          striped={true}
-          hover={true}
-          size="md"
-        />
-      </div>
+          <DataTable
+            data={activeAlerts}
+            columns={columns}
+            loading={loading}
+            emptyMessage="No active alerts"
+            actions={actions}
+            moduleName="Active Stock Alerts"
+            pagination={true}
+            pageSize={5}
+            showPageSizeSelector={false}
+            striped={true}
+            hover={true}
+            size="md"
+          />
+        </div>
 
-      {/* Dismissed Alerts */}
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Dismissed Alerts</h2>
-        <DataTable
-          data={dismissedAlerts}
-          columns={columns}
-          loading={loading}
-          emptyMessage="No dismissed alerts"
-          moduleName="Dismissed Stock Alerts"
-          pagination={true}
-          pageSize={5}
-          showPageSizeSelector={false}
-          striped={true}
-          hover={true}
-          size="md"
-        />
+        {/* Resolved Alerts */}
+        <div>
+          <div className="flex items-center mb-6">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+              <CheckCircleIcon className="w-6 h-6 text-green-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Resolved Alerts</h2>
+              <p className="text-sm text-gray-600">Alerts that have been addressed</p>
+            </div>
+          </div>
+
+          <DataTable
+            data={resolvedAlerts}
+            columns={columns}
+            loading={false}
+            emptyMessage="No resolved alerts"
+            moduleName="Resolved Stock Alerts"
+            pagination={true}
+            pageSize={5}
+            showPageSizeSelector={false}
+            striped={true}
+            hover={true}
+            size="md"
+          />
+        </div>
+
+        {/* Dismissed Alerts */}
+        <div>
+          <div className="flex items-center mb-6">
+            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
+              <XCircleIcon className="w-6 h-6 text-gray-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Dismissed Alerts</h2>
+              <p className="text-sm text-gray-600">Alerts that have been dismissed</p>
+            </div>
+          </div>
+
+          <DataTable
+            data={dismissedAlerts}
+            columns={columns}
+            loading={false}
+            emptyMessage="No dismissed alerts"
+            moduleName="Dismissed Stock Alerts"
+            pagination={true}
+            pageSize={5}
+            showPageSizeSelector={false}
+            striped={true}
+            hover={true}
+            size="md"
+          />
+        </div>
       </div>
 
       {/* Resolve Confirmation Modal */}
