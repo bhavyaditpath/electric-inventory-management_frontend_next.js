@@ -13,12 +13,13 @@ export default function GoogleSignInButton() {
       onClick={handleGoogleSignIn}
       className="
         w-full flex items-center justify-center gap-3
-        py-3 px-4 rounded-lg
-        bg-white border border-gray-300
-        hover:bg-gray-50 active:bg-gray-100
+        py-3.5 px-4 rounded-xl
+        bg-white border-2 border-gray-200
+        hover:bg-gray-50 hover:border-gray-300 active:bg-gray-100
         transition-all duration-200
         shadow-sm hover:shadow-md
-        font-medium text-gray-700 cursor-pointer
+        font-semibold text-gray-700 cursor-pointer
+        focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500
       "
     >
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-5 h-5">
