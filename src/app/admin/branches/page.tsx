@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import DataTable, { TableColumn } from "../../../components/DataTable";
-import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { PencilIcon, TrashIcon, ArrowPathIcon, BuildingStorefrontIcon } from "@heroicons/react/24/outline";
 import { branchApi } from "@/Services/branch.api";
 import Modal from "../../../components/Modal";
 import ConfirmModal from "../../../components/ConfirmModal";
@@ -278,28 +278,47 @@ export default function BranchesPage() {
   ), []);
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Branches Management</h1>
-            <p className="text-gray-600 mt-2">Manage all branches in the system</p>
+    <div className="p-6 bg-gray-50">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+          <div className="flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Branches Management</h1>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage all branches in the system</p>
           </div>
-          <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4 mt-4 md:mt-0">
-            <input
-              type="text"
-              placeholder="Search by branch name..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="w-full md:w-auto px-4 py-2 border border-gray-500 rounded-md focus:outline-none text-gray-900"
-            />
+          <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center justify-center px-3 py-2 sm:px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
+            >
+              <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2 text-gray-600" />
+              <span className="text-gray-700">Refresh</span>
+            </button>
             <button
               onClick={handleCreateBranch}
-              className="w-full md:w-auto bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center px-3 py-2 sm:px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-colors text-sm sm:text-base"
             >
-              Add New Branch
+              <BuildingStorefrontIcon className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Add New Branch</span>
+              <span className="xs:hidden">Add Branch</span>
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="mb-8">
+        <div className="relative max-w-md">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <BuildingStorefrontIcon className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search by branch name..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white text-gray-900"
+          />
         </div>
       </div>
       {/* bg-white rounded-lg shadow */}

@@ -4,6 +4,7 @@ import DataTable, { TableColumn } from "@/components/DataTable";
 import { userApi } from "@/Services/user.api";
 import { branchApi } from "@/Services/branch.api";
 import { PencilIcon, TrashIcon } from "@heroicons/react/16/solid";
+import { ArrowPathIcon, UsersIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import Modal from "@/components/Modal";
 import ConfirmModal from "@/components/ConfirmModal";
@@ -273,26 +274,29 @@ export default function UserPage() {
     );
 
     return (
-        <div className="p-6">
-            <div className="mb-6">
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-                        <p className="text-gray-600 mt-2">Manage all Users in the system</p>
+        <div className="p-6 bg-gray-50">
+            {/* Header */}
+            <div className="mb-8">
+                <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+                    <div className="flex-1">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">User Management</h1>
+                        <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage all users in the system</p>
                     </div>
-                    <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4 mt-4 md:mt-0">
-                        {/* <input
-                            type="text"
-                            placeholder="Search by username..."
-                            value={searchTerm}
-                            onChange={handleSearchChange}
-                            className="w-full md:w-auto px-4 py-2 border border-gray-500 rounded-md focus:outline-none text-gray-900"
-                        /> */}
+                    <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="inline-flex items-center justify-center px-3 py-2 sm:px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
+                        >
+                            <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2 text-gray-600" />
+                            <span className="text-gray-700">Refresh</span>
+                        </button>
                         <button
                             onClick={handleCreateUser}
-                            className="w-full md:w-auto bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
+                            className="inline-flex items-center justify-center px-3 py-2 sm:px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-colors text-sm sm:text-base"
                         >
-                            Add New User
+                            <UsersIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                            <span className="hidden xs:inline">Add New User</span>
+                            <span className="xs:hidden">Add User</span>
                         </button>
                     </div>
                 </div>

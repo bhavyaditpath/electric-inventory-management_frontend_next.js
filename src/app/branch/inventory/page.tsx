@@ -9,6 +9,7 @@ import { showError, showSuccess } from "../../../Services/toast.service";
 import { inventoryApi } from "@/Services/inventory.service";
 import { purchaseApi } from "@/Services/purchase.service";
 import { useSearchParams } from "next/navigation";
+import { ArrowPathIcon, CubeIcon } from '@heroicons/react/24/outline';
 
 export interface InventoryItem {
   id: string;
@@ -185,35 +186,39 @@ export default function BranchInventoryPage() {
   );
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Branch Inventory</h1>
-            <p className="text-gray-600 mt-2">
-              View purchased items and current stock levels for this branch
-            </p>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+          <div className="flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Branch Inventory</h1>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">View purchased items and current stock levels for this branch</p>
           </div>
-
-          <div className="mt-4 md:mt-0">
+          <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center justify-center px-3 py-2 sm:px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
+            >
+              <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2 text-gray-600" />
+              <span className="text-gray-700">Refresh</span>
+            </button>
             <button
               onClick={() => setShowCustomizer(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 
-              focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center gap-2"
+              className="inline-flex items-center justify-center px-3 py-2 sm:px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-colors text-sm sm:text-base"
             >
               <span className="text-sm font-medium">Customize Columns</span>
             </button>
           </div>
         </div>
-
-        <ColumnCustomizer
-          visible={showCustomizer}
-          onClose={() => setShowCustomizer(false)}
-          columns={tableColumns}
-          onApply={handleColumnsChange}
-          omitColumns={["productName"]}
-        />
       </div>
+
+      <ColumnCustomizer
+        visible={showCustomizer}
+        onClose={() => setShowCustomizer(false)}
+        columns={tableColumns}
+        onApply={handleColumnsChange}
+        omitColumns={["productName"]}
+      />
 
       {/* TABLE */}
       <DataTable
@@ -236,38 +241,65 @@ export default function BranchInventoryPage() {
 
       {/* STOCK SUMMARY */}
       {inventory.length > 0 && (
-        <div className="mt-6 bg-gray-50 p-4 rounded-lg">
-          <h3 className="text-lg font-semibold mb-3 text-gray-900">
-            Stock Alert Summary
-          </h3>
+        <div className="mt-8 bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                <CubeIcon className="w-5 h-5 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Stock Alert Summary</h3>
+            </div>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-red-50 p-3 rounded border-l-4 border-red-500">
-              <div className="text-red-800 font-medium">Low Stock Items</div>
-              <div className="text-red-600 text-2xl font-bold">
-                {inventory.filter((i) => i.currentQuantity <= i.lowStockThreshold).length}
+          <div className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="bg-red-50 p-4 sm:p-6 rounded-lg border border-red-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="text-red-800 font-semibold text-base sm:text-lg">Low Stock Items</div>
+                    <div className="text-red-600 text-2xl sm:text-3xl font-bold mt-1">
+                      {inventory.filter((i) => i.currentQuantity <= i.lowStockThreshold).length}
+                    </div>
+                  </div>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-lg flex items-center justify-center ml-3">
+                    <CubeIcon className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 p-4 sm:p-6 rounded-lg border border-yellow-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="text-yellow-800 font-semibold text-base sm:text-lg">Warning Level</div>
+                    <div className="text-yellow-600 text-2xl sm:text-3xl font-bold mt-1">
+                      {inventory.filter(
+                        (i) =>
+                          i.currentQuantity > i.lowStockThreshold &&
+                          i.currentQuantity <= i.lowStockThreshold * 2
+                      ).length}
+                    </div>
+                  </div>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-lg flex items-center justify-center ml-3">
+                    <CubeIcon className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-green-50 p-4 sm:p-6 rounded-lg border border-green-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="text-green-800 font-semibold text-base sm:text-lg">Good Stock</div>
+                    <div className="text-green-600 text-2xl sm:text-3xl font-bold mt-1">
+                      {inventory.filter((i) => i.currentQuantity > i.lowStockThreshold * 2)
+                        .length}
+                    </div>
+                  </div>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center ml-3">
+                    <CubeIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-500">
-              <div className="text-yellow-800 font-medium">Warning Level</div>
-              <div className="text-yellow-600 text-2xl font-bold">
-                {inventory.filter(
-                  (i) =>
-                    i.currentQuantity > i.lowStockThreshold &&
-                    i.currentQuantity <= i.lowStockThreshold * 2
-                ).length}
-              </div>
-            </div>
-
-            <div className="bg-green-50 p-3 rounded border-l-4 border-green-500">
-              <div className="text-green-800 font-medium">Good Stock</div>
-              <div className="text-green-600 text-2xl font-bold">
-                {inventory.filter((i) => i.currentQuantity > i.lowStockThreshold * 2)
-                  .length}
-              </div>
-            </div>
-
           </div>
         </div>
       )}
