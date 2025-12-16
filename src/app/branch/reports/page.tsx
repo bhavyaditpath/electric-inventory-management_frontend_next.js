@@ -306,42 +306,44 @@ export default function ReportsPage() {
   );
 
   return (
-    <div className="p-6 bg-gray-50 ">
+    <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Reports Management</h1>
-            <p className="text-gray-600 mt-1">View, generate and manage system reports and preferences</p>
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col space-y-3 sm:space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Reports Management</h1>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">View, generate and manage system reports and preferences</p>
           </div>
-          <button
-            onClick={() => window.location.reload()}
-            className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <ArrowPathIcon className="w-4 h-4 mr-2 text-gray-600" />
-            <span className="text-gray-700">Refresh</span>
-          </button>
+          <div className="flex justify-center lg:justify-end">
+            <button
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center px-3 py-2 sm:px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
+            >
+              <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2 text-gray-600" />
+              <span className=" text-gray-700">Refresh</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Main Tabs */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-          <nav className="flex">
+          <nav className="flex flex-col sm:flex-row">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex items-center px-6 py-4 text-sm font-medium border-b-2 transition-colors flex-1 justify-center ${
+                  className={`flex items-center px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium border-b-2 sm:border-b-2 transition-colors flex-1 justify-center sm:justify-center ${
                     activeTab === tab.key
                       ? 'border-blue-500 text-blue-600 bg-blue-50/50'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  <Icon className="w-5 h-5 mr-2" />
-                  {tab.label}
+                  <Icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                  <span className="text-xs sm:text-sm">{tab.label}</span>
                 </button>
               );
             })}
@@ -363,8 +365,8 @@ export default function ReportsPage() {
               </div>
             </div>
 
-            <div className="p-6">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="p-4 sm:p-6">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                 {Object.values(ReportType).map((type) => (
                   <button
                     key={type}
@@ -372,15 +374,15 @@ export default function ReportsPage() {
                       setReportType(type);
                       fetchReport(type);
                     }}
-                    className={`p-4 rounded-xl border-2 transition-all hover:shadow-md ${
+                    className={`p-3 sm:p-4 rounded-xl border-2 transition-all hover:shadow-md ${
                       reportType === type
                         ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
                         : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
                     }`}
                   >
                     <div className="text-center">
-                      <DocumentTextIcon className="w-8 h-8 mx-auto mb-3 text-gray-600" />
-                      <span className="font-semibold capitalize text-sm">
+                      <DocumentTextIcon className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 sm:mb-3 text-gray-600" />
+                      <span className="font-semibold capitalize text-xs sm:text-sm">
                         {type.replace('-', ' ')}
                       </span>
                     </div>
@@ -393,39 +395,41 @@ export default function ReportsPage() {
           {/* Report Display */}
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
             {loading ? (
-              <div className="p-12 text-center">
-                <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-600 font-medium">Loading report...</p>
+              <div className="p-8 sm:p-12 text-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-600 font-medium text-sm sm:text-base">Loading report...</p>
               </div>
             ) : reportData ? (
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
+              <div className="p-4 sm:p-6">
+                <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 mb-4 sm:mb-6">
                   <div className="flex items-center">
-                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-4">
-                      <ChartBarIcon className="w-6 h-6 text-green-600" />
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3 sm:mr-4">
+                      <ChartBarIcon className="w-4 h-4 sm:w-6 sm:h-6 text-green-600" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-semibold text-gray-900">
+                      <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                         {reportType.charAt(0).toUpperCase() + reportType.slice(1).replace('-', ' ')} Report
                       </h2>
-                      <p className="text-sm text-gray-600">Generated on {new Date().toLocaleDateString()}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Generated on {new Date().toLocaleDateString()}</p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => fetchReport(reportType)}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    <ArrowPathIcon className="w-4 h-4 mr-2" />
-                    Refresh
-                  </button>
+                  <div className="flex justify-start sm:justify-end">
+                    <button
+                      onClick={() => fetchReport(reportType)}
+                      className="inline-flex items-center px-3 py-2 sm:px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
+                    >
+                      <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                      <span className="">Refresh</span>
+                    </button>
+                  </div>
                 </div>
                 <ReportDataRenderer data={reportData} />
               </div>
             ) : (
-              <div className="p-12 text-center">
-                <DocumentTextIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 font-medium text-lg">Select a report type to view data</p>
-                <p className="text-gray-500 text-sm mt-1">Choose from the available report types above</p>
+              <div className="p-8 sm:p-12 text-center">
+                <DocumentTextIcon className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 font-medium text-base sm:text-lg">Select a report type to view data</p>
+                <p className="text-gray-500 text-xs sm:text-sm mt-1">Choose from the available report types above</p>
               </div>
             )}
           </div>
@@ -433,19 +437,19 @@ export default function ReportsPage() {
       )}
 
       {activeTab === 'generate' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           {/* Generate Specific Report */}
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
                   <ChartBarIcon className="w-5 h-5 text-blue-600" />
                 </div>
-                <h2 className="text-lg font-semibold text-gray-900">Generate Specific Report</h2>
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900">Generate Specific Report</h2>
               </div>
             </div>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -490,16 +494,16 @@ export default function ReportsPage() {
 
           {/* Generate Scheduled Reports */}
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
                   <CogIcon className="w-5 h-5 text-green-600" />
                 </div>
-                <h2 className="text-lg font-semibold text-gray-900">Generate Scheduled Reports</h2>
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900">Generate Scheduled Reports</h2>
               </div>
             </div>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <p className="text-gray-600 mb-6 leading-relaxed">
                 Generate all reports that are scheduled based on user preferences. This will process all active report preferences and deliver them according to their configured settings.
               </p>
@@ -532,44 +536,44 @@ export default function ReportsPage() {
       {activeTab === 'preferences' && (
         <div className="space-y-8">
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="flex-1">
                   <p className="text-sm font-medium text-gray-600">Total Preferences</p>
-                  <p className="text-3xl font-bold text-gray-900">{preferences.length}</p>
-                  <p className="text-sm text-gray-500 mt-1">Configured reports</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-900">{preferences.length}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">Configured reports</p>
                 </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <DocumentTextIcon className="w-6 h-6 text-blue-600" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center ml-3">
+                  <DocumentTextIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="flex-1">
                   <p className="text-sm font-medium text-gray-600">Active Preferences</p>
-                  <p className="text-3xl font-bold text-gray-900">
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-900">
                     {preferences.filter((p: any) => p.isActive).length}
                   </p>
-                  <p className="text-sm text-gray-500 mt-1">Currently active</p>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">Currently active</p>
                 </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <ChartBarIcon className="w-6 h-6 text-green-600" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center ml-3">
+                  <ChartBarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="flex-1">
                   <p className="text-sm font-medium text-gray-600">Email Delivery</p>
-                  <p className="text-3xl font-bold text-gray-900">
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-900">
                     {preferences.filter((p: any) => p.deliveryMethod === DeliveryMethod.EMAIL).length}
                   </p>
-                  <p className="text-sm text-gray-500 mt-1">Email preferences</p>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">Email preferences</p>
                 </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <CogIcon className="w-6 h-6 text-purple-600" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center ml-3">
+                  <CogIcon className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
                 </div>
               </div>
             </div>
@@ -577,36 +581,39 @@ export default function ReportsPage() {
 
           {/* Preferences Table */}
           <div>
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-4">
-                <CogIcon className="w-6 h-6 text-indigo-600" />
+            <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4 mb-4 sm:mb-6">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                <CogIcon className="w-4 h-4 sm:w-6 sm:h-6 text-indigo-600" />
               </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">Report Preferences</h2>
-                <p className="text-sm text-gray-600">Manage automated report delivery preferences</p>
+              <div className="flex-1">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Report Preferences</h2>
+                <p className="text-xs sm:text-sm text-gray-600">Manage automated report delivery preferences</p>
               </div>
             </div>
 
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-4">
-                    <h3 className="text-lg font-semibold text-gray-900">All Preferences</h3>
+              <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+                <div className="flex flex-col space-y-3 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
+                  <div className="flex items-center space-x-3">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">All Preferences</h3>
                     <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">
                       {preferences.length} total
                     </span>
                   </div>
-                  <button
-                    onClick={() => {
-                      setEditingPreference(null);
-                      resetForm();
-                      setShowPreferenceModal(true);
-                    }}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    <CogIcon className="w-4 h-4 mr-2" />
-                    Add Preference
-                  </button>
+                  <div className="flex justify-start sm:justify-end">
+                    <button
+                      onClick={() => {
+                        setEditingPreference(null);
+                        resetForm();
+                        setShowPreferenceModal(true);
+                      }}
+                      className="inline-flex items-center px-3 py-2 sm:px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
+                    >
+                      <CogIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                      <span className="">Add Preference</span>
+                      <span className="xs:hidden">Add</span>
+                    </button>
+                  </div>
                 </div>
               </div>
               <DataTable
@@ -639,7 +646,7 @@ export default function ReportsPage() {
         }}
         title={editingPreference ? 'Edit Report Preference' : 'Create Report Preference'}
       >
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           <div>
             <label htmlFor="reportType" className="block text-sm font-semibold text-gray-700 mb-2">
               Report Type <span className="text-red-500">*</span>
@@ -648,7 +655,7 @@ export default function ReportsPage() {
               id="reportType"
               value={formData.reportType}
               onChange={(e) => setFormData({ ...formData, reportType: e.target.value as ReportType })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white text-gray-900"
+              className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white text-gray-900 text-sm sm:text-base"
             >
               {Object.values(ReportType).map((type) => (
                 <option key={type} value={type}>
@@ -666,7 +673,7 @@ export default function ReportsPage() {
               id="deliveryMethod"
               value={formData.deliveryMethod}
               onChange={(e) => setFormData({ ...formData, deliveryMethod: e.target.value as DeliveryMethod })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white text-gray-900"
+              className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white text-gray-900 text-sm sm:text-base"
             >
               <option value={DeliveryMethod.EMAIL}>Email</option>
               <option value={DeliveryMethod.LOCAL_FILE}>Local File</option>
@@ -686,7 +693,7 @@ export default function ReportsPage() {
             </label>
           </div>
 
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-xl">
+          <div className="flex flex-col space-y-3 sm:flex-row sm:justify-end sm:space-y-0 sm:space-x-4 pt-4 sm:pt-6 border-t border-gray-200 bg-gray-50 -mx-4 sm:-mx-6 -mb-4 sm:-mb-6 px-4 sm:px-6 py-4 rounded-b-xl">
             <button
               type="button"
               onClick={() => {
@@ -695,18 +702,18 @@ export default function ReportsPage() {
                 resetForm();
               }}
               disabled={isSubmitting}
-              className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer"
+              className="px-4 py-2 sm:px-6 sm:py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer order-2 sm:order-1"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer"
+              className="px-4 py-2 sm:px-6 sm:py-2.5 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer order-1 sm:order-2"
             >
               {isSubmitting ? (
                 <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin -ml-1 mr-2 sm:mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>

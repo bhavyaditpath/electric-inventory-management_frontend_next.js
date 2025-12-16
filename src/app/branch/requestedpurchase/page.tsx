@@ -101,12 +101,12 @@ const RequestedPurchasePage = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 ">
+    <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
-          <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Requested Purchases</h1>
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col space-y-3 sm:space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Requested Purchases</h1>
             <p className="text-gray-600 mt-1 text-sm sm:text-base">Track the status of your purchase requests</p>
           </div>
           <div className="flex justify-center lg:justify-end">
@@ -122,17 +122,17 @@ const RequestedPurchasePage = () => {
       </div>
 
       {/* Search Bar */}
-      <div className="mb-8">
-        <div className="relative max-w-md">
+      <div className="mb-6 sm:mb-8">
+        <div className="relative max-w-md mx-auto sm:mx-0">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
           </div>
           <input
             type="text"
-            placeholder="Search requests by product or status..."
+            placeholder="Search requests..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white text-gray-900"
+            className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white text-gray-900 text-sm sm:text-base"
             aria-label="Search requests"
           />
         </div>
@@ -140,16 +140,16 @@ const RequestedPurchasePage = () => {
 
       {/* Requests List */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
           <div className="flex items-center">
             <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
               <CubeIcon className="w-5 h-5 text-indigo-600" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">All Requests</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900">All Requests</h2>
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {loadingRequests ? (
               <div className="col-span-full flex justify-center py-12">
@@ -167,51 +167,50 @@ const RequestedPurchasePage = () => {
               </div>
             ) : (
               filteredRequests.map(request => (
-                <div key={request.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex-1">
-                        <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-                          <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-                            {request.purchase?.productName || 'Unknown Product'}
-                          </h3>
-                          <span
-                            className={`px-2 py-1 sm:px-3 text-xs font-medium rounded-full self-start sm:self-auto ${request.status === RequestStatus.REQUEST
-                              ? 'bg-amber-100 text-amber-800'
-                              : request.status === RequestStatus.IN_TRANSIT
-                                ? 'bg-sky-100 text-sky-800'
-                                : request.status === RequestStatus.DELIVERED
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : request.status === RequestStatus.REJECT
-                                    ? 'bg-red-100 text-red-800'
-                                    : 'bg-gray-100 text-gray-800'
-                              }`}
-                          >
-                            {request.status.replace('_', ' ')}
-                          </span>
-                        </div>
-                        <div className="mt-2 space-y-1">
-                          <p className="text-sm text-gray-600">
-                            <span className="font-medium">{request.quantityRequested}</span> units requested
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Assigned to <span className="font-medium">{request.adminUser?.username || "Not Assigned"}</span>
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Requested on {new Date(request.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
+                <div key={request.id} className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-md transition-shadow">
+                  <div className="flex flex-col space-y-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col space-y-2 sm:flex-row sm:items-start sm:justify-between sm:space-y-0 sm:space-x-3">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+                          {request.purchase?.productName || 'Unknown Product'}
+                        </h3>
+                        <span
+                          className={`px-2 py-1 sm:px-3 text-xs font-medium rounded-full self-start sm:self-auto flex-shrink-0 ${request.status === RequestStatus.REQUEST
+                            ? 'bg-amber-100 text-amber-800'
+                            : request.status === RequestStatus.IN_TRANSIT
+                              ? 'bg-sky-100 text-sky-800'
+                              : request.status === RequestStatus.DELIVERED
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : request.status === RequestStatus.REJECT
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-gray-100 text-gray-800'
+                            }`}
+                        >
+                          {request.status.replace('_', ' ')}
+                        </span>
+                      </div>
+                      <div className="mt-3 space-y-1">
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">{request.quantityRequested}</span> units requested
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Assigned to <span className="font-medium">{request.adminUser?.username || "Not Assigned"}</span>
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Requested on {new Date(request.createdAt).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-2">
+                    <div className="flex justify-start pt-2 border-t border-gray-100">
                       {request.status === RequestStatus.IN_TRANSIT && (
                         <button
                           onClick={() => handleStatusUpdate(request.id, RequestStatus.DELIVERED)}
-                          className="inline-flex items-center px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 hover:border-emerald-300 transition-colors"
+                          className="inline-flex items-center px-3 py-2 sm:px-4 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 hover:border-emerald-300 transition-colors w-full sm:w-auto justify-center"
                         >
                           <CheckCircleIcon className="h-4 w-4 mr-2" />
-                          Mark Delivered
+                          <span className="hidden xs:inline">Mark Delivered</span>
+                          <span className="xs:hidden">Deliver</span>
                         </button>
                       )}
                     </div>
@@ -222,18 +221,18 @@ const RequestedPurchasePage = () => {
           </div>
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-6 py-4">
-              <div className="text-sm text-gray-700">
+            <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 px-4 sm:px-6 py-4 border-t border-gray-200">
+              <div className="text-sm text-gray-700 text-center sm:text-left">
                 Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, total)} of {total} results
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center justify-center space-x-2">
                 <button
                   onClick={() => handlePageChange(page - 1)}
                   disabled={page <= 1}
                   className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronLeftIcon className="h-4 w-4 mr-1" />
-                  Previous
+                  <span className="hidden sm:inline">Previous</span>
                 </button>
                 <span className="text-sm text-gray-700 px-3 py-2">
                   Page {page} of {totalPages}
@@ -243,7 +242,7 @@ const RequestedPurchasePage = () => {
                   disabled={page >= totalPages}
                   className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  Next
+                  <span className="hidden sm:inline">Next</span>
                   <ChevronRightIcon className="h-4 w-4 ml-1" />
                 </button>
               </div>
