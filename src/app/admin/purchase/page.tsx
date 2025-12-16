@@ -9,7 +9,7 @@ import { PurchaseDto, PurchaseResponseDto } from '../../../types/api-types';
 import { showSuccess, showError } from '../../../Services/toast.service';
 import { exportPurchasesToPDF } from '../../../utils/pdfExport';
 import { useAuth } from '../../../contexts/AuthContext';
-// import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon, DocumentTextIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 
 const PurchasePage = () => {
   const router = useRouter();
@@ -197,184 +197,217 @@ const PurchasePage = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Purchase Management</h1>
-        <p className="text-gray-600 mt-2">Record and manage inventory purchases</p>
+    <div className="p-6 bg-gray-50">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Purchase Management</h1>
+            <p className="text-gray-600 mt-1">Record and manage inventory purchases</p>
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <ArrowPathIcon className="w-4 h-4 mr-2 text-gray-600" />
+            <span className="text-gray-700">Refresh</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Purchase Form */}
-        <div className="card">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900">
-            {editingPurchase ? 'Edit Purchase' : 'Record New Purchase'}
-          </h2>
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                <ShoppingCartIcon className="w-5 h-5 text-blue-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">
+                {editingPurchase ? 'Edit Purchase' : 'Record New Purchase'}
+              </h2>
+            </div>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="p-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
 
-            <InputField
-              label="Product/Item Name"
-              type="text"
-              value={formData.productName}
-              onChange={handleInputChange}
-              name="productName"
-              error={errors.productName}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
               <InputField
-                label="Quantity"
-                type="number"
-                value={formData.quantity}
+                label="Product/Item Name"
+                type="text"
+                value={formData.productName}
                 onChange={handleInputChange}
-                name="quantity"
-                step="0.01"
-                error={errors.quantity}
+                name="productName"
+                error={errors.productName}
               />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Unit</label>
-                <select
-                  name="unit"
-                  value={formData.unit}
+              <div className="grid grid-cols-2 gap-4">
+                <InputField
+                  label="Quantity"
+                  type="number"
+                  value={formData.quantity}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-700"
+                  name="quantity"
+                  step="0.01"
+                  error={errors.quantity}
+                />
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Unit</label>
+                  <select
+                    name="unit"
+                    value={formData.unit}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white text-gray-900"
+                  >
+                    <option value="pieces">Pieces</option>
+                    <option value="boxes">Boxes</option>
+                    <option value="kgs">Kgs</option>
+                  </select>
+                  {errors.unit && (
+                    <p className="text-red-500 text-sm mt-1">{errors.unit}</p>
+                  )}
+                </div>
+              </div>
+
+              <InputField
+                label="Price per Unit"
+                type="number"
+                value={formData.pricePerUnit}
+                onChange={handleInputChange}
+                name="pricePerUnit"
+                step="0.01"
+                error={errors.pricePerUnit}
+              />
+
+              <div className="space-y-1">
+                <label className="block text-sm font-semibold text-gray-700">Total Price</label>
+                <input
+                  type="text"
+                  value={`Rs ${formData.totalPrice}`}
+                  readOnly
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-gray-50 text-gray-900 font-medium"
+                />
+                {errors.totalPrice && <p className="text-red-500 text-sm mt-1">{errors.totalPrice}</p>}
+              </div>
+
+              <InputField
+                label="Low Stock Alert Threshold"
+                type="number"
+                value={formData.lowStockThreshold}
+                onChange={handleInputChange}
+                name="lowStockThreshold"
+                error={errors.lowStockThreshold}
+              />
+
+              <InputField
+                label="Supplier Name"
+                type="text"
+                value={formData.brand}
+                onChange={handleInputChange}
+                name="brand"
+                error={errors.brand}
+              />
+
+              <div className="flex space-x-4 pt-4">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`flex-1 py-3.5 px-4 rounded-lg font-semibold text-white transition-all duration-200 ${
+                    loading
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 focus:ring-2 focus:ring-blue-200 shadow-lg hover:shadow-xl'
+                  }`}
                 >
-                  <option value="pieces">Pieces</option>
-                  <option value="boxes">Boxes</option>
-                  <option value="kgs">Kgs</option>
-                </select>
-                {errors.unit && (
-                  <p className="text-red-500 text-sm mt-1">{errors.unit}</p>
+                  {loading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3 inline-block"></div>
+                      {editingPurchase ? 'Updating...' : 'Recording...'}
+                    </>
+                  ) : (
+                    editingPurchase ? 'Update Purchase' : 'Record Purchase'
+                  )}
+                </button>
+                {editingPurchase && (
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    className="flex-1 py-3.5 px-4 rounded-lg font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-50 active:bg-gray-100 focus:ring-2 focus:ring-gray-200 transition-all duration-200"
+                  >
+                    Cancel Edit
+                  </button>
                 )}
               </div>
-            </div>
-
-            <InputField
-              label="Price per Unit"
-              type="number"
-              value={formData.pricePerUnit}
-              onChange={handleInputChange}
-              name="pricePerUnit"
-              step="0.01"
-              error={errors.pricePerUnit}
-            />
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Total Price</label>
-              <input
-                type="text"
-                value={`Rs ${formData.totalPrice}`}
-                readOnly
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
-              />
-              {errors.totalPrice && <p className="text-red-500 text-sm mt-1">{errors.totalPrice}</p>}
-            </div>
-
-            <InputField
-              label="Low Stock Alert Threshold"
-              type="number"
-              value={formData.lowStockThreshold}
-              onChange={handleInputChange}
-              name="lowStockThreshold"
-              error={errors.lowStockThreshold}
-            />
-
-            <InputField
-              label="Supplier Name"
-              type="text"
-              value={formData.brand}
-              onChange={handleInputChange}
-              name="brand"
-              error={errors.brand}
-            />
-
-            <div className="flex space-x-4">
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn btn-primary flex-1"
-              >
-                {loading ? (editingPurchase ? 'Updating...' : 'Recording...') : (editingPurchase ? 'Update Purchase' : 'Record Purchase')}
-              </button>
-              {editingPurchase && (
-                <button
-                  type="button"
-                  onClick={handleCancelEdit}
-                  className="btn btn-outline flex-1"
-                >
-                  Cancel Edit
-                </button>
-              )}
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
 
         {/* HISTORY */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Recent Purchases <span className="text-sm font-normal text-gray-500">(last 3 days)</span></h2>
-            <button
-              onClick={() => exportPurchasesToPDF(purchases, user?.branch || 'All Branches')}
-              disabled={!purchases || purchases.length === 0}
-              className="btn btn-primary"
-            >
-              Export to PDF
-            </button>
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center">
+                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                  <DocumentTextIcon className="w-5 h-5 text-green-600" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Recent Purchases
+                  <span className="text-sm font-normal text-gray-500 ml-2">(last 3 days)</span>
+                </h2>
+              </div>
+              <button
+                onClick={() => exportPurchasesToPDF(purchases, user?.branch || 'All Branches')}
+                disabled={!purchases || purchases.length === 0}
+                className={`inline-flex items-center px-4 py-2 rounded-lg font-semibold text-white transition-all duration-200 ${
+                  !purchases || purchases.length === 0
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-green-600 hover:bg-green-700 active:bg-green-800 focus:ring-2 focus:ring-green-200 shadow-lg hover:shadow-xl'
+                }`}
+              >
+                <DocumentTextIcon className="w-4 h-4 mr-2" />
+                Export PDF
+              </button>
+            </div>
           </div>
 
-          <div className="space-y-4 max-h-96 overflow-y-auto">
-            {!purchases || purchases.length === 0 ? (
-              <p className="text-gray-500">No purchases recorded yet.</p>
-            ) : (
-              purchases.slice(0, 10).map(purchase => (
-                <div key={purchase.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-600">{purchase.productName}</h3>
-                      <p className="text-sm text-gray-600">{purchase.brand}</p>
-                      <p className="text-sm text-gray-600">
-                        {purchase.quantity} {purchase.unit} × Rs {purchase.pricePerUnit} = Rs {purchase.totalPrice}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(purchase.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col items-end space-y-2">
-                      <p className="text-sm text-gray-600">Threshold: {purchase.lowStockThreshold}</p>
-
-                      {/* <div className="flex space-x-2">
-                        <button
-                          onClick={() => {
-                            setEditingPurchase(purchase);
-                            router.push(`/admin/purchase?edit=${purchase.id}`);
-                          }}
-                          className="p-1 text-blue-600 hover:text-blue-800"
-                          title="Edit Purchase"
-                        >
-                          <PencilIcon className="h-4 w-4" />
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setDeleteId(purchase.id);
-                            setShowConfirmDelete(true);
-                          }}
-                          className="p-1 text-red-600 hover:text-red-800"
-                          title="Delete Purchase"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </button>
-                      </div> */}
+          <div className="p-6">
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {!purchases || purchases.length === 0 ? (
+                <div className="text-center py-12">
+                  <ShoppingCartIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600 font-medium text-lg">No purchases recorded yet</p>
+                  <p className="text-gray-500 text-sm mt-1">Start by recording your first purchase</p>
+                </div>
+              ) : (
+                purchases.slice(0, 10).map(purchase => (
+                  <div key={purchase.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900">{purchase.productName}</h3>
+                        <p className="text-sm text-gray-600">{purchase.brand}</p>
+                        <div className="flex items-center space-x-4 text-sm text-gray-600">
+                          <span>{purchase.quantity} {purchase.unit}</span>
+                          <span>×</span>
+                          <span>Rs {purchase.pricePerUnit}</span>
+                          <span>=</span>
+                          <span className="font-semibold text-blue-600">Rs {purchase.totalPrice}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-gray-500">
+                            {new Date(purchase.createdAt).toLocaleDateString()}
+                          </p>
+                          <p className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
+                            Threshold: {purchase.lowStockThreshold}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
         </div>
-
       </div>
 
       <ConfirmModal
