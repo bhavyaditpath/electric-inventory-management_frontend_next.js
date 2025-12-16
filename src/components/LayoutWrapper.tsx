@@ -55,7 +55,7 @@ export default function LayoutWrapper({
 
   return (
     <RoleProtectedRoute requiredRole={requiredRole}>
-      <div className="flex min-h-screen bg-gray-100">
+      <div className="flex min-h-screen bg-gray-50">
 
         {isMobile && isMobileOpen && (
           <div className="fixed inset-0 z-50 flex">
