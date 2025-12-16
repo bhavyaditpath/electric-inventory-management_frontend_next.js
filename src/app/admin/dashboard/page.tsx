@@ -6,11 +6,22 @@ import { branchApi } from '@/Services/branch.api';
 import { purchaseApi } from '@/Services/purchase.service';
 import { requestApi } from '@/Services/request.service';
 import { Inventory, PurchaseResponseDto, RequestResponseDto } from '@/types/api-types';
+import {
+  CubeIcon,
+  BuildingStorefrontIcon,
+  CurrencyDollarIcon,
+  ArrowPathIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  DocumentTextIcon
+} from '@heroicons/react/24/outline';
 
 interface DashboardStats {
   totalInventory: number;
   activeBranches: number;
   monthlySales: number;
+  totalRequests: number;
   recentActivity: ActivityItem[];
 }
 
@@ -23,6 +34,7 @@ interface ActivityItem {
   status?: string;
   value?: string;
   color: string;
+  icon: any;
 }
 
 export default function DashboardPage() {
@@ -30,6 +42,7 @@ export default function DashboardPage() {
     totalInventory: 0,
     activeBranches: 0,
     monthlySales: 0,
+    totalRequests: 0,
     recentActivity: []
   });
   const [loading, setLoading] = useState(true);
@@ -104,6 +117,7 @@ export default function DashboardPage() {
       } else {
         totalInventory = 0;
       }
+
       // Process branch data - following admin/branches pattern
       let activeBranches = 0;
       if (branchResponse.success && Array.isArray(branchResponse.data)) {
@@ -127,6 +141,26 @@ export default function DashboardPage() {
         monthlySales = currentMonthPurchases.reduce((sum: number, purchase: PurchaseResponseDto) => sum + purchase.totalPrice, 0);
       }
 
+      // Process request data for pending requests only
+      let allRequests: RequestResponseDto[] = [];
+      let totalRequests = 0;
+
+      if (requestResponse.success && requestResponse.data) {
+        const data = requestResponse.data as any;
+        if (data.items && Array.isArray(data.items)) {
+          allRequests = data.items;
+        } else if (Array.isArray(data)) {
+          allRequests = data;
+        }
+      } else if (Array.isArray(requestResponse)) {
+        allRequests = requestResponse as RequestResponseDto[];
+      }
+
+      // Count only requests with "Request" status
+      if (Array.isArray(allRequests)) {
+        totalRequests = allRequests.filter(request => request.status === 'Request').length;
+      }
+
       // Process recent activity
       const recentActivity: ActivityItem[] = [];
 
@@ -143,21 +177,16 @@ export default function DashboardPage() {
               description: `${purchase.quantity} ${purchase.unit} of ${purchase.productName}`,
               timestamp: getTimeAgo(purchase.createdAt),
               value: `+${purchase.quantity} items`,
-              color: 'blue'
+              color: 'blue',
+              icon: CubeIcon
             });
           });
       }
 
-      // Add recent requests
-      let allRequests: RequestResponseDto[] = [];
-      if (Array.isArray(requestResponse)) {
-        allRequests = requestResponse as RequestResponseDto[];
-      } else if (requestResponse.success && requestResponse.data) {
-        allRequests = requestResponse.data as RequestResponseDto[];
-      }
-
+      // Add recent requests (only those with "Request" status for activity)
       if (Array.isArray(allRequests)) {
-        allRequests
+        const pendingRequests = allRequests.filter(request => request.status === 'Request');
+        pendingRequests
           .sort((a: RequestResponseDto, b: RequestResponseDto) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           .slice(0, 2)
           .forEach(request => {
@@ -168,7 +197,8 @@ export default function DashboardPage() {
               description: `${request.quantityRequested} items requested`,
               timestamp: getTimeAgo(request.createdAt),
               status: request.status,
-              color: request.status === 'Accept' ? 'green' : request.status === 'Reject' ? 'red' : 'yellow'
+              color: 'yellow',
+              icon: ClockIcon
             });
           });
       }
@@ -186,6 +216,7 @@ export default function DashboardPage() {
         totalInventory,
         activeBranches,
         monthlySales,
+        totalRequests,
         recentActivity: recentActivity.slice(0, 5) // Show top 5 activities
       });
 
@@ -204,16 +235,16 @@ export default function DashboardPage() {
   // Loading skeleton
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-6 bg-gray-50 min-h-screen">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-2">Welcome to the Electric Inventory Management System</p>
+          <div className="h-8 bg-gray-200 rounded w-48 mb-2 animate-pulse"></div>
+          <div className="h-4 bg-gray-200 rounded w-80 animate-pulse"></div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
               <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
               <div className="h-3 bg-gray-200 rounded w-2/3"></div>
             </div>
@@ -226,16 +257,21 @@ export default function DashboardPage() {
   // Error state
   if (error) {
     return (
-      <div className="p-6">
+      <div className="p-6 bg-gray-50 min-h-screen">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         </div>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800">{error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <div className="flex items-center mb-3">
+            <ExclamationTriangleIcon className="w-6 h-6 text-red-600 mr-3" />
+            <p className="text-red-800 font-semibold">Error Loading Dashboard</p>
+          </div>
+          <p className="text-red-700 mb-4">{error}</p>
           <button
             onClick={fetchDashboardData}
-            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
+            <ArrowPathIcon className="w-4 h-4 mr-2" />
             Retry
           </button>
         </div>
@@ -244,69 +280,141 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Welcome to the Electric Inventory Management System</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Dashboard Cards */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Inventory</h3>
-          <p className="text-3xl font-bold text-blue-600">{stats.totalInventory.toLocaleString()}</p>
-          <p className="text-sm text-gray-500">Items in stock</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Active Branches</h3>
-          <p className="text-3xl font-bold text-green-600">{stats.activeBranches}</p>
-          <p className="text-sm text-gray-500">Branches online</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Monthly Sales</h3>
-          <p className="text-3xl font-bold text-purple-600">{formatCurrency(stats.monthlySales)}</p>
-          <p className="text-sm text-gray-500">This month</p>
-        </div>
-      </div>
-
-      <div className="mt-8 bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Recent Activity</h2>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600 mt-1">Electric Inventory Management System</p>
+          </div>
           <button
             onClick={fetchDashboardData}
-            className="text-sm text-blue-600 hover:text-blue-800"
+            className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            Refresh
+            <ArrowPathIcon className="w-4 h-4 mr-2 text-gray-600" />
+            <span className="text-gray-700">Refresh</span>
           </button>
         </div>
-        <div className="space-y-4">
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Total Inventory Card */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Inventory</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.totalInventory.toLocaleString()}</p>
+              <p className="text-sm text-gray-500 mt-1">Items in stock</p>
+            </div>
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <CubeIcon className="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Active Branches Card */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Active Branches</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.activeBranches}</p>
+              <p className="text-sm text-gray-500 mt-1">Branches online</p>
+            </div>
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <BuildingStorefrontIcon className="w-6 h-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Monthly Sales Card */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Monthly Sales</p>
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.monthlySales)}</p>
+              <p className="text-sm text-gray-500 mt-1">This month</p>
+            </div>
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <CurrencyDollarIcon className="w-6 h-6 text-purple-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Pending Requests Card */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Pending Requests</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.totalRequests}</p>
+              <p className="text-sm text-gray-500 mt-1">Awaiting approval</p>
+            </div>
+            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+              <DocumentTextIcon className="w-6 h-6 text-yellow-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="bg-white rounded-lg border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
+        </div>
+
+        <div className="p-6">
           {stats.recentActivity.length > 0 ? (
-            stats.recentActivity.map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between py-2 border-b border-gray-200 last:border-b-0">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{activity.title}</p>
-                  <p className="text-xs text-gray-500">{activity.description}</p>
-                  <p className="text-xs text-gray-400">{activity.timestamp}</p>
-                </div>
-                <div className="text-right">
-                  {activity.value && (
-                    <span className={`text-sm text-${activity.color}-600`}>
-                      {activity.value}
-                    </span>
-                  )}
-                  {activity.status && (
-                    <span className={`text-sm text-${activity.color}-600`}>
-                      {activity.status}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))
+            <div className="space-y-4">
+              {stats.recentActivity.map((activity) => {
+                const IconComponent = activity.icon;
+                return (
+                  <div key={activity.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                    <div className="flex items-center">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-4 ${
+                        activity.color === 'blue' ? 'bg-blue-100' :
+                        activity.color === 'green' ? 'bg-green-100' :
+                        activity.color === 'red' ? 'bg-red-100' :
+                        activity.color === 'yellow' ? 'bg-yellow-100' : 'bg-gray-100'
+                      }`}>
+                        <IconComponent className={`w-5 h-5 ${
+                          activity.color === 'blue' ? 'text-blue-600' :
+                          activity.color === 'green' ? 'text-green-600' :
+                          activity.color === 'red' ? 'text-red-600' :
+                          activity.color === 'yellow' ? 'text-yellow-600' : 'text-gray-600'
+                        }`} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{activity.title}</p>
+                        <p className="text-sm text-gray-600">{activity.description}</p>
+                        <p className="text-xs text-gray-500 mt-1">{activity.timestamp}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      {activity.value && (
+                        <span className="text-sm text-gray-900 font-medium">
+                          {activity.value}
+                        </span>
+                      )}
+                      {activity.status && (
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          activity.color === 'green' ? 'bg-green-100 text-green-800' :
+                          activity.color === 'red' ? 'bg-red-100 text-red-800' :
+                          activity.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {activity.status}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              <p>No recent activity</p>
+            <div className="text-center py-8">
+              <ClockIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-500 font-medium">No recent activity</p>
+              <p className="text-gray-400 text-sm">Recent inventory activities will appear here</p>
             </div>
           )}
         </div>
