@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import DataTable, { TableColumn } from "../../../components/DataTable";
-import { PencilIcon, TrashIcon, ArrowPathIcon, BuildingStorefrontIcon } from "@heroicons/react/24/outline";
+import { PencilIcon, ArrowPathIcon, BuildingStorefrontIcon } from "@heroicons/react/24/outline";
 import { branchApi } from "@/Services/branch.api";
 import Modal from "../../../components/Modal";
 import ConfirmModal from "../../../components/ConfirmModal";
@@ -20,51 +20,6 @@ interface Branch {
   updatedBy: number | null;
   isRemoved: boolean;
 }
-
-const columns: TableColumn<Branch>[] = [
-  {
-    key: "name",
-    header: "Branch Name",
-    sortable: true,
-    className: "font-medium text-gray-900"
-  },
-  {
-    key: "address",
-    header: "Address",
-    sortable: false,
-    render: (value: string | undefined) => (
-      <div className="max-w-xs truncate" title={value || "N/A"}>
-        {value || "N/A"}
-      </div>
-    )
-  },
-  {
-    key: "phone",
-    header: "Phone",
-    sortable: false,
-    render: (value: string | undefined) => value || "N/A"
-  },
-  {
-    key: "createdAt",
-    header: "Created",
-    sortable: true,
-    render: (value: string) => new Date(value).toLocaleDateString()
-  },
-  // {
-  //   key: "isRemoved",
-  //   header: "Status",
-  //   sortable: true,
-  //   render: (value: boolean) => (
-  //     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-  //       !value
-  //         ? 'bg-green-100 text-green-800'
-  //         : 'bg-red-100 text-red-800'
-  //     }`}>
-  //       {!value ? 'Active' : 'Inactive'}
-  //     </span>
-  //   )
-  // }
-];
 
 export default function BranchesPage() {
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -164,27 +119,90 @@ export default function BranchesPage() {
     setShowModal(true);
   }, []);
 
-  const handleDelete = useCallback((branch: Branch) => {
+  const handleToggleStatus = useCallback((branch: Branch) => {
     setDeletingBranch(branch);
     setShowDeleteModal(true);
   }, []);
 
-  const confirmDelete = useCallback(async () => {
+  const columns: TableColumn<Branch>[] = useMemo(() => [
+    {
+      key: "name",
+      header: "Branch Name",
+      sortable: true,
+      className: "font-medium text-gray-900"
+    },
+    {
+      key: "address",
+      header: "Address",
+      sortable: false,
+      render: (value: string | undefined) => (
+        <div className="max-w-xs truncate" title={value || "N/A"}>
+          {value || "N/A"}
+        </div>
+      )
+    },
+    {
+      key: "phone",
+      header: "Phone",
+      sortable: false,
+      render: (value: string | undefined) => value || "N/A"
+    },
+    {
+      key: "toggle",
+      header: "Status Toggle",
+      sortable: false,
+      render: (value: any, branch: Branch) => (
+        <button
+          onClick={() => handleToggleStatus(branch)}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${!branch.isRemoved ? 'bg-green-600' : 'bg-gray-200'
+            }`}
+          title={branch.isRemoved ? 'Activate Branch' : 'Deactivate Branch'}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${!branch.isRemoved ? 'translate-x-6' : 'translate-x-1'
+              }`}
+          />
+        </button>
+      )
+    },
+    {
+      key: "createdAt",
+      header: "Created",
+      sortable: true,
+      render: (value: string) => new Date(value).toLocaleDateString()
+    },
+    {
+      key: "isRemoved",
+      header: "Status",
+      sortable: true,
+      render: (value: boolean) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${!value
+            ? 'bg-green-100 text-green-800'
+            : 'bg-red-100 text-red-800'
+          }`}>
+          {!value ? 'Active' : 'Inactive'}
+        </span>
+      )
+    }
+  ], [handleToggleStatus]);
+
+  const confirmToggleStatus = useCallback(async () => {
     if (!deletingBranch) return;
     setIsDeleting(true);
     try {
-      const response = await branchApi.delete(deletingBranch.id);
+      const newStatus = !deletingBranch.isRemoved;
+      const response = await branchApi.update(deletingBranch.id, { isRemoved: newStatus });
       if (response.success) {
-        showSuccess(response.message || "Branch deleted successfully");
+        showSuccess(response.message || `Branch ${newStatus ? 'deactivated' : 'activated'} successfully`);
         await loadBranches(currentPage, pageSize, searchTerm, sortBy, sortOrder);
         setShowDeleteModal(false);
         setDeletingBranch(null);
       } else {
-        showError(response.message || "Error deleting branch");
+        showError(response.message || `Error ${newStatus ? 'deactivating' : 'activating'} branch`);
       }
     } catch (error) {
-      console.error("Error deleting branch:", error);
-      showError("Error deleting branch");
+      console.error("Error toggling branch status:", error);
+      showError("Error toggling branch status");
     } finally {
       setIsDeleting(false);
     }
@@ -263,16 +281,6 @@ export default function BranchesPage() {
         title="Edit Branch"
       >
         <PencilIcon className="w-4 h-4" />
-      </button>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          handleDelete(branch);
-        }}
-        className="text-red-600 hover:text-red-900 p-1 cursor-pointer"
-        title="Delete Branch"
-      >
-        <TrashIcon className="w-4 h-4" />
       </button>
     </div>
   ), []);
@@ -429,16 +437,16 @@ export default function BranchesPage() {
         </form>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
+      {/* Status Toggle Confirmation Modal */}
       <ConfirmModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        title="Delete Branch"
-        message={`Are you sure you want to delete "${deletingBranch?.name}"? This action cannot be undone.`}
-        confirmLabel="Delete"
-        onConfirm={confirmDelete}
+        title={deletingBranch?.isRemoved ? "Activate Branch" : "Deactivate Branch"}
+        message={`Are you sure you want to ${deletingBranch?.isRemoved ? 'activate' : 'deactivate'} "${deletingBranch?.name}"?`}
+        confirmLabel={deletingBranch?.isRemoved ? "Activate" : "Deactivate"}
+        onConfirm={confirmToggleStatus}
         isDeleting={isDeleting}
-        variant="danger"
+        variant={deletingBranch?.isRemoved ? "warning" : "danger"}
       />
     </div>
   );
