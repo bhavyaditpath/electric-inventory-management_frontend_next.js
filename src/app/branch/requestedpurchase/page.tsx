@@ -69,37 +69,6 @@ const RequestedPurchasePage = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case RequestStatus.REQUEST:
-        return <ClockIcon className="h-4 w-4" />;
-      case RequestStatus.IN_TRANSIT:
-        return <TruckIcon className="h-4 w-4" />;
-      case RequestStatus.DELIVERED:
-        return <CheckCircleIcon className="h-4 w-4" />;
-      case RequestStatus.REJECT:
-        return <XCircleIcon className="h-4 w-4" />;
-      default:
-        return <CubeIcon className="h-4 w-4" />;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const baseClasses = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
-    switch (status) {
-      case RequestStatus.REQUEST:
-        return `${baseClasses} bg-blue-100 text-blue-800`;
-      case RequestStatus.IN_TRANSIT:
-        return `${baseClasses} bg-yellow-100 text-yellow-800`;
-      case RequestStatus.DELIVERED:
-        return `${baseClasses} bg-green-100 text-green-800`;
-      case RequestStatus.REJECT:
-        return `${baseClasses} bg-red-100 text-red-800`;
-      default:
-        return `${baseClasses} bg-gray-100 text-gray-800`;
-    }
-  };
-
   return (
     <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
       {/* Header */}
@@ -202,7 +171,7 @@ const RequestedPurchasePage = () => {
                       </div>
                     </div>
 
-                    <div className="flex justify-start pt-2 border-t border-gray-100">
+                    <div className="flex justify-start pt-0">
                       {request.status === RequestStatus.IN_TRANSIT && (
                         <button
                           onClick={() => handleStatusUpdate(request.id, RequestStatus.DELIVERED)}
@@ -221,7 +190,7 @@ const RequestedPurchasePage = () => {
           </div>
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 px-4 sm:px-6 py-4 border-t border-gray-200">
+            <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 px-4 sm:px-6 py-4">
               <div className="text-sm text-gray-700 text-center sm:text-left">
                 Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, total)} of {total} results
               </div>

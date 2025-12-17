@@ -196,7 +196,7 @@ const RequestPage = () => {
                       </div>
                     </div>
 
-                    <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2 pt-2 border-t border-gray-100">
+                    <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2 pt-0">
                       {request.status === RequestStatus.REQUEST && (
                         <>
                           <button
@@ -264,7 +264,7 @@ const RequestPage = () => {
           </div>
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 px-4 sm:px-6 py-4 border-t border-gray-200">
+            <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 px-4 sm:px-6 py-4">
               <div className="text-sm text-gray-700 text-center sm:text-left">
                 Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, total)} of {total} results
               </div>
