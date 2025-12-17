@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ChevronUpIcon, ChevronDownIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
 
 export interface TableColumn<T> {
@@ -12,7 +12,7 @@ export interface TableColumn<T> {
 }
 
 export interface DataTableProps<T = any> {
-  data: T[];
+  data?: T[];
   columns: TableColumn<T>[];
   loading?: boolean;
   emptyMessage?: string;
@@ -37,7 +37,7 @@ export interface DataTableProps<T = any> {
 }
 
 export default function DataTable<T extends Record<string, any>>({
-  data,
+  data = [],
   columns,
   loading = false,
   emptyMessage = "No data available",
@@ -86,17 +86,17 @@ export default function DataTable<T extends Record<string, any>>({
   const endIndex = startIndex + pageSize;
   const paginatedData = pagination ? (serverSide ? sortedData : sortedData.slice(startIndex, endIndex)) : sortedData;
 
-  // Reset to first page when data changes or page size changes
-  useMemo(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      handlePageChange(1);
-    }
-  }, [totalPages, currentPage]);
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     onPageChange?.(page);
   };
+
+  // Reset to first page when data changes or page size changes
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      handlePageChange(1);
+    }
+  }, [totalPages, currentPage, handlePageChange]);
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize);

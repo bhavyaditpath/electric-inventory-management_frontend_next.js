@@ -33,6 +33,10 @@ export default function UserPage() {
     const [pageSize, setPageSize] = useState(10);
     const [totalRecords, setTotalRecords] = useState(0);
 
+    // Sorting state
+    const [sortBy, setSortBy] = useState<string>('');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
     const loadBranches = useCallback(async () => {
         if (branches.length > 0) return;
         const response = await branchApi.getAll();
@@ -41,13 +45,15 @@ export default function UserPage() {
         }
     }, [branches]);
 
-    const loadUsers = useCallback(async (page: number = currentPage, pageSizeValue: number = pageSize, search: string = searchTerm) => {
+    const loadUsers = useCallback(async (page: number = currentPage, pageSizeValue: number = pageSize, search: string = searchTerm, sortByValue: string = sortBy, sortOrderValue: string = sortOrder) => {
         setLoading(true);
         try {
             const response = await userApi.getAll({
                 page,
                 pageSize: pageSizeValue,
-                search: search.trim() || undefined
+                search: search.trim() || undefined,
+                sortBy: sortByValue || undefined,
+                sortOrder: (sortOrderValue as 'asc' | 'desc') || undefined
             });
             if (response.success) {
                 const data = response.data;
@@ -64,7 +70,7 @@ export default function UserPage() {
         } finally {
             setLoading(false);
         }
-    }, [currentPage, pageSize, searchTerm]);
+    }, [currentPage, pageSize, searchTerm, sortBy, sortOrder]);
 
     const columns = useMemo<TableColumn<User>[]>(() => [
         {
@@ -102,7 +108,7 @@ export default function UserPage() {
     useEffect(() => {
         if (!firstLoad.current) {
             firstLoad.current = true;
-            loadUsers(1, 10, '');
+            loadUsers(1, 10, '', '', '');
         }
     }, [loadUsers]);
 
@@ -110,19 +116,26 @@ export default function UserPage() {
         const value = e.target.value;
         setSearchTerm(value);
         setCurrentPage(1); // Reset to first page when searching
-        loadUsers(1, pageSize, value);
-    }, [pageSize, loadUsers]);
+        loadUsers(1, pageSize, value, sortBy, sortOrder);
+    }, [pageSize, sortBy, sortOrder, loadUsers]);
 
     const handlePageChange = useCallback((page: number) => {
         setCurrentPage(page);
-        loadUsers(page, pageSize, searchTerm);
-    }, [pageSize, searchTerm, loadUsers]);
+        loadUsers(page, pageSize, searchTerm, sortBy, sortOrder);
+    }, [pageSize, searchTerm, sortBy, sortOrder, loadUsers]);
 
     const handlePageSizeChange = useCallback((newPageSize: number) => {
         setPageSize(newPageSize);
         setCurrentPage(1); // Reset to first page
-        loadUsers(1, newPageSize, searchTerm);
-    }, [searchTerm, loadUsers]);
+        loadUsers(1, newPageSize, searchTerm, sortBy, sortOrder);
+    }, [searchTerm, sortBy, sortOrder, loadUsers]);
+
+    const handleSort = useCallback((sortByValue: string, sortOrderValue: 'asc' | 'desc') => {
+        setSortBy(sortByValue);
+        setSortOrder(sortOrderValue);
+        setCurrentPage(1); // Reset to first page when sorting
+        loadUsers(1, pageSize, searchTerm, sortByValue, sortOrderValue);
+    }, [pageSize, searchTerm, loadUsers]);
 
     const handleCreateUser = useCallback(() => {
         setModalMode('create');
@@ -158,7 +171,7 @@ export default function UserPage() {
             const response = await userApi.delete(deletingUser.id);
             if (response.success) {
                 showSuccess(response.message || "User deleted successfully");
-                await loadUsers(currentPage, pageSize, searchTerm);
+                await loadUsers(currentPage, pageSize, searchTerm, sortBy, sortOrder);
                 setShowDeleteModal(false);
                 setDeletingUser(null);
             } else {
@@ -170,7 +183,7 @@ export default function UserPage() {
         } finally {
             setIsDeleting(false);
         }
-    }, [deletingUser, currentPage, pageSize, searchTerm, loadUsers]);
+    }, [deletingUser, currentPage, pageSize, searchTerm, sortBy, sortOrder, loadUsers]);
 
     const validateForm = useCallback(() => {
         const newErrors = { username: '', password: '', branchId: '' };
@@ -234,7 +247,7 @@ export default function UserPage() {
                 showSuccess(response.message || `User ${modalMode === 'create' ? 'created' : 'updated'} successfully`);
                 setShowModal(false);
                 setEditingUser(null);
-                await loadUsers(currentPage, pageSize, searchTerm);
+                await loadUsers(currentPage, pageSize, searchTerm, sortBy, sortOrder);
             } else {
                 showError(response?.message || `Error ${modalMode === 'create' ? 'creating' : 'updating'} user`);
             }
@@ -301,6 +314,22 @@ export default function UserPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Search Bar */}
+            <div className="mb-8">
+                <div className="relative max-w-md">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <UsersIcon className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Search by username..."
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white text-gray-900"
+                    />
+                </div>
+            </div>
             {/* bg-white rounded-lg shadow */}
             <div className="p-0">
                 <DataTable
@@ -320,6 +349,7 @@ export default function UserPage() {
                     totalItems={totalRecords}
                     onPageChange={handlePageChange}
                     onPageSizeChange={handlePageSizeChange}
+                    onSort={handleSort}
                     showPageSizeSelector={true}
                     pageSizeOptions={[5, 10, 25, 50]}
                 />

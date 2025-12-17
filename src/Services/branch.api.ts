@@ -23,7 +23,7 @@ export const branchApi = {
   getById: (id: number) => apiClient.get(`/branch/${id}`),
   create: (branchData: { name: string; address: string; phone: string }) =>
     apiClient.post('/branch', branchData),
-  update: (id: number, branchData: Partial<{ name: string; address: string; phone: string }>) =>
+  update: (id: number, branchData: Partial<{ name: string; address: string; phone: string; isRemoved: boolean }>) =>
     apiClient.patch(`/branch/${id}`, branchData),
   delete: (id: number) => apiClient.delete(`/branch/${id}`),
 };
