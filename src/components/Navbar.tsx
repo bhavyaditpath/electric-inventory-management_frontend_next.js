@@ -28,17 +28,26 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
     router.push(NAVIGATION.auth.login);
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      const itemsPath = user?.role === UserRole.ADMIN ? NAVIGATION.admin.inventory : NAVIGATION.branch.inventory;
-      router.push(`${itemsPath}?search=${encodeURIComponent(searchQuery.trim())}`);
-      if (isMobile) {
-        setMobileSearchOpen(false);
-        setSearchQuery('');
+  useEffect(() => {
+    if (isMobile && mobileSearchOpen === false) return;
+
+    const handler = setTimeout(() => {
+      const trimmed = searchQuery.trim();
+      const basePath =
+        user?.role === UserRole.ADMIN
+          ? NAVIGATION.admin.inventory
+          : NAVIGATION.branch.inventory;
+
+      if (trimmed) {
+        router.push(`${basePath}?search=${encodeURIComponent(trimmed)}`);
+      } else {
+        router.push(basePath); // 🔥 removes search from URL
       }
-    }
-  };
+    }, 500); // ⏱ debounce delay
+
+    return () => clearTimeout(handler);
+  }, [searchQuery, user?.role]);
+
 
   const handleMobileSearchToggle = () => {
     setMobileSearchOpen(!mobileSearchOpen);
@@ -89,7 +98,7 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
           {/* Desktop search */}
           {!isMobile && (
             <div className="flex-1 max-w-xl">
-              <form onSubmit={handleSearch} className="relative">
+              <div className="relative">
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                 <input
                   type="text"
@@ -98,7 +107,7 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-black"
                 />
-              </form>
+              </div>
             </div>
           )}
         </div>
@@ -180,7 +189,7 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
       {/* Mobile search overlay */}
       {isMobile && mobileSearchOpen && (
         <div className="mobile-search-container absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-lg z-40 p-4">
-          <form onSubmit={handleSearch} className="relative">
+          <div className="relative">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
             <input
               ref={searchInputRef}
@@ -190,7 +199,7 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-black"
             />
-          </form>
+          </div>
         </div>
       )}
     </nav>

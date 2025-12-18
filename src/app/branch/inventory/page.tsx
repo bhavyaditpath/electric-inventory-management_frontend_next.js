@@ -78,14 +78,11 @@ export default function BranchInventoryPage() {
     }
   }, [currentPage, pageSize, searchTerm, sortBy, sortOrder]);
 
-  const firstLoad = useRef(false);
-
-  useEffect(() => {
-    if (!firstLoad.current) {
-      firstLoad.current = true;
-      loadInventory(1, pageSize, urlSearch);
-    }
-  }, [loadInventory, urlSearch]);
+ useEffect(() => {
+    setSearchTerm(urlSearch);
+    setCurrentPage(1);
+    loadInventory(1, pageSize, urlSearch);
+  }, [urlSearch]);
 
   const handlePageChange = useCallback(
     (page: number) => {
