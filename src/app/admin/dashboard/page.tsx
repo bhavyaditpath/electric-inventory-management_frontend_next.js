@@ -1,21 +1,19 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { inventoryApi } from '@/Services/inventory.service';
-import { branchApi } from '@/Services/branch.api';
 import { purchaseApi } from '@/Services/purchase.service';
-import { requestApi } from '@/Services/request.service';
-import { Inventory, PurchaseResponseDto, RequestResponseDto } from '@/types/api-types';
+import { dashboardApi } from '@/Services/dashboard.api';
+import { PurchaseResponseDto, RequestResponseDto } from '@/types/api-types';
 import {
   CubeIcon,
   BuildingStorefrontIcon,
   CurrencyDollarIcon,
   ArrowPathIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon,
   ClockIcon,
   DocumentTextIcon
 } from '@heroicons/react/24/outline';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DashboardStats {
   totalInventory: number;
@@ -47,6 +45,7 @@ export default function DashboardPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   // Helper function to format currency
   const formatCurrency = (amount: number) => {
@@ -72,93 +71,34 @@ export default function DashboardPage() {
     }
   };
 
-  // Helper function to get current month purchases
-  const getCurrentMonthPurchases = (purchases: PurchaseResponseDto[]) => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
-    return purchases.filter(purchase => {
-      const purchaseDate = new Date(purchase.createdAt);
-      return purchaseDate.getMonth() === currentMonth &&
-        purchaseDate.getFullYear() === currentYear;
-    });
-  };
-
   // Fetch dashboard data
   const fetchDashboardData = async () => {
+    if (!user?.id) return;
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch all data using the same pattern as other files
-      const inventoryResponse = await inventoryApi.getAll();
-      const branchResponse = await branchApi.getAll();
+      // Fetch stats from backend APIs
+      const [totalInventoryRes, activeBranchesRes, monthlySalesRes, pendingRequestsRes] = await Promise.all([
+        dashboardApi.getTotalInventory(user.id),
+        dashboardApi.getActiveBranches(user.id),
+        dashboardApi.getMonthlySales(user.id),
+        dashboardApi.getPendingRequests(user.id)
+      ]);
+
+      const totalInventory = (totalInventoryRes as any).totalInventory || 0;
+      const activeBranches = (activeBranchesRes as any).activeBranches || 0;
+      const monthlySales = (monthlySalesRes as any).monthlySales || 0;
+      const totalRequests = (pendingRequestsRes as any).pendingRequests || 0;
+
+      // Fetch purchase and request data for recent activity
       const purchaseResponse = await purchaseApi.getPurchases();
-      const requestResponse = await requestApi.getRequests();
-
-      let totalInventory = 0;
-
-      if (inventoryResponse?.data) {
-        const inv = inventoryResponse.data;
-        let items: any[] = [];
-        if (inv.items && Array.isArray(inv.items)) {
-          items = inv.items;
-        }
-        else if (Array.isArray(inv)) {
-          items = inv;
-        }
-        const normalized = items.map(item => ({
-          ...item,
-          lastPurchaseDate: new Date(item.lastPurchaseDate),
-        }));
-
-        totalInventory = normalized.reduce((sum, item) => sum + Number(item.currentQuantity), 0);
-      } else {
-        totalInventory = 0;
-      }
-
-      // Process branch data - following admin/branches pattern
-      let activeBranches = 0;
-      if (branchResponse.success && Array.isArray(branchResponse.data)) {
-        activeBranches = branchResponse.data.length;
-      } else if (Array.isArray(branchResponse)) {
-        activeBranches = branchResponse.length;
-      }
-
-      // Process purchase data for monthly sales
-      let monthlySales = 0;
       let allPurchases: PurchaseResponseDto[] = [];
 
       if (Array.isArray(purchaseResponse)) {
         allPurchases = purchaseResponse as PurchaseResponseDto[];
       } else if (purchaseResponse.success && purchaseResponse.data) {
         allPurchases = purchaseResponse.data as PurchaseResponseDto[];
-      }
-
-      if (Array.isArray(allPurchases)) {
-        const currentMonthPurchases = getCurrentMonthPurchases(allPurchases);
-        monthlySales = currentMonthPurchases.reduce((sum: number, purchase: PurchaseResponseDto) => sum + purchase.totalPrice, 0);
-      }
-
-      // Process request data for pending requests only
-      let allRequests: RequestResponseDto[] = [];
-      let totalRequests = 0;
-
-      if (requestResponse.success && requestResponse.data) {
-        const data = requestResponse.data as any;
-        if (data.items && Array.isArray(data.items)) {
-          allRequests = data.items;
-        } else if (Array.isArray(data)) {
-          allRequests = data;
-        }
-      } else if (Array.isArray(requestResponse)) {
-        allRequests = requestResponse as RequestResponseDto[];
-      }
-
-      // Count only requests with "Request" status
-      if (Array.isArray(allRequests)) {
-        totalRequests = allRequests.filter(request => request.status === 'Request').length;
       }
 
       // Process recent activity
@@ -179,26 +119,6 @@ export default function DashboardPage() {
               value: `+${purchase.quantity} items`,
               color: 'blue',
               icon: CubeIcon
-            });
-          });
-      }
-
-      // Add recent requests (only those with "Request" status for activity)
-      if (Array.isArray(allRequests)) {
-        const pendingRequests = allRequests.filter(request => request.status === 'Request');
-        pendingRequests
-          .sort((a: RequestResponseDto, b: RequestResponseDto) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .slice(0, 2)
-          .forEach(request => {
-            recentActivity.push({
-              id: `request-${request.id}`,
-              type: 'request',
-              title: `Request ${request.status.toLowerCase()}`,
-              description: `${request.quantityRequested} items requested`,
-              timestamp: getTimeAgo(request.createdAt),
-              status: request.status,
-              color: 'yellow',
-              icon: ClockIcon
             });
           });
       }
@@ -371,18 +291,16 @@ export default function DashboardPage() {
                 return (
                   <div key={activity.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
                     <div className="flex items-center">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-4 ${
-                        activity.color === 'blue' ? 'bg-blue-100' :
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-4 ${activity.color === 'blue' ? 'bg-blue-100' :
                         activity.color === 'green' ? 'bg-green-100' :
-                        activity.color === 'red' ? 'bg-red-100' :
-                        activity.color === 'yellow' ? 'bg-yellow-100' : 'bg-gray-100'
-                      }`}>
-                        <IconComponent className={`w-5 h-5 ${
-                          activity.color === 'blue' ? 'text-blue-600' :
+                          activity.color === 'red' ? 'bg-red-100' :
+                            activity.color === 'yellow' ? 'bg-yellow-100' : 'bg-gray-100'
+                        }`}>
+                        <IconComponent className={`w-5 h-5 ${activity.color === 'blue' ? 'text-blue-600' :
                           activity.color === 'green' ? 'text-green-600' :
-                          activity.color === 'red' ? 'text-red-600' :
-                          activity.color === 'yellow' ? 'text-yellow-600' : 'text-gray-600'
-                        }`} />
+                            activity.color === 'red' ? 'text-red-600' :
+                              activity.color === 'yellow' ? 'text-yellow-600' : 'text-gray-600'
+                          }`} />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900">{activity.title}</p>
@@ -397,11 +315,10 @@ export default function DashboardPage() {
                         </span>
                       )}
                       {activity.status && (
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          activity.color === 'green' ? 'bg-green-100 text-green-800' :
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${activity.color === 'green' ? 'bg-green-100 text-green-800' :
                           activity.color === 'red' ? 'bg-red-100 text-red-800' :
-                          activity.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
+                            activity.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
                           {activity.status}
                         </span>
                       )}

@@ -5,10 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { inventoryApi } from '@/Services/inventory.service';
 import { purchaseApi } from '@/Services/purchase.service';
-import { requestApi } from '@/Services/request.service';
+import { dashboardApi } from '@/Services/dashboard.api';
 import { Inventory, PurchaseResponseDto, RequestResponseDto } from '@/types/api-types';
-import { AlertStatus, RequestStatus } from '@/types/enums';
-import { alertApi, StockAlert } from '@/Services/alert.api';
 import {
   CubeIcon,
   ExclamationTriangleIcon,
@@ -26,22 +24,41 @@ export default function BranchDashboardPage() {
   const router = useRouter();
   const [inventory, setInventory] = useState<Inventory[]>([]);
   const [purchases, setPurchases] = useState<PurchaseResponseDto[]>([]);
-  const [requests, setRequests] = useState<RequestResponseDto[]>([]);
-  const [activeAlerts, setActiveAlerts] = useState<StockAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState({
+    currentStock: 0,
+    activeAlertsCount: 0,
+    pendingOrders: 0,
+    todaysSales: 0
+  });
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!user?.branchId) return;
+      if (!user?.id) return;
 
       try {
         setLoading(true);
-        const [inventoryRes, purchasesRes, requestsRes, alertsRes] = await Promise.all([
+
+        // Fetch stats from APIs
+        const [currentStockRes, activeAlertsRes, pendingOrdersRes, todaysSalesRes] = await Promise.all([
+          dashboardApi.getCurrentStock(user.id),
+          dashboardApi.getActiveAlerts(user.id),
+          dashboardApi.getPendingOrders(user.id),
+          dashboardApi.getTodaysSales(user.id)
+        ]);
+
+        const currentStock = (currentStockRes as any).currentStock || 0;
+        const activeAlertsCount = (activeAlertsRes as any).activeAlerts || 0;
+        const pendingOrders = (pendingOrdersRes as any).pendingOrders || 0;
+        const todaysSales = (todaysSalesRes as any).todaysSales || 0;
+
+        setStats({ currentStock, activeAlertsCount, pendingOrders, todaysSales });
+
+        // Fetch inventory and purchases for lists
+        const [inventoryRes, purchasesRes] = await Promise.all([
           inventoryApi.getAll(),
-          purchaseApi.getPurchases(),
-          requestApi.getRequests(),
-          alertApi.getByBranch(user.branchId, AlertStatus.ACTIVE),
+          purchaseApi.getPurchases()
         ]);
 
         if (inventoryRes?.data) {
@@ -70,16 +87,6 @@ export default function BranchDashboardPage() {
         } else if (Array.isArray(purchasesRes)) {
           setPurchases((purchasesRes as PurchaseResponseDto[]).filter(purchase => purchase.branchId === user.branchId));
         }
-        if (requestsRes.success && requestsRes.data) {
-          const data = requestsRes.data as { items?: RequestResponseDto[] };
-          const requests = Array.isArray(data.items) ? data.items : [];
-          setRequests(requests);
-        }
-        if (alertsRes?.data && Array.isArray(alertsRes.data)) {
-          setActiveAlerts(alertsRes.data as StockAlert[]);
-        } else if (Array.isArray(alertsRes)) {
-          setActiveAlerts(alertsRes as StockAlert[]);
-        }
       } catch (err) {
         setError('Failed to load dashboard data');
         console.error(err);
@@ -91,21 +98,6 @@ export default function BranchDashboardPage() {
     fetchData();
   }, [user?.branchId]);
 
-  const currentStock = inventory.reduce((sum, item) => sum + item.currentQuantity, 0);
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todaysPurchases = purchases.filter(purchase => {
-    const purchaseDate = new Date(purchase.createdAt);
-    purchaseDate.setHours(0, 0, 0, 0);
-    return purchaseDate.getTime() === today.getTime();
-  });
-  const todaysSales = todaysPurchases.reduce((sum, purchase) => sum + purchase.totalPrice, 0);
-  const activeAlertsCount = activeAlerts.length;
-
-  const pendingOrders = requests.filter(
-    req => req.status === RequestStatus.REQUEST
-  ).length;
   const recentSales = purchases
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 3);
@@ -209,7 +201,7 @@ export default function BranchDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Current Stock</p>
-              <p className="text-3xl font-bold text-gray-900">{currentStock}</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.currentStock}</p>
               <p className="text-sm text-gray-500 mt-1">Items available</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -223,7 +215,7 @@ export default function BranchDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Active Alerts</p>
-              <p className="text-3xl font-bold text-gray-900">{activeAlertsCount}</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.activeAlertsCount}</p>
               <p className="text-sm text-gray-500 mt-1">Stock alerts</p>
             </div>
             <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
@@ -237,7 +229,7 @@ export default function BranchDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Pending Orders</p>
-              <p className="text-3xl font-bold text-gray-900">{pendingOrders}</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.pendingOrders}</p>
               <p className="text-sm text-gray-500 mt-1">From admin</p>
             </div>
             <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -251,7 +243,7 @@ export default function BranchDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Today's Sales</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(todaysSales)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.todaysSales)}</p>
               <p className="text-sm text-gray-500 mt-1">Revenue today</p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
