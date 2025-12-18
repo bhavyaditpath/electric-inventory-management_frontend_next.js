@@ -30,7 +30,7 @@ export default function BranchDashboardPage() {
     currentStock: 0,
     activeAlertsCount: 0,
     pendingOrders: 0,
-    todaysSales: 0
+    todaysBuys: 0
   });
 
   useEffect(() => {
@@ -41,19 +41,19 @@ export default function BranchDashboardPage() {
         setLoading(true);
 
         // Fetch stats from APIs
-        const [currentStockRes, activeAlertsRes, pendingOrdersRes, todaysSalesRes] = await Promise.all([
+        const [currentStockRes, activeAlertsRes, pendingOrdersRes, todaysBuysRes] = await Promise.all([
           dashboardApi.getCurrentStock(user.id),
           dashboardApi.getActiveAlerts(user.id),
           dashboardApi.getPendingOrders(user.id),
-          dashboardApi.getTodaysSales(user.id)
+          dashboardApi.getTodaysBuys(user.id)
         ]);
 
-        const currentStock = (currentStockRes as any).currentStock || 0;
-        const activeAlertsCount = (activeAlertsRes as any).activeAlerts || 0;
-        const pendingOrders = (pendingOrdersRes as any).pendingOrders || 0;
-        const todaysSales = (todaysSalesRes as any).todaysSales || 0;
+        const currentStock = (currentStockRes as any).count || 0;
+        const activeAlertsCount = (activeAlertsRes as any).count || 0;
+        const pendingOrders = (pendingOrdersRes as any).count || 0;
+        const todaysBuys = (todaysBuysRes as any).count || 0;
 
-        setStats({ currentStock, activeAlertsCount, pendingOrders, todaysSales });
+        setStats({ currentStock, activeAlertsCount, pendingOrders, todaysBuys });
 
         // Fetch inventory and purchases for lists
         const [inventoryRes, purchasesRes] = await Promise.all([
@@ -242,8 +242,8 @@ export default function BranchDashboardPage() {
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Today's Sales</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.todaysSales)}</p>
+              <p className="text-sm font-medium text-gray-600">Today's Buys</p> 
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.todaysBuys)}</p>
               <p className="text-sm text-gray-500 mt-1">Revenue today</p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -255,14 +255,14 @@ export default function BranchDashboardPage() {
 
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Recent Sales */}
+        {/* Recent Buys */}
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center">
               <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
                 <ShoppingCartIcon className="w-5 h-5 text-green-600" />
               </div>
-              <h2 className="text-lg font-semibold text-gray-900">Recent Sales</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Recent Buys</h2>
             </div>
           </div>
 

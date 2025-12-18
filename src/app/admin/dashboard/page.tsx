@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { purchaseApi } from '@/Services/purchase.service';
 import { dashboardApi } from '@/Services/dashboard.api';
-import { PurchaseResponseDto, RequestResponseDto } from '@/types/api-types';
+import { PurchaseResponseDto } from '@/types/api-types';
 import {
   CubeIcon,
   BuildingStorefrontIcon,
@@ -81,15 +81,33 @@ export default function DashboardPage() {
       // Fetch stats from backend APIs
       const [totalInventoryRes, activeBranchesRes, monthlySalesRes, pendingRequestsRes] = await Promise.all([
         dashboardApi.getTotalInventory(user.id),
-        dashboardApi.getActiveBranches(user.id),
+        dashboardApi.getActiveBranches(),
         dashboardApi.getMonthlySales(user.id),
         dashboardApi.getPendingRequests(user.id)
       ]);
+      console.log('Dashboard API Responses:', {
+        totalInventoryRes,
+        activeBranchesRes,
+        monthlySalesRes,
+        pendingRequestsRes
+      });
 
-      const totalInventory = (totalInventoryRes as any).totalInventory || 0;
-      const activeBranches = (activeBranchesRes as any).activeBranches || 0;
-      const monthlySales = (monthlySalesRes as any).monthlySales || 0;
-      const totalRequests = (pendingRequestsRes as any).pendingRequests || 0;
+      const totalInventory =
+        (totalInventoryRes as any)?.count ??
+        0;
+
+      const activeBranches =
+        (activeBranchesRes as any)?.count ??
+        0;
+
+      const monthlySales =
+        (monthlySalesRes as any)?.count ??
+        0;
+
+      const totalRequests =
+        (pendingRequestsRes as any)?.count ??
+        0;
+
 
       // Fetch purchase and request data for recent activity
       const purchaseResponse = await purchaseApi.getPurchases();
