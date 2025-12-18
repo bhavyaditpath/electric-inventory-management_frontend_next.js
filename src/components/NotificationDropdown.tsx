@@ -58,6 +58,43 @@ export default function NotificationDropdown() {
     fetchUnreadCount();
   }, []);
 
+  // Re-fetch unread count when dropdown opens
+  useEffect(() => {
+    if (dropdownOpen) {
+      const fetchUnreadCount = async () => {
+        try {
+          const response = await notificationApi.getUnreadCount();
+          if (response.success && response.data) {
+            setUnreadCount(response.data.unreadCount);
+          }
+        } catch (error) {
+          console.error('Error fetching unread count:', error);
+        }
+      };
+      fetchUnreadCount();
+    }
+  }, [dropdownOpen]);
+
+  // Listen for notifications marked as read event
+  useEffect(() => {
+    const handleNotificationsMarkedAsRead = () => {
+      const fetchUnreadCount = async () => {
+        try {
+          const response = await notificationApi.getUnreadCount();
+          if (response.success && response.data) {
+            setUnreadCount(response.data.unreadCount);
+          }
+        } catch (error) {
+          console.error('Error fetching unread count:', error);
+        }
+      };
+      fetchUnreadCount();
+    };
+
+    window.addEventListener('notificationsMarkedAsRead', handleNotificationsMarkedAsRead);
+    return () => window.removeEventListener('notificationsMarkedAsRead', handleNotificationsMarkedAsRead);
+  }, []);
+
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };

@@ -54,6 +54,8 @@ export default function NotificationsPage() {
         if (fetchResponse.success && fetchResponse.data) {
           setNotifications(fetchResponse.data.data || []);
         }
+        // Notify other components to update unread count
+        window.dispatchEvent(new CustomEvent('notificationsMarkedAsRead'));
       } else {
         console.error('Failed to mark all notifications as read:', response.message);
       }
