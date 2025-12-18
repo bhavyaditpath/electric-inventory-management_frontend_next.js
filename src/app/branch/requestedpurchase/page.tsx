@@ -16,10 +16,14 @@ const RequestedPurchasePage = () => {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   // Load requests
-  const loadRequests = useCallback(async (currentPage = page, currentPageSize = pageSize) => {
+  const loadRequests = useCallback(async (currentPage = page, currentPageSize = pageSize, currentSearchTerm = searchTerm) => {
     try {
       setLoadingRequests(true);
-      const response = await requestApi.getRequests({ page: currentPage, pageSize: currentPageSize });
+      const response = await requestApi.getRequests({
+        page: currentPage,
+        pageSize: currentPageSize,
+        search: currentSearchTerm || undefined
+      });
       if (response.success) {
         const data = response.data as PaginatedResponse<RequestResponseDto>;
         setRequests(Array.isArray(data.items) ? data.items : []);
@@ -39,7 +43,7 @@ const RequestedPurchasePage = () => {
     } finally {
       setLoadingRequests(false);
     }
-  }, [page, pageSize]);
+  }, [page, pageSize, searchTerm]);
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -50,10 +54,11 @@ const RequestedPurchasePage = () => {
     loadRequests();
   }, [loadRequests]);
 
-  const filteredRequests = requests.filter(request =>
-    request.purchase?.productName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.status.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Reload requests when search term changes
+  useEffect(() => {
+    setPage(1); // Reset to first page when searching
+    loadRequests(1, pageSize, searchTerm);
+  }, [searchTerm, pageSize]);
 
   const handleStatusUpdate = async (requestId: number, newStatus: string) => {
     try {
@@ -124,7 +129,7 @@ const RequestedPurchasePage = () => {
               <div className="col-span-full flex justify-center py-12">
                 <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
               </div>
-            ) : !filteredRequests || filteredRequests.length === 0 ? (
+            ) : !requests.length ? (
               <div className="text-center py-12 col-span-full">
                 <CubeIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600 font-medium text-lg">
@@ -135,7 +140,7 @@ const RequestedPurchasePage = () => {
                 </p>
               </div>
             ) : (
-              filteredRequests.map(request => (
+              requests.map((request: RequestResponseDto) => (
                 <div key={request.id} className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-md transition-shadow">
                   <div className="flex flex-col space-y-4">
                     <div className="flex-1 min-w-0">
