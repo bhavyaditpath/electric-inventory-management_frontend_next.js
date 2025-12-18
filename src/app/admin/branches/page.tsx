@@ -34,6 +34,7 @@ export default function BranchesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,7 +45,7 @@ export default function BranchesPage() {
   const [sortBy, setSortBy] = useState<string>('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  const loadBranches = useCallback(async (page: number = currentPage, pageSizeValue: number = pageSize, search: string = searchTerm, sortByValue: string = sortBy, sortOrderValue: string = sortOrder) => {
+  const loadBranches = useCallback(async (page: number = currentPage, pageSizeValue: number = pageSize, search: string = debouncedSearchTerm, sortByValue: string = sortBy, sortOrderValue: string = sortOrder) => {
     setLoading(true);
     try {
       const response = await branchApi.getAll({
@@ -70,14 +71,13 @@ export default function BranchesPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, searchTerm, sortBy, sortOrder]);
+  }, [currentPage, pageSize, debouncedSearchTerm, sortBy, sortOrder]);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
     setCurrentPage(1); // Reset to first page when searching
-    loadBranches(1, pageSize, value, sortBy, sortOrder);
-  }, [pageSize, sortBy, sortOrder, loadBranches]);
+  }, []);
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
@@ -99,12 +99,28 @@ export default function BranchesPage() {
 
   const firstLoad = useRef(false);
 
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   useEffect(() => {
     if (!firstLoad.current) {
       firstLoad.current = true;
       loadBranches(1, 10, '', '', '');
     }
   }, [loadBranches]);
+
+  // Load branches when debounced search term changes
+  useEffect(() => {
+    if (firstLoad.current) {
+      loadBranches(1, pageSize, debouncedSearchTerm, sortBy, sortOrder);
+    }
+  }, [debouncedSearchTerm, pageSize, sortBy, sortOrder, loadBranches]);
 
 
   const handleEdit = useCallback((branch: Branch) => {

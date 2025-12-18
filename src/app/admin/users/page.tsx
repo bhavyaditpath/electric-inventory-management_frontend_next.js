@@ -27,6 +27,7 @@ export default function UserPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -45,7 +46,7 @@ export default function UserPage() {
         }
     }, [branches]);
 
-    const loadUsers = useCallback(async (page: number = currentPage, pageSizeValue: number = pageSize, search: string = searchTerm, sortByValue: string = sortBy, sortOrderValue: string = sortOrder) => {
+    const loadUsers = useCallback(async (page: number = currentPage, pageSizeValue: number = pageSize, search: string = debouncedSearchTerm, sortByValue: string = sortBy, sortOrderValue: string = sortOrder) => {
         setLoading(true);
         try {
             const response = await userApi.getAll({
@@ -70,7 +71,7 @@ export default function UserPage() {
         } finally {
             setLoading(false);
         }
-    }, [currentPage, pageSize, searchTerm, sortBy, sortOrder]);
+    }, [currentPage, pageSize, debouncedSearchTerm, sortBy, sortOrder]);
 
     const columns = useMemo<TableColumn<User>[]>(() => [
         {
@@ -105,6 +106,15 @@ export default function UserPage() {
     ], []);
     const firstLoad = useRef(false);
 
+    // Debounce search term
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 500); // 500ms delay
+
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
     useEffect(() => {
         if (!firstLoad.current) {
             firstLoad.current = true;
@@ -112,12 +122,18 @@ export default function UserPage() {
         }
     }, [loadUsers]);
 
+    // Load users when debounced search term changes
+    useEffect(() => {
+        if (firstLoad.current) {
+            loadUsers(1, pageSize, debouncedSearchTerm, sortBy, sortOrder);
+        }
+    }, [debouncedSearchTerm, pageSize, sortBy, sortOrder, loadUsers]);
+
     const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setSearchTerm(value);
         setCurrentPage(1); // Reset to first page when searching
-        loadUsers(1, pageSize, value, sortBy, sortOrder);
-    }, [pageSize, sortBy, sortOrder, loadUsers]);
+    }, []);
 
     const handlePageChange = useCallback((page: number) => {
         setCurrentPage(page);
