@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { notificationApi, Notification } from '../../Services/notification.api';
+import { UserIcon, BuildingStorefrontIcon, ExclamationTriangleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
 export default function NotificationsPage() {
   const [activeTab, setActiveTab] = useState<'user' | 'branch'>('user');
@@ -70,6 +71,15 @@ export default function NotificationsPage() {
 
   const unreadCount = filteredNotifications.filter(n => !n.read).length;
 
+  const getNotificationIcon = (notification: Notification) => {
+    if (notification.type === 'user') {
+      return <UserIcon className="w-6 h-6 text-blue-500" />;
+    } else if (notification.type === 'branch') {
+      return <BuildingStorefrontIcon className="w-6 h-6 text-green-500" />;
+    }
+    return <ExclamationTriangleIcon className="w-6 h-6 text-yellow-500" />;
+  };
+
   return (
     <div className="p-3 sm:p-4 lg:p-6">
       {/* Header Section */}
@@ -121,7 +131,7 @@ export default function NotificationsPage() {
       </div>
 
       {/* Notifications List */}
-      <div className="bg-white rounded-lg shadow border border-slate-200 overflow-hidden">
+      <div className="">
         {filteredNotifications.length === 0 ? (
           <div className="p-6 sm:p-8 text-center text-slate-500">
             <div className="max-w-sm mx-auto">
@@ -129,22 +139,34 @@ export default function NotificationsPage() {
             </div>
           </div>
         ) : (
-          <div className="divide-y divide-slate-200">
+          <div className="space-y-3">
             {filteredNotifications.map((notification: Notification) => (
               <div
                 key={notification.id}
-                className={`p-3 sm:p-4 hover:bg-slate-50 transition-all touch-manipulation ${
-                  !notification.read ? 'bg-blue-50' : ''
+                className={`p-4 border rounded-lg hover:shadow-md transition-all touch-manipulation cursor-pointer ${
+                  !notification.read ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-200'
                 }`}
                 onClick={() => markAsRead(notification.id)}
               >
-                <div className="flex justify-between items-start gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0">
+                    {getNotificationIcon(notification)}
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className={`text-sm sm:text-base font-medium line-clamp-2 ${
-                      !notification.read ? 'text-blue-600' : 'text-slate-800'
-                    }`}>
-                      {notification.title}
-                    </h3>
+                    <div className="flex justify-between items-start">
+                      <h3 className={`text-sm sm:text-base font-medium line-clamp-2 ${
+                        !notification.read ? 'text-blue-600' : 'text-slate-800'
+                      }`}>
+                        {notification.title}
+                      </h3>
+                      <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ml-2 ${
+                        notification.type === 'user'
+                          ? 'bg-blue-100 text-blue-600'
+                          : 'bg-green-100 text-green-600'
+                      }`}>
+                        {notification.type}
+                      </span>
+                    </div>
                     <p className={`text-sm sm:text-base mt-1 line-clamp-3 ${
                       !notification.read ? 'text-slate-700' : 'text-slate-500'
                     }`}>
@@ -153,23 +175,14 @@ export default function NotificationsPage() {
                     <p className="text-xs text-slate-400 mt-2">
                       {new Date(notification.createdAt).toLocaleString()}
                     </p>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
-                      notification.type === 'user' 
-                        ? 'bg-blue-100 text-blue-600' 
-                        : 'bg-green-100 text-green-600'
-                    }`}>
-                      {notification.type}
-                    </span>
+                    {!notification.read && (
+                      <div className="mt-2 flex items-center text-xs text-blue-600">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                        <span>Click to mark as read</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-                {!notification.read && (
-                  <div className="mt-2 flex items-center text-xs text-blue-600">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                    <span>Click to mark as read</span>
-                  </div>
-                )}
               </div>
             ))}
           </div>

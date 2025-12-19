@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { BellIcon, XMarkIcon, UserIcon, BuildingStorefrontIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { notificationApi, Notification } from '../Services/notification.api';
 import { useAuth } from '../contexts/AuthContext';
@@ -95,6 +95,15 @@ export default function NotificationDropdown() {
     return () => window.removeEventListener('notificationsMarkedAsRead', handleNotificationsMarkedAsRead);
   }, []);
 
+  const getNotificationIcon = (notification: Notification) => {
+    if (notification.type === 'user') {
+      return <UserIcon className="w-5 h-5 text-blue-500" />;
+    } else if (notification.type === 'branch') {
+      return <BuildingStorefrontIcon className="w-5 h-5 text-green-500" />;
+    }
+    return <ExclamationTriangleIcon className="w-5 h-5 text-yellow-500" />;
+  };
+
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };
@@ -183,17 +192,28 @@ export default function NotificationDropdown() {
                     <div
                       key={notification.id}
                       className={`p-3 rounded-lg border transition-all touch-manipulation ${!notification.read
-                          ? 'bg-blue-50 border-blue-200'
-                          : 'bg-slate-50 border-slate-200'
-                        }`}
+                        ? 'bg-blue-50 border-blue-200'
+                        : 'bg-slate-50 border-slate-200'
+                      }`}
                       onClick={() => markAsRead(notification.id)}
                     >
-                      <div className="flex justify-between items-start gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0">
+                          {getNotificationIcon(notification)}
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className={`text-sm font-medium line-clamp-1 ${!notification.read ? 'text-blue-600' : 'text-slate-800'
+                          <div className="flex justify-between items-start">
+                            <h4 className={`text-sm font-medium line-clamp-1 ${!notification.read ? 'text-blue-600' : 'text-slate-800'
+                              }`}>
+                              {notification.title}
+                            </h4>
+                            <span className={`text-xs px-2 py-1 rounded-full ml-2 ${notification.type === 'user'
+                              ? 'bg-blue-100 text-blue-600'
+                              : 'bg-green-100 text-green-600'
                             }`}>
-                            {notification.title}
-                          </h4>
+                              {notification.type}
+                            </span>
+                          </div>
                           <p className={`text-xs mt-1 line-clamp-2 ${!notification.read ? 'text-slate-700' : 'text-slate-500'
                             }`}>
                             {notification.message}
@@ -201,14 +221,6 @@ export default function NotificationDropdown() {
                           <p className="text-xs text-slate-400 mt-1">
                             {new Date(notification.createdAt).toLocaleDateString()}
                           </p>
-                        </div>
-                        <div className="flex-shrink-0">
-                          <span className={`text-xs px-2 py-1 rounded-full ${notification.type === 'user'
-                              ? 'bg-blue-100 text-blue-600'
-                              : 'bg-green-100 text-green-600'
-                            }`}>
-                            {notification.type}
-                          </span>
                         </div>
                       </div>
                     </div>
@@ -259,22 +271,25 @@ export default function NotificationDropdown() {
                       }`}
                     onClick={() => markAsRead(notification.id)}
                   >
-                    <div className="flex justify-between items-start">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0">
+                        {getNotificationIcon(notification)}
+                      </div>
                       <div className="flex-1">
-                        <h4 className={`text-sm font-medium ${!notification.read ? 'text-blue-600' : 'text-slate-800'}`}>
-                          {notification.title}
-                        </h4>
+                        <div className="flex justify-between items-start">
+                          <h4 className={`text-sm font-medium ${!notification.read ? 'text-blue-600' : 'text-slate-800'}`}>
+                            {notification.title}
+                          </h4>
+                          <span className={`text-xs px-2 py-1 rounded-full ml-2 ${notification.type === 'user' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}>
+                            {notification.type}
+                          </span>
+                        </div>
                         <p className={`text-xs mt-1 ${!notification.read ? 'text-slate-700' : 'text-slate-500'}`}>
                           {notification.message}
                         </p>
                         <p className="text-xs text-slate-400 mt-1">
                           {new Date(notification.createdAt).toLocaleString()}
                         </p>
-                      </div>
-                      <div className="ml-2">
-                        <span className={`text-xs px-2 py-1 rounded-full ${notification.type === 'user' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}>
-                          {notification.type}
-                        </span>
                       </div>
                     </div>
                   </div>
