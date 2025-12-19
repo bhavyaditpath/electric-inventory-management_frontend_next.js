@@ -34,6 +34,8 @@ export default function ReportsPage() {
     isActive: true
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [isGeneratingScheduled, setIsGeneratingScheduled] = useState(false);
 
   const tabs = [
     { key: 'view', label: 'View Reports', icon: DocumentTextIcon },
@@ -67,7 +69,7 @@ export default function ReportsPage() {
           response = await reportsApi.getDailyReport();
           break;
         case ReportType.WEEKLY:
-          response = await reportsApi.getWeeklyReport();  
+          response = await reportsApi.getWeeklyReport();
           break;
         case ReportType.MONTHLY:
           response = await reportsApi.getMonthlyReport();
@@ -111,7 +113,7 @@ export default function ReportsPage() {
   };
 
   const handleGenerateReport = async () => {
-    setLoading(true);
+    setIsGeneratingReport(true);
     try {
       const response = await reportsApi.generateReport(reportType);
       if (response) {
@@ -120,29 +122,28 @@ export default function ReportsPage() {
         showError('Failed to generate report');
       }
     } catch (error) {
-      console.error('Error generating report:', error);
       showError('Error generating report');
     } finally {
-      setLoading(false);
+      setIsGeneratingReport(false);
     }
   };
 
   const handleGenerateScheduled = async () => {
-    setLoading(true);
+    setIsGeneratingScheduled(true);
     try {
       const response = await reportsApi.generateScheduledReports();
       if (response) {
-        showSuccess(response.message ||  'Scheduled reports generated successfully!');
+        showSuccess(response.message || 'Scheduled reports generated successfully!');
       } else {
         showError('Failed to generate scheduled reports');
       }
     } catch (error) {
-      console.error('Error generating scheduled reports:', error);
       showError('Error generating scheduled reports');
     } finally {
-      setLoading(false);
+      setIsGeneratingScheduled(false);
     }
   };
+
 
   const handleCreatePreference = useCallback(async () => {
     setIsSubmitting(true);
@@ -274,9 +275,8 @@ export default function ReportsPage() {
       header: "Status",
       sortable: true,
       render: (value?: boolean) => (
-        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-          value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-        }`}>
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          }`}>
           {value ? 'Active' : 'Inactive'}
         </span>
       )
@@ -336,11 +336,10 @@ export default function ReportsPage() {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex items-center px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium border-b-2 sm:border-b-2 transition-colors flex-1 justify-center sm:justify-center ${
-                    activeTab === tab.key
+                  className={`flex items-center px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium border-b-2 sm:border-b-2 transition-colors flex-1 justify-center sm:justify-center ${activeTab === tab.key
                       ? 'border-blue-500 text-blue-600 bg-blue-50/50'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   <Icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   <span className="text-xs sm:text-sm">{tab.label}</span>
@@ -374,11 +373,10 @@ export default function ReportsPage() {
                       setReportType(type);
                       fetchReport(type);
                     }}
-                    className={`p-3 sm:p-4 rounded-xl border-2 transition-all hover:shadow-md ${
-                      reportType === type
+                    className={`p-3 sm:p-4 rounded-xl border-2 transition-all hover:shadow-md ${reportType === type
                         ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
                         : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     <div className="text-center">
                       <DocumentTextIcon className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 sm:mb-3 text-gray-600" />
@@ -469,14 +467,13 @@ export default function ReportsPage() {
                 </div>
                 <button
                   onClick={handleGenerateReport}
-                  disabled={loading}
-                  className={`w-full py-3.5 px-4 rounded-lg font-semibold text-white transition-all duration-200 ${
-                    loading
+                  disabled={isGeneratingReport}
+                  className={`w-full py-3.5 px-4 rounded-lg font-semibold text-white transition-all duration-200 ${isGeneratingReport
                       ? 'bg-gray-400 cursor-not-allowed'
                       : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 focus:ring-2 focus:ring-blue-200 shadow-lg hover:shadow-xl'
-                  }`}
+                    }`}
                 >
-                  {loading ? (
+                  {isGeneratingReport ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3 inline-block"></div>
                       Generating...
@@ -509,14 +506,13 @@ export default function ReportsPage() {
               </p>
               <button
                 onClick={handleGenerateScheduled}
-                disabled={loading}
-                className={`w-full py-3.5 px-4 rounded-lg font-semibold text-white transition-all duration-200 ${
-                  loading
+                disabled={isGeneratingScheduled}
+                className={`w-full py-3.5 px-4 rounded-lg font-semibold text-white transition-all duration-200 ${isGeneratingScheduled
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-green-600 hover:bg-green-700 active:bg-green-800 focus:ring-2 focus:ring-green-200 shadow-lg hover:shadow-xl'
-                }`}
+                  }`}
               >
-                {loading ? (
+                {isGeneratingScheduled ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3 inline-block"></div>
                     Generating...
