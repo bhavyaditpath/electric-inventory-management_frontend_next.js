@@ -71,7 +71,7 @@ export default function UserPage() {
         } finally {
             setLoading(false);
         }
-    }, [currentPage, pageSize, debouncedSearchTerm, sortBy, sortOrder]);
+    }, [pageSize, debouncedSearchTerm, sortBy, sortOrder]);
 
     const columns = useMemo<TableColumn<User>[]>(() => [
         {

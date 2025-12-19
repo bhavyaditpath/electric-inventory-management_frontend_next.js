@@ -71,7 +71,7 @@ export default function BranchesPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, debouncedSearchTerm, sortBy, sortOrder]);
+  }, [pageSize, debouncedSearchTerm, sortBy, sortOrder]);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
