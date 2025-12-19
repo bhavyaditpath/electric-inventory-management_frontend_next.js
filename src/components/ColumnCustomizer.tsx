@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TableColumn } from "./DataTable";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { XMarkIcon, Bars3Icon } from "@heroicons/react/24/outline";
+import { showError } from "../Services/toast.service";
 
 interface CustomizableColumn<T> {
   key: T | string;
@@ -30,33 +31,41 @@ export default function ColumnCustomizer<T>({
   const [totalColumns, setTotalColumns] = useState<CustomizableColumn<T>[]>([]);
   const [selectedColumns, setSelectedColumns] = useState<CustomizableColumn<T>[]>([]);
 
+  const initializedRef = useRef(false);
+
   useEffect(() => {
-    if (visible) {
-      // Initialize columns when dialog becomes visible
-      // Use the current order from columns, but get visibility from className
-      const initialTotalColumns: CustomizableColumn<T>[] = columns
-        .filter(col => !omitColumns.includes(col.key as string))
-        .map(col => ({
-          key: col.key,
-          header: col.header,
-          isChecked: !col.className?.includes('hidden'),
-          isHidden: col.className?.includes('hidden')
-        }));
+    if (!visible || initializedRef.current) return;
 
-      // Preserve the current order from the table by sorting selected columns
-      // according to their position in the original columns array
-      const initialSelectedColumns = initialTotalColumns
-        .filter(col => col.isChecked)
-        .sort((a, b) => {
-          const aIndex = columns.findIndex(col => col.key === a.key);
-          const bIndex = columns.findIndex(col => col.key === b.key);
-          return aIndex - bIndex;
-        });
+    initializedRef.current = true;
 
-      setTotalColumns(initialTotalColumns);
-      setSelectedColumns(initialSelectedColumns);
+    const initialTotalColumns: CustomizableColumn<T>[] = columns
+      .filter(col => !omitColumns.includes(col.key as string))
+      .map(col => ({
+        key: col.key,
+        header: col.header,
+        isChecked: !col.className?.includes('hidden'),
+        isHidden: col.className?.includes('hidden')
+      }));
+
+    const initialSelectedColumns = initialTotalColumns
+      .filter(col => col.isChecked)
+      .sort((a, b) => {
+        const aIndex = columns.findIndex(col => col.key === a.key);
+        const bIndex = columns.findIndex(col => col.key === b.key);
+        return aIndex - bIndex;
+      });
+
+    setTotalColumns(initialTotalColumns);
+    setSelectedColumns(initialSelectedColumns);
+
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible) {
+      initializedRef.current = false;
     }
-  }, [visible, columns, omitColumns]);
+  }, [visible]);
+
 
   const handleColumnSelectionChange = (columnKey: string, isChecked: boolean) => {
     const updatedTotalColumns = totalColumns.map(col =>
@@ -103,7 +112,7 @@ export default function ColumnCustomizer<T>({
 
   const handleApply = () => {
     if (selectedColumns.length === 0) {
-      alert("At least one column should be selected.");
+      showError("At least one column should be selected.");
       return;
     }
 
