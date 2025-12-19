@@ -5,8 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useState, useEffect, useRef } from 'react';
 import { NAVIGATION } from '../app/Constants/navigation.constants';
 import { useRouter } from 'next/navigation';
-import { UserRole } from '../types/enums';
 import NotificationDropdown from './NotificationDropdown';
+import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 
 interface NavbarProps {
   sidebarOpen: boolean;
@@ -28,26 +28,12 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
     router.push(NAVIGATION.auth.login);
   };
 
-  useEffect(() => {
-    if (isMobile && mobileSearchOpen === false) return;
-
-    const handler = setTimeout(() => {
-      const trimmed = searchQuery.trim();
-      const basePath =
-        user?.role === UserRole.ADMIN
-          ? NAVIGATION.admin.inventory
-          : NAVIGATION.branch.inventory;
-
-      if (trimmed) {
-        router.push(`${basePath}?search=${encodeURIComponent(trimmed)}`);
-      } else {
-        router.push(basePath); // 🔥 removes search from URL
-      }
-    }, 500); // ⏱ debounce delay
-
-    return () => clearTimeout(handler);
-  }, [searchQuery, user?.role]);
-
+  useGlobalSearch({
+    searchQuery,
+    userRole: user?.role,
+    isMobile,
+    mobileSearchOpen
+  });
 
   const handleMobileSearchToggle = () => {
     setMobileSearchOpen(!mobileSearchOpen);
