@@ -27,7 +27,6 @@ class ApiClient {
       ...options,
     };
 
-    // Add auth token if available (prefer access_token for OAuth)
     const token = localStorage.getItem('access_token') || localStorage.getItem('token');
     if (token) {
       config.headers = {
@@ -39,48 +38,27 @@ class ApiClient {
     try {
       let response = await fetch(url, config);
 
-      // Check if response has valid JSON content
-      const contentType = response.headers.get('content-type');
-      let data;
-
-      try {
-        data = await response.json();
-      } catch (jsonError) {
-        // If response is not JSON, handle it appropriately
-        if (response.ok) {
-          // For successful non-JSON responses, return a basic success response
-          return { success: true, message: 'Operation completed successfully' };
-        } else {
-          // For error responses that aren't JSON, create an appropriate error response
-          throw new Error(`API request failed with status ${response.status}: ${response.statusText}`);
-        }
-      }
-
-      // If unauthorized and we have a refresh token, try to refresh
       if (response.status === 401 && localStorage.getItem('refresh_token')) {
         const refreshResponse = await this.refreshAccessToken();
+
         if (refreshResponse.success && refreshResponse.data?.access_token) {
-          // Retry the original request with new token
           config.headers = {
             ...config.headers,
             Authorization: `Bearer ${refreshResponse.data.access_token}`,
           };
-          response = await fetch(url, config);
 
-          // Handle retry response JSON parsing
-          try {
-            data = await response.json();
-          } catch (retryJsonError) {
-            if (response.ok) {
-              return { success: true, message: 'Operation completed successfully' };
-            } else {
-              throw new Error(`API request failed with status ${response.status}: ${response.statusText}`);
-            }
-          }
+          response = await fetch(url, config);
         }
       }
 
-      return data;
+      try {
+        return await response.json();
+      } catch {
+        if (response.ok) {
+          return { success: true, message: 'Operation completed successfully' };
+        }
+        throw new Error(`API request failed with status ${response.status}`);
+      }
     } catch (error) {
       console.error('API Error:', error);
       throw error;

@@ -49,7 +49,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const fetchProfile = async () => {
     try {
       const response = await authApi.getProfile();
-      console.log(response.data)
       if (response.success && response.data) {
         setUser(prevUser => ({
           ...prevUser,
@@ -65,15 +64,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Check if user is logged in on app start
     const token = tokenManager.getToken();
     if (token) {
-      // Check if token is expired
-      if (tokenManager.isTokenExpired()) {
-        // Token expired, logout user
-        logout();
-        setIsLoading(false);
-        return;
-      }
+      // ❌ DO NOT logout on access-token expiry
+      // Refresh token will be handled by interceptor
 
-      // Decode token to get user information
       const decoded = tokenManager.decodeToken(token);
       if (decoded) {
         setUser({
@@ -82,32 +75,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           role: (decoded.role as UserRole) || UserRole.BRANCH,
           branchId: decoded.branchId || 0,
         });
-        // Fetch full profile data
         fetchProfile();
       }
     }
     setIsLoading(false);
   }, []);
 
-  // Check token expiry every minute
-  useEffect(() => {
-    const checkTokenExpiry = () => {
-      if (tokenManager.isTokenExpired()) {
-        logout();
-        router.push('/auth/login');
-      }
-    };
-
-    const interval = setInterval(checkTokenExpiry, 60000); // Check every 60 seconds
-
-    return () => clearInterval(interval);
-  }, [router]);
+  // ❌ REMOVED: interval-based logout on token expiry
+  // Refresh token flow must handle this via interceptor
 
   const login = (token: string, userData?: User) => {
     tokenManager.setToken(token);
     if (userData) {
       setUser(userData);
-      // Fetch full profile data after login
       fetchProfile();
     }
   };
@@ -115,6 +95,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = () => {
     tokenManager.removeToken();
     setUser(null);
+    router.push('/auth/login');
   };
 
   const value: AuthContextType = {

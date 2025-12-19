@@ -6,6 +6,13 @@ export const tokenManager = {
     localStorage.setItem('token', token);
   },
 
+  setTokens: (accessToken: string, refreshToken?: string) => {
+    localStorage.setItem('access_token', accessToken);
+    if (refreshToken) {
+      localStorage.setItem('refresh_token', refreshToken);
+    }
+  },
+
   getToken: () => {
     return localStorage.getItem('token') || localStorage.getItem('access_token');
   },
@@ -34,14 +41,13 @@ export const tokenManager = {
   },
 
   isAuthenticated: () => {
-    return !!(tokenManager.getAccessToken() || tokenManager.getToken());
+    return !!tokenManager.getAccessToken();
   },
 
   decodeToken: (token: string) => {
     try {
       const payload = token.split('.')[1];
-      const decodedPayload = JSON.parse(atob(payload));
-      return decodedPayload;
+      return JSON.parse(atob(payload));
     } catch (error) {
       console.error('Error decoding token:', error);
       return null;
@@ -49,7 +55,7 @@ export const tokenManager = {
   },
 
   getUserRole: () => {
-    const token = tokenManager.getAccessToken() || tokenManager.getToken();
+    const token = tokenManager.getAccessToken();
     if (!token) return null;
 
     const decoded = tokenManager.decodeToken(token);
@@ -57,7 +63,7 @@ export const tokenManager = {
   },
 
   getTokenExpiry: () => {
-    const token = tokenManager.getAccessToken() || tokenManager.getToken();
+    const token = tokenManager.getAccessToken();
     if (!token) return null;
 
     const decoded = tokenManager.decodeToken(token);
