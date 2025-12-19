@@ -57,8 +57,6 @@ export default function AdminInventoryPage() {
         sortOrder: sortDir,
       });
 
-      console.log("Inventory API Response:", res.data);
-
       const paginated = res.data;
 
       if (paginated && Array.isArray(paginated.items)) {

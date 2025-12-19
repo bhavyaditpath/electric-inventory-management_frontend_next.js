@@ -77,12 +77,6 @@ export default function DashboardPage() {
         dashboardApi.getMonthlySales(user.id),
         dashboardApi.getPendingRequests(user.id)
       ]);
-      console.log('Dashboard API Responses:', {
-        totalInventoryRes,
-        activeBranchesRes,
-        monthlySalesRes,
-        pendingRequestsRes
-      });
 
       const totalInventory =
         (totalInventoryRes as any)?.count ??

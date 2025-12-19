@@ -100,7 +100,6 @@ export default function ReportsPage() {
   const fetchPreferences = async () => {
     try {
       const response = await reportsApi.getUserPreferences();
-      console.log(response)
       if (response) {
         setPreferences(Array.isArray(response) ? response : []);
       } else {
