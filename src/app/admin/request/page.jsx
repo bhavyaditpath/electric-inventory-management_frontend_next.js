@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import ConfirmModal from '../../../components/ConfirmModal';
 import { requestApi } from '../../../Services/request.service';
 import { RequestStatus } from '../../../types/enums';
 import { showSuccess, showError } from '../../../Services/toast.service';
@@ -11,9 +10,6 @@ const RequestPage = () => {
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [requests, setRequests] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showConfirmAction, setShowConfirmAction] = useState(false);
-  const [actionRequest, setActionRequest] = useState(null);
-  const [actionType, setActionType] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [total, setTotal] = useState(0);
@@ -76,27 +72,21 @@ const RequestPage = () => {
   //   const interval = setInterval(loadRequests, 5000);
   //   return () => clearInterval(interval);
   // }, [loadRequests, searchTerm]);
-
-  const handleAction = async () => {
-    if (!actionRequest) return;
-
+  const handleRequestAction = async (request, status) => {
     try {
-      const response = await requestApi.updateRequestStatus(actionRequest.id, actionType);
+      const response = await requestApi.updateRequestStatus(request.id, status);
 
       if (response.success) {
-        showSuccess(response.message || `Request ${actionType}`);
-        loadRequests();
+        showSuccess(response.message || `Request ${status}`);
+        loadRequests(page, pageSize, searchTerm);
       } else {
         showError(response.message || 'Failed to update request status');
       }
     } catch {
       showError('Failed to update request status');
-    } finally {
-      setShowConfirmAction(false);
-      setActionRequest(null);
-      setActionType('');
     }
   };
+
 
   return (
     <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
@@ -204,12 +194,8 @@ const RequestPage = () => {
                       {request.status === RequestStatus.REQUEST && (
                         <>
                           <button
-                            onClick={() => {
-                              setActionRequest(request);
-                              setActionType(RequestStatus.ACCEPT);
-                              setShowConfirmAction(true);
-                            }}
-                            className="inline-flex items-center justify-center px-3 py-2 sm:px-4 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 hover:border-emerald-300 transition-colors cursor-pointer w-full sm:w-auto"
+                            onClick={() => handleRequestAction(request, RequestStatus.ACCEPT)}
+                            className="cursor-pointer inline-flex items-center justify-center px-3 py-2 sm:px-4 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 hover:border-emerald-300 transition-colors cursor-pointer w-full sm:w-auto"
                             title="Accept Request"
                           >
                             <CheckIcon className="h-4 w-4 mr-1 sm:mr-2" />
@@ -217,12 +203,8 @@ const RequestPage = () => {
                           </button>
 
                           <button
-                            onClick={() => {
-                              setActionRequest(request);
-                              setActionType(RequestStatus.REJECT);
-                              setShowConfirmAction(true);
-                            }}
-                            className="inline-flex items-center justify-center px-3 py-2 sm:px-4 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer w-full sm:w-auto"
+                            onClick={() => handleRequestAction(request, RequestStatus.REJECT)}
+                            className="cursor-pointer inline-flex items-center justify-center px-3 py-2 sm:px-4 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer w-full sm:w-auto"
                             title="Reject Request"
                           >
                             <XMarkIcon className="h-4 w-4 mr-1 sm:mr-2" />
@@ -233,12 +215,8 @@ const RequestPage = () => {
 
                       {request.status === RequestStatus.ACCEPT && (
                         <button
-                          onClick={() => {
-                            setActionRequest(request);
-                            setActionType(RequestStatus.IN_TRANSIT);
-                            setShowConfirmAction(true);
-                          }}
-                          className="inline-flex items-center justify-center px-3 py-2 sm:px-4 text-sm font-medium text-sky-700 bg-sky-50 border border-sky-200 rounded-lg hover:bg-sky-100 hover:border-sky-300 transition-colors cursor-pointer w-full sm:w-auto"
+                          onClick={() => handleRequestAction(request, RequestStatus.IN_TRANSIT)}
+                          className="cursor-pointerinline-flex items-center justify-center px-3 py-2 sm:px-4 text-sm font-medium text-sky-700 bg-sky-50 border border-sky-200 rounded-lg hover:bg-sky-100 hover:border-sky-300 transition-colors cursor-pointer w-full sm:w-auto"
                           title="Mark as In Transit"
                         >
                           <TruckIcon className="h-4 w-4 mr-1 sm:mr-2" />
@@ -248,12 +226,8 @@ const RequestPage = () => {
 
                       {request.status === RequestStatus.IN_TRANSIT && (
                         <button
-                          onClick={() => {
-                            setActionRequest(request);
-                            setActionType(RequestStatus.DELIVERED);
-                            setShowConfirmAction(true);
-                          }}
-                          className="inline-flex items-center justify-center px-3 py-2 sm:px-4 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 hover:border-emerald-300 transition-colors cursor-pointer w-full sm:w-auto"
+                          onClick={() => handleRequestAction(request, RequestStatus.DELIVERED)}
+                          className="cursor-pointer inline-flex items-center justify-center px-3 py-2 sm:px-4 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 hover:border-emerald-300 transition-colors cursor-pointer w-full sm:w-auto"
                           title="Mark as Delivered"
                         >
                           <CheckIcon className="h-4 w-4 mr-1 sm:mr-2" />
@@ -297,16 +271,6 @@ const RequestPage = () => {
           )}
         </div>
       </div>
-
-      <ConfirmModal
-        isOpen={showConfirmAction}
-        onClose={() => setShowConfirmAction(false)}
-        title={`Confirm ${actionType}`}
-        message={`Are you sure you want to ${actionType.toLowerCase()} this request?`}
-        onConfirm={handleAction}
-        confirmLabel={actionType}
-        variant={actionType === RequestStatus.REJECT ? 'danger' : 'info'}
-      />
     </div>
   );
 };

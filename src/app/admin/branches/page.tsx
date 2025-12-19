@@ -27,12 +27,9 @@ export default function BranchesPage() {
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deletingBranch, setDeletingBranch] = useState<Branch | null>(null);
   const [formData, setFormData] = useState({ name: '', address: '', phone: '' });
   const [errors, setErrors] = useState({ name: '', phone: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
@@ -135,10 +132,30 @@ export default function BranchesPage() {
     setShowModal(true);
   }, []);
 
-  const handleToggleStatus = useCallback((branch: Branch) => {
-    setDeletingBranch(branch);
-    setShowDeleteModal(true);
-  }, []);
+  const handleToggleStatus = useCallback(async (branch: Branch) => {
+    try {
+      const newStatus = !branch.isRemoved;
+
+      const response = await branchApi.update(branch.id, {
+        isRemoved: newStatus
+      });
+
+      if (response.success) {
+        showSuccess(
+          response.message ||
+          `Branch ${newStatus ? 'deactivated' : 'activated'} successfully`
+        );
+
+        await loadBranches(currentPage, pageSize, searchTerm, sortBy, sortOrder);
+      } else {
+        showError(response.message || 'Failed to update branch status');
+      }
+    } catch (error) {
+      console.error('Toggle status error:', error);
+      showError('Error updating branch status');
+    }
+  }, [currentPage, pageSize, searchTerm, sortBy, sortOrder, loadBranches]);
+
 
   const columns: TableColumn<Branch>[] = useMemo(() => [
     {
@@ -170,12 +187,12 @@ export default function BranchesPage() {
       render: (value: any, branch: Branch) => (
         <button
           onClick={() => handleToggleStatus(branch)}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${!branch.isRemoved ? 'bg-green-600' : 'bg-gray-200'
+          className={`cursor-pointer relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${!branch.isRemoved ? 'bg-green-600' : 'bg-gray-200'
             }`}
           title={branch.isRemoved ? 'Activate Branch' : 'Deactivate Branch'}
         >
           <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${!branch.isRemoved ? 'translate-x-6' : 'translate-x-1'
+            className={`cursor-pointer inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${!branch.isRemoved ? 'translate-x-6' : 'translate-x-1'
               }`}
           />
         </button>
@@ -193,36 +210,14 @@ export default function BranchesPage() {
       sortable: true,
       render: (value: boolean) => (
         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${!value
-            ? 'bg-green-100 text-green-800'
-            : 'bg-red-100 text-red-800'
+          ? 'bg-green-100 text-green-800'
+          : 'bg-red-100 text-red-800'
           }`}>
           {!value ? 'Active' : 'Inactive'}
         </span>
       )
     }
   ], [handleToggleStatus]);
-
-  const confirmToggleStatus = useCallback(async () => {
-    if (!deletingBranch) return;
-    setIsDeleting(true);
-    try {
-      const newStatus = !deletingBranch.isRemoved;
-      const response = await branchApi.update(deletingBranch.id, { isRemoved: newStatus });
-      if (response.success) {
-        showSuccess(response.message || `Branch ${newStatus ? 'deactivated' : 'activated'} successfully`);
-        await loadBranches(currentPage, pageSize, searchTerm, sortBy, sortOrder);
-        setShowDeleteModal(false);
-        setDeletingBranch(null);
-      } else {
-        showError(response.message || `Error ${newStatus ? 'deactivating' : 'activating'} branch`);
-      }
-    } catch (error) {
-      console.error("Error toggling branch status:", error);
-      showError("Error toggling branch status");
-    } finally {
-      setIsDeleting(false);
-    }
-  }, [deletingBranch, currentPage, pageSize, searchTerm, sortBy, sortOrder, loadBranches]);
 
   const validateForm = useCallback(() => {
     const newErrors = { name: '', phone: '' };
@@ -452,18 +447,6 @@ export default function BranchesPage() {
           </div>
         </form>
       </Modal>
-
-      {/* Status Toggle Confirmation Modal */}
-      <ConfirmModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title={deletingBranch?.isRemoved ? "Activate Branch" : "Deactivate Branch"}
-        message={`Are you sure you want to ${deletingBranch?.isRemoved ? 'activate' : 'deactivate'} "${deletingBranch?.name}"?`}
-        confirmLabel={deletingBranch?.isRemoved ? "Activate" : "Deactivate"}
-        onConfirm={confirmToggleStatus}
-        isDeleting={isDeleting}
-        variant={deletingBranch?.isRemoved ? "warning" : "danger"}
-      />
     </div>
   );
 }
