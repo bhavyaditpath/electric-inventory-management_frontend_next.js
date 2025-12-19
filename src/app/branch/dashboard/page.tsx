@@ -132,7 +132,7 @@ export default function BranchDashboardPage() {
 
   if (loading) {
     return (
-      <div className="p-6 bg-gray-50 ">
+      <div className="p-6 bg-gray-50 min-h-screen">
         <div className="mb-6">
           <div className="h-8 bg-gray-200 rounded w-48 mb-2 animate-pulse"></div>
           <div className="h-4 bg-gray-200 rounded w-80 animate-pulse"></div>
@@ -153,7 +153,7 @@ export default function BranchDashboardPage() {
 
   if (error) {
     return (
-      <div className="p-6 bg-gray-50 ">
+      <div className="p-6 bg-gray-50 min-h-screen">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Branch Dashboard</h1>
         </div>
@@ -176,7 +176,7 @@ export default function BranchDashboardPage() {
   }
 
   return (
-    <div className="p-6 bg-gray-50 ">
+    <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -242,7 +242,7 @@ export default function BranchDashboardPage() {
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Today's Buys</p> 
+              <p className="text-sm font-medium text-gray-600">Today's Buys</p>
               <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.todaysBuys)}</p>
               <p className="text-sm text-gray-500 mt-1">Revenue today</p>
             </div>
@@ -316,14 +316,12 @@ export default function BranchDashboardPage() {
                   return (
                     <div key={item.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
                       <div className="flex items-center">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 ${
-                          status.color.includes('red') ? 'bg-red-100' :
-                          status.color.includes('orange') ? 'bg-orange-100' : 'bg-gray-100'
-                        }`}>
-                          <ExclamationTriangleIcon className={`w-4 h-4 ${
-                            status.color.includes('red') ? 'text-red-600' :
-                            status.color.includes('orange') ? 'text-orange-600' : 'text-gray-600'
-                          }`} />
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 ${status.color.includes('red') ? 'bg-red-100' :
+                            status.color.includes('orange') ? 'bg-orange-100' : 'bg-gray-100'
+                          }`}>
+                          <ExclamationTriangleIcon className={`w-4 h-4 ${status.color.includes('red') ? 'text-red-600' :
+                              status.color.includes('orange') ? 'text-orange-600' : 'text-gray-600'
+                            }`} />
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-900">{item.productName}</p>
@@ -332,10 +330,9 @@ export default function BranchDashboardPage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          status.color.includes('red') ? 'bg-red-100 text-red-800' :
-                          status.color.includes('orange') ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${status.color.includes('red') ? 'bg-red-100 text-red-800' :
+                            status.color.includes('orange') ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
                           {status.text}
                         </span>
                       </div>
@@ -375,11 +372,11 @@ export default function BranchDashboardPage() {
               Request Stock
             </button>
             <button
-              onClick={() => router.push('/branch/sales')}
+              onClick={() => router.push('/branch/reports')}
               className="flex items-center justify-center px-6 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
             >
-              <ShoppingCartIcon className="w-5 h-5 mr-2" />
-              Record Sale
+              <ChartBarIcon className="w-5 h-5 mr-2" />
+              Purchase Reports
             </button>
             <button
               onClick={() => router.push('/branch/inventory')}

@@ -225,7 +225,7 @@ export default function AdminAlertsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 bg-gray-50 ">
+      <div className="p-6 bg-gray-50 min-h-screen">
         <div className="mb-6">
           <div className="h-8 bg-gray-200 rounded w-48 mb-2 animate-pulse"></div>
           <div className="h-4 bg-gray-200 rounded w-80 animate-pulse"></div>
@@ -246,7 +246,7 @@ export default function AdminAlertsPage() {
 
   if (error) {
     return (
-      <div className="p-6 bg-gray-50 ">
+      <div className="p-6 bg-gray-50 min-h-screen">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Admin Alerts</h1>
         </div>
@@ -269,7 +269,7 @@ export default function AdminAlertsPage() {
   }
 
   return (
-    <div className="p-6 bg-gray-50 ">
+    <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">

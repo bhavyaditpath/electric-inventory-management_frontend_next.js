@@ -287,13 +287,13 @@ export default function ReportsPage() {
         >
           <PencilIcon className="w-4 h-4" />
         </button>
-        <button
+        {/* <button
           onClick={() => handleDelete(preference)}
           className="text-red-600 hover:text-red-900 p-1 cursor-pointer"
           title="Delete Preference"
         >
           <TrashIcon className="w-4 h-4" />
-        </button>
+        </button> */}
       </div>
     ),
     [handleEdit, handleDelete]

@@ -69,7 +69,7 @@ const RequestPage = () => {
       setPage(1); // Reset to first page when searching
       loadRequests(1, pageSize, searchTerm);
     }
-  }, [searchTerm, loadRequests, pageSize]);
+  }, [searchTerm]);
 
   // API call every 5000 millisecond
   // useEffect(() => {

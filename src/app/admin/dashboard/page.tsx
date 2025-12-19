@@ -47,14 +47,6 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
-  // Helper function to format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
-
   // Helper function to calculate time ago
   const getTimeAgo = (date: Date) => {
     const now = new Date();
@@ -173,7 +165,7 @@ export default function DashboardPage() {
   // Loading skeleton
   if (loading) {
     return (
-      <div className="p-6 bg-gray-50 ">
+      <div className="p-6 bg-gray-50 min-h-screen">
         <div className="mb-6">
           <div className="h-8 bg-gray-200 rounded w-48 mb-2 animate-pulse"></div>
           <div className="h-4 bg-gray-200 rounded w-80 animate-pulse"></div>
@@ -195,7 +187,7 @@ export default function DashboardPage() {
   // Error state
   if (error) {
     return (
-      <div className="p-6 bg-gray-50 ">
+      <div className="p-6 bg-gray-50 min-h-screen">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         </div>
@@ -218,7 +210,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-6 bg-gray-50 ">
+    <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -271,7 +263,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Monthly Sales</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.monthlySales)}</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.monthlySales}</p>
               <p className="text-sm text-gray-500 mt-1">This month</p>
             </div>
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { requestApi } from '../../../Services/request.service';
 import { RequestResponseDto, PaginatedResponse } from '../../../types/api-types';
 import { RequestStatus } from '../../../types/enums';
@@ -15,6 +15,8 @@ const RequestedPurchasePage = () => {
   const [pageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+
+  const firstLoad = useRef(false);
   // Load requests
   const loadRequests = useCallback(async (currentPage = page, currentPageSize = pageSize, currentSearchTerm = searchTerm) => {
     try {
@@ -51,14 +53,17 @@ const RequestedPurchasePage = () => {
   };
 
   useEffect(() => {
-    loadRequests();
+    if (!firstLoad.current) {
+      firstLoad.current = true;
+      loadRequests();
+    }
   }, [loadRequests]);
 
   // Reload requests when search term changes
   useEffect(() => {
     setPage(1); // Reset to first page when searching
     loadRequests(1, pageSize, searchTerm);
-  }, [searchTerm, pageSize]);
+  }, [searchTerm]);
 
   const handleStatusUpdate = async (requestId: number, newStatus: string) => {
     try {
