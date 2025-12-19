@@ -455,7 +455,7 @@ const PurchasePage = () => {
           </div>
 
           <div className="p-6">
-            <div className="space-y-4 max-h-96 overflow-y-auto">
+            <div className="space-y-4">
               {!purchases || purchases.length === 0 ? (
                 <div className="text-center py-12">
                   <ShoppingCartIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
