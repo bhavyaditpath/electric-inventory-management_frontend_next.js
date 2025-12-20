@@ -135,34 +135,31 @@ export default function BranchesPage() {
   const handleToggleStatus = useCallback(async (branch: Branch) => {
     const newStatus = !branch.isRemoved;
 
-    setBranches(prev =>
-      prev.map(b =>
-        b.id === branch.id ? { ...b, isRemoved: newStatus } : b
-      )
-    );
-
     try {
       const response = await branchApi.update(branch.id, {
         isRemoved: newStatus
       });
 
-      if (response.success) {
-        showSuccess(
-          response.message ||
-          `Branch ${newStatus ? 'deactivated' : 'activated'} successfully`
-        );
-      } else {
+      if (!response.success) {
         throw new Error(response.message);
       }
-    } catch (error) {
-      // ❌ Rollback on failure
+
       setBranches(prev =>
         prev.map(b =>
-          b.id === branch.id ? { ...b, isRemoved: branch.isRemoved } : b
+          b.id === branch.id ? { ...b, isRemoved: newStatus } : b
         )
       );
 
-      showError('Error updating branch status');
+      showSuccess(
+        response.message ||
+        `Branch ${newStatus ? 'deactivated' : 'activated'} successfully`
+      );
+    } catch (error) {
+      showError(
+        error instanceof Error
+          ? error.message
+          : 'Error updating branch status'
+      );
     }
   }, []);
 
