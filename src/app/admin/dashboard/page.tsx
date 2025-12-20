@@ -1,17 +1,19 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { purchaseApi } from '@/Services/purchase.service';
 import { dashboardApi } from '@/Services/dashboard.api';
 import { PurchaseResponseDto } from '@/types/api-types';
+import { StockAlert } from '@/Services/alert.api';
 import {
   CubeIcon,
   BuildingStorefrontIcon,
   CurrencyDollarIcon,
   ArrowPathIcon,
   ExclamationTriangleIcon,
-  ClockIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  ShoppingCartIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -21,6 +23,7 @@ interface DashboardStats {
   monthlySales: number;
   totalRequests: number;
   recentActivity: ActivityItem[];
+  activeAlerts: StockAlert[];
 }
 
 interface ActivityItem {
@@ -36,12 +39,14 @@ interface ActivityItem {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats>({
     totalInventory: 0,
     activeBranches: 0,
     monthlySales: 0,
     totalRequests: 0,
-    recentActivity: []
+    recentActivity: [],
+    activeAlerts: []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -105,6 +110,14 @@ export default function DashboardPage() {
         allPurchases = purchaseResponse.data as PurchaseResponseDto[];
       }
 
+      // Fetch active alerts
+      const activeAlertsResponse = await dashboardApi.getActiveAlertsList(user.id);
+      let activeAlerts: StockAlert[] = [];
+
+      if (Array.isArray(activeAlertsResponse)) {
+        activeAlerts = activeAlertsResponse as StockAlert[];
+      } 
+
       // Process recent activity
       const recentActivity: ActivityItem[] = [];
 
@@ -119,7 +132,7 @@ export default function DashboardPage() {
               type: 'purchase',
               title: 'New inventory purchased',
               description: `${purchase.quantity} ${purchase.unit} of ${purchase.productName}`,
-              timestamp: getTimeAgo(purchase.createdAt),
+              timestamp: getTimeAgo(new Date(purchase.createdAt)),
               value: `+${purchase.quantity} items`,
               color: 'blue',
               icon: CubeIcon
@@ -141,7 +154,8 @@ export default function DashboardPage() {
         activeBranches,
         monthlySales,
         totalRequests,
-        recentActivity: recentActivity.slice(0, 5) // Show top 5 activities
+        recentActivity: recentActivity.slice(0, 5), // Show top 5 activities
+        activeAlerts
       });
 
     } catch (err) {
@@ -209,7 +223,7 @@ export default function DashboardPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             <p className="text-gray-600 mt-1">Electric Inventory Management System</p>
           </div>
           <button
@@ -224,7 +238,7 @@ export default function DashboardPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Total Inventory Card */}
+        {/* Current Stock Card */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -266,13 +280,13 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Pending Requests Card */}
+        {/* Pending Orders Card */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Pending Requests</p>
               <p className="text-3xl font-bold text-gray-900">{stats.totalRequests}</p>
-              <p className="text-sm text-gray-500 mt-1">Awaiting approval</p>
+              <p className="text-sm text-gray-500 mt-1">From branches</p>
             </div>
             <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
               <DocumentTextIcon className="w-6 h-6 text-yellow-600" />
@@ -281,63 +295,92 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="bg-white rounded-lg border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
-        </div>
+      {/* Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Recent Buys */}
+        <div className="bg-white rounded-lg border border-gray-200 h-80 md:h-96 flex flex-col">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                <ShoppingCartIcon className="w-5 h-5 text-green-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">Recent Purchases</h2>
+            </div>
+          </div>
 
-        <div className="p-6">
-          {stats.recentActivity.length > 0 ? (
-            <div className="space-y-4">
-              {stats.recentActivity.map((activity) => {
-                const IconComponent = activity.icon;
-                return (
+          <div className="p-6 flex-1 overflow-y-auto scrollbar-hide pt-0">
+            {stats.recentActivity.filter(a => a.type === 'purchase').length > 0 ? (
+              <div className="space-y-4">
+                {stats.recentActivity.filter(a => a.type === 'purchase').slice(0, 3).map((activity) => (
                   <div key={activity.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
                     <div className="flex items-center">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-4 ${activity.color === 'blue' ? 'bg-blue-100' :
-                        activity.color === 'green' ? 'bg-green-100' :
-                          activity.color === 'red' ? 'bg-red-100' :
-                            activity.color === 'yellow' ? 'bg-yellow-100' : 'bg-gray-100'
-                        }`}>
-                        <IconComponent className={`w-5 h-5 ${activity.color === 'blue' ? 'text-blue-600' :
-                          activity.color === 'green' ? 'text-green-600' :
-                            activity.color === 'red' ? 'text-red-600' :
-                              activity.color === 'yellow' ? 'text-yellow-600' : 'text-gray-600'
-                          }`} />
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                        <CubeIcon className="w-4 h-4 text-blue-600" />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900">{activity.title}</p>
-                        <p className="text-sm text-gray-600">{activity.description}</p>
+                        <p className="text-xs text-gray-600">{activity.description}</p>
                         <p className="text-xs text-gray-500 mt-1">{activity.timestamp}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      {activity.value && (
-                        <span className="text-sm text-gray-900 font-medium">
-                          {activity.value}
-                        </span>
-                      )}
-                      {activity.status && (
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${activity.color === 'green' ? 'bg-green-100 text-green-800' :
-                          activity.color === 'red' ? 'bg-red-100 text-red-800' :
-                            activity.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
-                          }`}>
-                          {activity.status}
-                        </span>
-                      )}
+                      <span className="text-sm font-semibold text-green-600">{activity.value}</span>
                     </div>
                   </div>
-                );
-              })}
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <ShoppingCartIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-500 font-medium">No recent purchases</p>
+                <p className="text-gray-400 text-sm">Recent purchases will appear here</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Stock Alerts */}
+        <div className="bg-white rounded-lg border border-gray-200 h-80 md:h-96 flex flex-col">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+                <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">Active Alerts</h2>
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <ClockIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500 font-medium">No recent activity</p>
-              <p className="text-gray-400 text-sm">Recent inventory activities will appear here</p>
-            </div>
-          )}
+          </div>
+
+          <div className="p-6 flex-1 overflow-y-auto scrollbar-hide pt-0">
+            {stats.activeAlerts.length > 0 ? (
+              <div className="space-y-4">
+                {stats.activeAlerts.map((alert) => (
+                  <div key={alert.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+                        <ExclamationTriangleIcon className="w-4 h-4 text-red-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{alert.itemName}</p>
+                        <p className="text-xs text-gray-600">Branch: {alert.branch?.name || 'Unknown'}</p>
+                        <p className="text-xs text-gray-500 mt-1">Shortage: {alert.shortage}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Active
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <CubeIcon className="w-12 h-12 text-green-400 mx-auto mb-3" />
+                <p className="text-gray-500 font-medium">No active alerts</p>
+                <p className="text-gray-400 text-sm">All stock levels are adequate</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

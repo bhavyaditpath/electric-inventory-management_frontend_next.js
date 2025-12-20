@@ -18,6 +18,10 @@ export interface StockAlert {
   resolvedDate?: string | null;
   notes?: string | null;
   branchId: number;
+  branch?: {
+    id: number;
+    name: string;
+  };
 }
 
 export interface AlertsResponse {
