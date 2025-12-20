@@ -308,11 +308,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="p-6 flex-1 overflow-y-auto scrollbar-hide pt-0">
+          <div className="px-6 flex-1 overflow-y-auto scrollbar-hide">
             {stats.recentActivity.filter(a => a.type === 'purchase').length > 0 ? (
               <div className="space-y-4">
                 {stats.recentActivity.filter(a => a.type === 'purchase').slice(0, 3).map((activity) => (
-                  <div key={activity.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                  <div key={activity.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0 mb-0 -mx-6 px-6">
                     <div className="flex items-center">
                       <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
                         <CubeIcon className="w-4 h-4 text-blue-600" />
@@ -350,11 +350,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="p-6 flex-1 overflow-y-auto scrollbar-hide pt-0">
+          <div className="px-6 flex-1 overflow-y-auto scrollbar-hide">
             {stats.activeAlerts.length > 0 ? (
               <div className="space-y-4">
                 {stats.activeAlerts.map((alert) => (
-                  <div key={alert.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                  <div key={alert.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0 mb-0 -mx-6 px-6">
                     <div className="flex items-center">
                       <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3">
                         <ExclamationTriangleIcon className="w-4 h-4 text-red-600" />

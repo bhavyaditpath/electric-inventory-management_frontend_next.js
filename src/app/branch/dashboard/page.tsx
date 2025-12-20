@@ -266,11 +266,11 @@ export default function BranchDashboardPage() {
             </div>
           </div>
 
-          <div className="p-6">
+          <div className="px-6 flex-1 overflow-y-auto scrollbar-hide">
             {recentSales.length > 0 ? (
               <div className="space-y-4">
                 {recentSales.map((sale, index) => (
-                  <div key={sale.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                  <div key={sale.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0 mb-0 -mx-6 px-6">
                     <div className="flex items-center">
                       <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
                         <ChartBarIcon className="w-4 h-4 text-blue-600" />
@@ -308,19 +308,19 @@ export default function BranchDashboardPage() {
             </div>
           </div>
 
-          <div className="p-6">
+          <div className="px-6 flex-1 overflow-y-auto scrollbar-hide">
             {stockAlerts.length > 0 ? (
               <div className="space-y-4">
                 {stockAlerts.map((item, index) => {
                   const status = getStockStatus(item.currentQuantity, item.lowStockThreshold);
                   return (
-                    <div key={item.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                    <div key={item.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0 mb-0 -mx-6 px-6">
                       <div className="flex items-center">
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 ${status.color.includes('red') ? 'bg-red-100' :
-                            status.color.includes('orange') ? 'bg-orange-100' : 'bg-gray-100'
+                          status.color.includes('orange') ? 'bg-orange-100' : 'bg-gray-100'
                           }`}>
                           <ExclamationTriangleIcon className={`w-4 h-4 ${status.color.includes('red') ? 'text-red-600' :
-                              status.color.includes('orange') ? 'text-orange-600' : 'text-gray-600'
+                            status.color.includes('orange') ? 'text-orange-600' : 'text-gray-600'
                             }`} />
                         </div>
                         <div>
@@ -331,7 +331,7 @@ export default function BranchDashboardPage() {
                       </div>
                       <div className="text-right">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${status.color.includes('red') ? 'bg-red-100 text-red-800' :
-                            status.color.includes('orange') ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'
+                          status.color.includes('orange') ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'
                           }`}>
                           {status.text}
                         </span>
