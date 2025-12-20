@@ -205,13 +205,19 @@ const PurchasePage = () => {
             <h1 className="text-3xl font-bold text-gray-900">Purchase Management</h1>
             <p className="text-gray-600 mt-1">Record and manage inventory purchases</p>
           </div>
-          <button
-            onClick={() => window.location.reload()}
+          {/* <button
+            onClick={loadPurchases}
+            disabled={loadingPurchases}
             className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            <ArrowPathIcon className="w-4 h-4 mr-2 text-gray-600" />
-            <span className="text-gray-700">Refresh</span>
-          </button>
+            <ArrowPathIcon
+              className={`w-4 h-4 mr-2 text-gray-600 ${loadingPurchases ? 'animate-spin' : ''
+                }`}
+            />
+            <span className="text-gray-700">
+              {loadingPurchases ? 'Refreshing...' : 'Refresh'}
+            </span>
+          </button> */}
         </div>
       </div>
 
@@ -313,11 +319,10 @@ const PurchasePage = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`flex-1 py-3.5 px-4 rounded-lg font-semibold text-white transition-all duration-200 ${
-                    loading
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 focus:ring-2 focus:ring-blue-200 shadow-lg hover:shadow-xl'
-                  }`}
+                  className={`flex-1 py-3.5 px-4 rounded-lg font-semibold text-white transition-all duration-200 ${loading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 focus:ring-2 focus:ring-blue-200 shadow-lg hover:shadow-xl'
+                    }`}
                 >
                   {loading ? (
                     <>
@@ -358,11 +363,10 @@ const PurchasePage = () => {
               <button
                 onClick={() => exportPurchasesToPDF(purchases, user?.branch || 'All Branches')}
                 disabled={!purchases || purchases.length === 0}
-                className={`inline-flex items-center px-4 py-2 rounded-lg font-semibold text-white transition-all duration-200 ${
-                  !purchases || purchases.length === 0
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-green-600 hover:bg-green-700 active:bg-green-800 focus:ring-2 focus:ring-green-200 shadow-lg hover:shadow-xl'
-                }`}
+                className={`inline-flex items-center px-4 py-2 rounded-lg font-semibold text-white transition-all duration-200 ${!purchases || purchases.length === 0
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-green-600 hover:bg-green-700 active:bg-green-800 focus:ring-2 focus:ring-green-200 shadow-lg hover:shadow-xl'
+                  }`}
               >
                 <DocumentTextIcon className="w-4 h-4 mr-2" />
                 Export PDF

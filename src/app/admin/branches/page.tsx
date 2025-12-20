@@ -133,9 +133,15 @@ export default function BranchesPage() {
   }, []);
 
   const handleToggleStatus = useCallback(async (branch: Branch) => {
-    try {
-      const newStatus = !branch.isRemoved;
+    const newStatus = !branch.isRemoved;
 
+    setBranches(prev =>
+      prev.map(b =>
+        b.id === branch.id ? { ...b, isRemoved: newStatus } : b
+      )
+    );
+
+    try {
       const response = await branchApi.update(branch.id, {
         isRemoved: newStatus
       });
@@ -145,16 +151,20 @@ export default function BranchesPage() {
           response.message ||
           `Branch ${newStatus ? 'deactivated' : 'activated'} successfully`
         );
-
-        await loadBranches(currentPage, pageSize, searchTerm, sortBy, sortOrder);
       } else {
-        showError(response.message || 'Failed to update branch status');
+        throw new Error(response.message);
       }
     } catch (error) {
-      console.error('Toggle status error:', error);
+      // ❌ Rollback on failure
+      setBranches(prev =>
+        prev.map(b =>
+          b.id === branch.id ? { ...b, isRemoved: branch.isRemoved } : b
+        )
+      );
+
       showError('Error updating branch status');
     }
-  }, [currentPage, pageSize, searchTerm, sortBy, sortOrder, loadBranches]);
+  }, []);
 
 
   const columns: TableColumn<Branch>[] = useMemo(() => [
@@ -307,7 +317,9 @@ export default function BranchesPage() {
           </div>
           <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
             <button
-              onClick={() => window.location.reload()}
+              onClick={() =>
+                loadBranches(currentPage, pageSize, searchTerm, sortBy, sortOrder)
+              }
               className="inline-flex items-center justify-center px-3 py-2 sm:px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
             >
               <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2 text-gray-600" />

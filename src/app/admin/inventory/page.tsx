@@ -38,6 +38,29 @@ export default function AdminInventoryPage() {
   const [totalRecords, setTotalRecords] = useState(0);
   const [sortBy, setSortBy] = useState<string>("productName");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [stockSummary, setStockSummary] = useState({
+    low: 0,
+    warning: 0,
+    good: 0,
+  });
+
+  const loadStockSummary = useCallback(async (search = searchTerm) => {
+    try {
+      const res = await inventoryApi.getStockSummary({
+        search: search.trim() || undefined,
+      });
+
+      if (res?.data) {
+        setStockSummary({
+          low: res.data.low || 0,
+          warning: res.data.warning || 0,
+          good: res.data.good || 0,
+        });
+      }
+    } catch (e) {
+      console.error("Stock summary load error:", e);
+    }
+  }, [searchTerm]);
 
   const loadInventory = useCallback(async (
     page = currentPage,
@@ -80,6 +103,7 @@ export default function AdminInventoryPage() {
     setSearchTerm(urlSearch);
     setCurrentPage(1);
     loadInventory(1, pageSize, urlSearch);
+    loadStockSummary(urlSearch);
   }, [urlSearch]);
 
   const handlePageChange = useCallback(
@@ -109,12 +133,19 @@ export default function AdminInventoryPage() {
   const handleDeleteInventory = async () => {
     if (!deleteId) return;
 
+    const deletedId = deleteId;
+
+    setInventory(prev => prev.filter(i => i.id !== deletedId));
+    setTotalRecords(prev => prev - 1);
+
     try {
-      await purchaseApi.removePurchase(deleteId);
+      await purchaseApi.removePurchase(deletedId);
       showSuccess("Inventory deleted successfully!");
-      loadInventory();
     } catch (error) {
       console.error("Failed to delete inventory:", error);
+
+      await loadInventory(currentPage, pageSize, searchTerm, sortBy, sortOrder);
+      await loadStockSummary(searchTerm);
       showError("Failed to delete inventory");
     } finally {
       setShowConfirmDelete(false);
@@ -197,7 +228,9 @@ export default function AdminInventoryPage() {
           </div>
           <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
             <button
-              onClick={() => window.location.reload()}
+              onClick={() =>
+                loadInventory(currentPage, pageSize, searchTerm, sortBy, sortOrder)
+              }
               className="inline-flex items-center justify-center px-3 py-2 sm:px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
             >
               <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2 text-gray-600" />
@@ -259,7 +292,7 @@ export default function AdminInventoryPage() {
                   <div className="flex-1">
                     <div className="text-red-800 font-semibold text-base sm:text-lg">Low Stock Items</div>
                     <div className="text-red-600 text-2xl sm:text-3xl font-bold mt-1">
-                      {inventory.filter((i) => i.currentQuantity <= i.lowStockThreshold).length}
+                      {stockSummary.low}
                     </div>
                   </div>
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-lg flex items-center justify-center ml-3">
@@ -273,11 +306,7 @@ export default function AdminInventoryPage() {
                   <div className="flex-1">
                     <div className="text-yellow-800 font-semibold text-base sm:text-lg">Warning Level</div>
                     <div className="text-yellow-600 text-2xl sm:text-3xl font-bold mt-1">
-                      {inventory.filter(
-                        (i) =>
-                          i.currentQuantity > i.lowStockThreshold &&
-                          i.currentQuantity <= i.lowStockThreshold * 2
-                      ).length}
+                      {stockSummary.warning}
                     </div>
                   </div>
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-lg flex items-center justify-center ml-3">
@@ -291,8 +320,7 @@ export default function AdminInventoryPage() {
                   <div className="flex-1">
                     <div className="text-green-800 font-semibold text-base sm:text-lg">Good Stock</div>
                     <div className="text-green-600 text-2xl sm:text-3xl font-bold mt-1">
-                      {inventory.filter((i) => i.currentQuantity > i.lowStockThreshold * 2)
-                        .length}
+                      {stockSummary.good}
                     </div>
                   </div>
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center ml-3">
