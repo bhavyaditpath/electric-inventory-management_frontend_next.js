@@ -24,5 +24,17 @@ export const inventoryApi = {
     return apiClient.get<PaginatedResponse<InventoryItem>>(
       `/inventory${queryString ? `?${queryString}` : ""}`
     );
+  },
+
+  getStockSummary: (params?: { search?: string }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.search) searchParams.append("search", params.search);
+
+    const queryString = searchParams.toString();
+    return apiClient.get<{
+      low: number;
+      warning: number;
+      good: number;
+    }>(`/inventory/summary${queryString ? `?${queryString}` : ""}`);
   }
 };
