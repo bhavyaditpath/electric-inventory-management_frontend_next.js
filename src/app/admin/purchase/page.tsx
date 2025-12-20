@@ -221,9 +221,9 @@ const PurchasePage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="flex flex-col lg:flex-row gap-8">
         {/* Purchase Form */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex-1">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center">
               <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
@@ -348,7 +348,7 @@ const PurchasePage = () => {
         </div>
 
         {/* HISTORY */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex-1">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex justify-between items-center">
               <div className="flex items-center">
@@ -375,7 +375,7 @@ const PurchasePage = () => {
           </div>
 
           <div className="p-6">
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-96 overflow-y-auto">
               {!purchases || purchases.length === 0 ? (
                 <div className="text-center py-12">
                   <ShoppingCartIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
