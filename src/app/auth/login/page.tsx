@@ -6,6 +6,7 @@ import { UserRole } from "../../../types/enums";
 import { tokenManager } from "@/Services/token.management.service";
 import { authApi } from "@/Services/auth.api";
 import { useAuth } from "@/contexts/AuthContext";
+import { showError } from "@/Services/toast.service";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import { 
   EyeIcon, 
@@ -49,6 +50,16 @@ export default function LoginPage() {
       return () => clearTimeout(timer);
     }
   }, [error]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const errorParam = params.get('error');
+    if (errorParam === 'user_not_found') {
+      const message = "User not found. Please check your username or contact support.";
+      setError(message);
+      showError(message);
+    }
+  }, []);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
