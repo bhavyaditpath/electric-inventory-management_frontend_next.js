@@ -22,6 +22,7 @@ export interface InventoryItem {
   branch?: any;
   lastPurchaseDate: Date | string;
   totalPurchased: number;
+  pricePerUnit: number;
 }
 
 export default function AdminInventoryPage() {
@@ -185,6 +186,13 @@ export default function AdminInventoryPage() {
       header: "Total Purchased",
       sortable: true,
       render: (value: number, row: InventoryItem) => `${value} ${row.unit}`,
+    },
+
+    {
+      key: "pricePerUnit",
+      header: "Price Per Unit",
+      sortable: true,
+      render: (value: number) => value ? `₹${Number(value).toFixed(2)}` : '₹0.00',
     },
 
     {

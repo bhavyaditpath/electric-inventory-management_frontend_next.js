@@ -21,7 +21,8 @@ export function useColumnCustomization<T>(initialColumns: T[], storageKey: strin
   const deserializeColumns = (config: any) => {
     const seen = new Set();
 
-    return config.columnOrder
+    // Start with saved columns
+    const savedColumns = config.columnOrder
       .filter((key: string) => {
         if (seen.has(key)) return false;
         seen.add(key);
@@ -41,6 +42,11 @@ export function useColumnCustomization<T>(initialColumns: T[], storageKey: strin
         return null;
       })
       .filter(Boolean);
+
+    // Add any new columns not in saved config
+    const newColumns = initialColumns.filter(col => !seen.has((col as any).key));
+
+    return [...savedColumns, ...newColumns];
   };
 
   const [tableColumns, setTableColumns] = useState(() => {
