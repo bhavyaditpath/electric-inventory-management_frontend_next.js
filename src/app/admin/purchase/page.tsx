@@ -180,10 +180,10 @@ const PurchasePage = () => {
     try {
       if (editingPurchase) {
         await purchaseApi.editRecordPurchase(editingPurchase.id.toString(), formData);
-        showSuccess('Purchase updated');
+        showSuccess('Purchase updated'); // -- This should be manage from the backend
       } else {
         await purchaseApi.recordPurchase(formData);
-        showSuccess('Purchase recorded');
+        showSuccess('Purchase recorded'); // -- This should be manage from the backend
       }
 
       handleCancelEdit();

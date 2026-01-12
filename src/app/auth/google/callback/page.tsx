@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { tokenManager } from "@/Services/token.management.service";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/types/enums";
 
-export default function GoogleOAuthCallback() {
+function GoogleOAuthCallbackForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
@@ -40,4 +40,12 @@ export default function GoogleOAuthCallback() {
   }, [accessToken]);
 
   return <div>Processing Google Login...</div>;
+}
+
+export default function GoogleOAuthCallback() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <GoogleOAuthCallbackForm />
+    </Suspense>
+  );
 }
