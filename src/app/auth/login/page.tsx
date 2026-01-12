@@ -248,6 +248,7 @@ export default function LoginPage() {
                     placeholder="Enter your password"
                     disabled={isLoading}
                     autoComplete="current-password"
+                    suppressHydrationWarning={true}
                   />
                   <button
                     type="button"

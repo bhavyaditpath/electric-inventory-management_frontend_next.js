@@ -91,7 +91,7 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
                   placeholder="Search items..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-black"
+                  className="w-full pl-10 pr-4 py-2 border  rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-black"
                 />
               </div>
             </div>
@@ -122,7 +122,7 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2 lg:gap-3 pl-2 lg:pl-4 border-l border-slate-200 hover:bg-slate-50 rounded-lg p-2 transition-all duration-200 cursor-pointer"
+              className="flex items-center gap-2 lg:gap-3 hover:bg-slate-50 rounded-lg p-2 transition-all duration-200 cursor-pointer"
             >
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-semibold text-slate-800">{user?.username || 'User'}</p>
@@ -154,8 +154,8 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50 cursor-pointer">
-                <div className="sm:hidden px-4 py-2 border-b border-slate-200">
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border  py-1 z-50 cursor-pointer">
+                <div className="sm:hidden px-4 py-2 border-b ">
                   <p className="text-sm font-semibold text-slate-800">{user?.username || 'User'}</p>
                   <p className="text-xs text-slate-500">{user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Role'}</p>
                 </div>
@@ -174,7 +174,7 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
 
       {/* Mobile search overlay */}
       {isMobile && mobileSearchOpen && (
-        <div className="mobile-search-container absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-lg z-40 p-4">
+        <div className="mobile-search-container absolute top-full left-0 right-0 bg-white border-b  shadow-lg z-40 p-4">
           <div className="relative">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
             <input
@@ -183,7 +183,7 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
               placeholder="Search items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-black"
+              className="w-full pl-10 pr-4 py-2 border  rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-black"
             />
           </div>
         </div>
