@@ -8,9 +8,9 @@ import { authApi } from "@/Services/auth.api";
 import { useAuth } from "@/contexts/AuthContext";
 import { showError } from "@/Services/toast.service";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
-import { 
-  EyeIcon, 
-  EyeSlashIcon, 
+import {
+  EyeIcon,
+  EyeSlashIcon,
   ShieldCheckIcon,
   CheckCircleIcon,
   ExclamationCircleIcon
@@ -74,7 +74,7 @@ export default function LoginPage() {
       const response = await authApi.login({ username: username.trim(), password });
 
       if (response.success && response.data?.access_token) {
-        tokenManager.setToken(response.data.access_token);
+        tokenManager.setTokens(response.data.access_token, response.data.refresh_token);
 
         const decoded = tokenManager.decodeToken(response.data.access_token);
         if (!decoded) throw new Error("Invalid token");
@@ -115,21 +115,21 @@ export default function LoginPage() {
             backgroundSize: '50px 50px'
           }}></div>
         </div>
-        
+
         <div className="relative z-10 px-16 text-white">
           <div className="flex items-center mb-8">
             <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4 backdrop-blur-sm">
               <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" />
               </svg>
             </div>
             <h1 className="text-3xl font-bold tracking-tight">Electric Inventory</h1>
           </div>
-          
+
           <h2 className="text-4xl font-bold mb-6 leading-tight">
             Professional Inventory Management
           </h2>
-          
+
           <p className="text-blue-100 text-lg mb-8 leading-relaxed max-w-md">
             Streamline your electrical inventory operations with secure, efficient, and intelligent management tools.
           </p>
@@ -158,7 +158,7 @@ export default function LoginPage() {
           <div className="lg:hidden text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4">
               <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" />
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Electric Inventory</h1>
@@ -199,11 +199,11 @@ export default function LoginPage() {
                     className={`
                       w-full px-4 py-3.5 rounded-xl border-2 transition-all duration-200
                       focus:outline-none text-gray-900 placeholder-gray-500
-                      ${usernameError 
-                        ? 'border-red-300 focus:border-red-500 bg-red-50' 
+                      ${usernameError
+                        ? 'border-red-300 focus:border-red-500 bg-red-50'
                         : focused.username && !usernameError
-                        ? 'border-blue-500 bg-blue-50 focus:ring-2 focus:ring-blue-200'
-                        : 'border-gray-200 hover:border-gray-300 focus:border-blue-500'
+                          ? 'border-blue-500 bg-blue-50 focus:ring-2 focus:ring-blue-200'
+                          : 'border-gray-200 hover:border-gray-300 focus:border-blue-500'
                       }
                     `}
                     placeholder="Enter your username"
@@ -238,11 +238,11 @@ export default function LoginPage() {
                     className={`
                       w-full px-4 py-3.5 pr-12 rounded-xl border-2 transition-all duration-200
                       focus:outline-none text-gray-900 placeholder-gray-500
-                      ${passwordError 
-                        ? 'border-red-300 focus:border-red-500 bg-red-50' 
+                      ${passwordError
+                        ? 'border-red-300 focus:border-red-500 bg-red-50'
                         : focused.password && !passwordError
-                        ? 'border-blue-500 bg-blue-50 focus:ring-2 focus:ring-blue-200'
-                        : 'border-gray-200 hover:border-gray-300 focus:border-blue-500'
+                          ? 'border-blue-500 bg-blue-50 focus:ring-2 focus:ring-blue-200'
+                          : 'border-gray-200 hover:border-gray-300 focus:border-blue-500'
                       }
                     `}
                     placeholder="Enter your password"

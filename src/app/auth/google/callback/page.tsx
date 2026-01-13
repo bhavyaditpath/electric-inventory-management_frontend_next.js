@@ -23,8 +23,7 @@ function GoogleOAuthCallbackForm() {
 
     if (!accessToken) return;
 
-    tokenManager.setAccessToken(accessToken);
-    if (refreshToken) tokenManager.setRefreshToken(refreshToken);
+    tokenManager.setTokens(accessToken, refreshToken || undefined);
 
     const decoded = tokenManager.decodeToken(accessToken);
     const user = {

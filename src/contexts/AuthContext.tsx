@@ -78,14 +78,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         fetchProfile();
       }
     }
+
+    // Listen for session expiry event from API
+    const handleSessionExpiry = () => {
+      tokenManager.removeToken(); // Ensure clean state
+      setUser(null);
+      router.push('/auth/login');
+    };
+
+    window.addEventListener('auth:session-expired', handleSessionExpiry);
+
     setIsLoading(false);
+
+    return () => {
+      window.removeEventListener('auth:session-expired', handleSessionExpiry);
+    };
   }, []);
 
   // ❌ REMOVED: interval-based logout on token expiry
   // Refresh token flow must handle this via interceptor
 
   const login = (token: string, userData?: User) => {
-    tokenManager.setToken(token);
+    tokenManager.setAccessToken(token);
     if (userData) {
       setUser(userData);
       fetchProfile();

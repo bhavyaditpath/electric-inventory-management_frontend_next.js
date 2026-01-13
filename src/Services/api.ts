@@ -38,16 +38,24 @@ class ApiClient {
     try {
       let response = await fetch(url, config);
 
-      if (response.status === 401 && localStorage.getItem('refresh_token')) {
-        const refreshResponse = await this.refreshAccessToken();
+      if (response.status === 401) {
+        if (localStorage.getItem('refresh_token')) {
+          const refreshResponse = await this.refreshAccessToken();
 
-        if (refreshResponse.success && refreshResponse.data?.access_token) {
-          config.headers = {
-            ...config.headers,
-            Authorization: `Bearer ${refreshResponse.data.access_token}`,
-          };
+          if (refreshResponse.success && refreshResponse.data?.access_token) {
+            config.headers = {
+              ...config.headers,
+              Authorization: `Bearer ${refreshResponse.data.access_token}`,
+            };
 
-          response = await fetch(url, config);
+            response = await fetch(url, config);
+          }
+        } else if (token) {
+          // If we had a token (authenticated request) but got 401 and have no refresh token,
+          // it means our session is dead and we can't recover.
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('auth:session-expired'));
+          }
         }
       }
 
@@ -106,6 +114,11 @@ class ApiClient {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('token');
+
+      // Notify UI to purge session state
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('auth:session-expired'));
+      }
       return { success: false, message: 'Token refresh failed' };
     }
   }
