@@ -92,7 +92,7 @@ export default function ChatWindow({
 
   if (!room) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-slate-50">
+      <div className="flex-1 w-full h-full flex items-center justify-center bg-slate-50">
         <div className="text-center">
           <div className="w-24 h-24 mx-auto mb-4 bg-slate-200 rounded-full flex items-center justify-center">
             <UserCircleIcon className="w-16 h-16 text-slate-400" />
