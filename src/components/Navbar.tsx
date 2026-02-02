@@ -1,11 +1,12 @@
 'use client';
 
-import { MagnifyingGlassIcon, UserIcon, ArrowRightOnRectangleIcon, ChevronDownIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, UserIcon, ArrowRightOnRectangleIcon, ChevronDownIcon, Bars3Icon, XMarkIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { useState, useEffect, useRef } from 'react';
 import { NAVIGATION } from '../app/Constants/navigation.constants';
 import { useRouter } from 'next/navigation';
 import NotificationDropdown from './NotificationDropdown';
+import ChatButton from './ChatButton';
 import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 
 interface NavbarProps {
@@ -117,6 +118,9 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
 
           {/* Notifications */}
           <NotificationDropdown />
+
+          {/* Chat */}
+          <ChatButton />
 
           {/* User dropdown */}
           <div className="relative" ref={dropdownRef}>
