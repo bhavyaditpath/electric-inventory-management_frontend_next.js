@@ -76,8 +76,14 @@ export function ChatProvider({ children }: ChatProviderProps) {
       );
     },
     onError: (message) => {
-      toast.error(message);
-      setError(message);
+      // Only show error for non-connection errors
+      if (!message.includes('connection') && !message.includes('WebSocket')) {
+        toast.error(message);
+        setError(message);
+      } else {
+        // Connection errors are expected when server is unavailable
+        console.warn('WebSocket connection issue:', message);
+      }
     },
   });
 
@@ -116,9 +122,12 @@ export function ChatProvider({ children }: ChatProviderProps) {
       setLoading(true);
       messagesPaginationRef.current = { page: 1, pageSize: 50 };
       const response = await chatApiHelpers.getMessages(activeRoom.id, 1, 50);
-      setMessages(response.items);
-      setHasMoreMessages(response.hasMore);
+      // Ensure items is an array
+      const items = Array.isArray(response?.items) ? response.items : [];
+      setMessages(items);
+      setHasMoreMessages(response?.hasMore ?? false);
     } catch (err) {
+      console.error('Failed to load messages:', err);
       setError('Failed to load messages');
       toast.error('Failed to load messages');
     } finally {
@@ -132,10 +141,13 @@ export function ChatProvider({ children }: ChatProviderProps) {
     try {
       const nextPage = messagesPaginationRef.current.page + 1;
       const response = await chatApiHelpers.getMessages(activeRoom.id, nextPage, 50);
-      setMessages((prev) => [...response.items, ...prev]);
+      // Ensure items is an array before spreading
+      const items = Array.isArray(response?.items) ? response.items : [];
+      setMessages((prev) => [...items, ...prev]);
       messagesPaginationRef.current = { ...messagesPaginationRef.current, page: nextPage };
-      setHasMoreMessages(response.hasMore);
+      setHasMoreMessages(response?.hasMore ?? false);
     } catch (err) {
+      console.error('Failed to load more messages:', err);
       setError('Failed to load more messages');
     }
   };

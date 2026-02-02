@@ -55,14 +55,20 @@ export function useChatWebSocket(options: UseChatWebSocketOptions = {}): UseChat
     const token = localStorage.getItem('access_token') || localStorage.getItem('token');
     if (!token) return;
 
-    // Create socket connection
-    socketRef.current = io(`${SOCKET_URL}/chat`, {
-      auth: { token },
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    });
+    // Create socket connection with error handling
+    try {
+      socketRef.current = io(`${SOCKET_URL}/chat`, {
+        auth: { token },
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: 3,
+        reconnectionDelay: 2000,
+        timeout: 5000,
+      });
+    } catch (error) {
+      console.warn('Failed to create WebSocket connection');
+      return;
+    }
 
     const socket = socketRef.current;
 
@@ -74,12 +80,13 @@ export function useChatWebSocket(options: UseChatWebSocketOptions = {}): UseChat
 
     socket.on('disconnect', (reason: string) => {
       setIsConnected(false);
-      console.log('Chat WebSocket disconnected:', reason);
+      console.warn('Chat WebSocket disconnected:', reason);
     });
 
     socket.on('connect_error', (error: Error) => {
-      console.error('Chat WebSocket connection error:', error);
+      console.warn('Chat WebSocket connection failed - server may be unavailable');
       setIsConnected(false);
+      // Don't throw error, just log warning
     });
 
     // Message events

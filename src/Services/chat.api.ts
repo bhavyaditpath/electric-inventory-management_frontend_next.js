@@ -75,9 +75,20 @@ export const chatApiHelpers = {
   },
 
   async getMessages(roomId: string, page = 1, pageSize = 50): Promise<PaginatedMessagesResponse> {
-    const response = await chatApi.getMessages(roomId, { page, pageSize });
-    if (response.success && response.data) {
-      return response.data;
+    try {
+      const response = await chatApi.getMessages(roomId, { page, pageSize });
+      if (response.success && response.data) {
+        return {
+          items: Array.isArray(response.data.items) ? response.data.items : [],
+          total: response.data.total ?? 0,
+          page: response.data.page ?? page,
+          pageSize: response.data.pageSize ?? pageSize,
+          totalPages: response.data.totalPages ?? 0,
+          hasMore: response.data.hasMore ?? false,
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
     }
     return { items: [], total: 0, page: 1, pageSize, totalPages: 0, hasMore: false };
   },
