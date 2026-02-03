@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useCallback, useState, useEffect, useRef } from 'react';
 import { useChatWebSocket } from '../hooks/useChatWebSocket';
-import { chatApiHelpers } from '../Services/chat.api';
+import { chatApiHelpers, normalizeMessage, normalizeRoom } from '../Services/chat.api';
 import {
   ChatRoom,
   Message,
@@ -43,18 +43,23 @@ export function ChatProvider({ children }: ChatProviderProps) {
   } = useChatWebSocket({
     enabled: !!user,
     onNewMessage: (message) => {
-      if (message.roomId === activeRoom?.id) {
-        setMessages((prev) => [...prev, message]);
+      const rawMessage = message as any;
+      const normalizedMessage = normalizeMessage(
+        message,
+        rawMessage?.roomId ?? rawMessage?.chatRoomId
+      );
+      if (normalizedMessage.roomId === activeRoom?.id) {
+        setMessages((prev) => [...prev, normalizedMessage]);
         // Mark as read if it's not our own message
-        if (message.senderId !== currentUserId) {
-          markAsRead([message.id]);
+        if (normalizedMessage.senderId !== currentUserId) {
+          markAsRead([normalizedMessage.id]);
         }
       }
       // Update rooms with new last message
       setRooms((prev) =>
         prev.map((room) =>
-          room.id === message.roomId
-            ? { ...room, lastMessage: message, unreadCount: room.id === activeRoom?.id ? 0 : room.unreadCount + 1 }
+          room.id === normalizedMessage.roomId
+            ? { ...room, lastMessage: normalizedMessage, unreadCount: room.id === activeRoom?.id ? 0 : room.unreadCount + 1 }
             : room
         )
       );
@@ -187,11 +192,12 @@ export function ChatProvider({ children }: ChatProviderProps) {
         m.chatApi.createRoom({ name, type, participantIds })
       );
       if (response.success && response.data) {
-        setRooms((prev) => [response.data!, ...prev]);
-        setActiveRoom(response.data);
+        const normalizedRoom = normalizeRoom(response.data);
+        setRooms((prev) => [normalizedRoom, ...prev]);
+        setActiveRoom(normalizedRoom);
         await loadMessages();
         toast.success('Room created successfully');
-        return response.data;
+        return normalizedRoom;
       }
     } catch (err) {
       setError('Failed to create room');
@@ -235,10 +241,10 @@ export function ChatProvider({ children }: ChatProviderProps) {
   };
 
   const markAsRead = async (messageIds: string[]) => {
-    if (!activeRoom || messageIds.length === 0) return;
+    if (!activeRoom) return;
 
     try {
-      await chatApiHelpers.markAsRead(activeRoom.id, messageIds);
+      await chatApiHelpers.markAsRead(activeRoom.id);
       wsMarkAsRead(activeRoom.id, messageIds);
       setMessages((prev) =>
         prev.map((msg) =>

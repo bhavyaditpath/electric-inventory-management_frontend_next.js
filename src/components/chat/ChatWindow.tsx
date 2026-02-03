@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { ChatRoom, Message } from '@/types/chat.types';
+import { ChatRoom, Message, User } from '@/types/chat.types';
 import { useAuth } from '@/contexts/AuthContext';
 import MessageBubble from './MessageBubble';
 import ChatInput from './ChatInput';
@@ -74,9 +74,23 @@ export default function ChatWindow({
     setIsAtBottom(atBottom);
   };
 
-  const getOtherParticipants = () => {
+  const getOtherParticipants = (): User[] => {
     if (!room) return [];
-    return room.participants.filter((p) => p.id !== user?.id?.toString());
+    const others = (room.participants ?? []).filter(
+      (p) => p.id !== user?.id?.toString()
+    );
+    if (others.length > 0) return others;
+    return [
+      {
+        id: '',
+        username: room.name,
+        role: 'admin',
+        profilePicture: undefined,
+        branchId: undefined,
+        branchName: undefined,
+        isOnline: false,
+      },
+    ];
   };
 
   const formatHeaderTime = (date: string) => {
@@ -122,7 +136,7 @@ export default function ChatWindow({
         )}
 
         {/* Room avatar */}
-        {room.type === 'direct' ? (
+        {(room.type ?? 'direct') === 'direct' ? (
           getOtherParticipants().map((participant) => (
             <div key={participant.id} className="relative">
               {participant.profilePicture ? (
@@ -150,12 +164,13 @@ export default function ChatWindow({
         {/* Room info */}
         <div className="flex-1 min-w-0">
           <h3 className="font-medium text-slate-900 truncate">{room.name}</h3>
-          {room.type === 'direct' && getOtherParticipants()[0]?.isOnline && (
+        {(room.type ?? 'direct') === 'direct' &&
+          getOtherParticipants()[0]?.isOnline && (
             <p className="text-xs text-green-500">Online</p>
           )}
-          {room.type === 'group' && (
+          {(room.type ?? 'direct') === 'group' && (
             <p className="text-xs text-slate-500">
-              {room.participants.length} participants
+              {(room.participants ?? []).length} participants
             </p>
           )}
         </div>

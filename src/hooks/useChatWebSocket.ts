@@ -33,6 +33,7 @@ interface UseChatWebSocketReturn {
 export function useChatWebSocket(options: UseChatWebSocketOptions = {}): UseChatWebSocketReturn {
   const { user } = useAuth();
   const socketRef = useRef<Socket | null>(null);
+  const handlersRef = useRef<UseChatWebSocketOptions>({});
   const [isConnected, setIsConnected] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
   const [typingUsers, setTypingUsers] = useState<{ [roomId: string]: Set<string> }>({});
@@ -47,6 +48,18 @@ export function useChatWebSocket(options: UseChatWebSocketOptions = {}): UseChat
     onRoomUpdated,
     onError,
   } = options;
+
+  useEffect(() => {
+    handlersRef.current = {
+      onNewMessage,
+      onUserOnline,
+      onUserOffline,
+      onUserTyping,
+      onMessageRead,
+      onRoomUpdated,
+      onError,
+    };
+  }, [onNewMessage, onUserOnline, onUserOffline, onUserTyping, onMessageRead, onRoomUpdated, onError]);
 
   // Initialize socket connection
   useEffect(() => {
@@ -91,13 +104,13 @@ export function useChatWebSocket(options: UseChatWebSocketOptions = {}): UseChat
 
     // Message events
     socket.on('newMessage', (message: Message) => {
-      onNewMessage?.(message);
+      handlersRef.current.onNewMessage?.(message);
     });
 
     // User status events
     socket.on('userOnline', ({ userId }: { userId: string }) => {
       setOnlineUsers(prev => new Set([...prev, userId]));
-      onUserOnline?.(userId);
+      handlersRef.current.onUserOnline?.(userId);
     });
 
     socket.on('userOffline', ({ userId }: { userId: string }) => {
@@ -106,7 +119,7 @@ export function useChatWebSocket(options: UseChatWebSocketOptions = {}): UseChat
         newSet.delete(userId);
         return newSet;
       });
-      onUserOffline?.(userId);
+      handlersRef.current.onUserOffline?.(userId);
     });
 
     // Typing events
@@ -123,22 +136,22 @@ export function useChatWebSocket(options: UseChatWebSocketOptions = {}): UseChat
         }
         return { ...newTyping };
       });
-      onUserTyping?.(roomId, userId, isTyping);
+      handlersRef.current.onUserTyping?.(roomId, userId, isTyping);
     });
 
     // Message read events
     socket.on('messageRead', ({ roomId, messageIds, readBy }: { roomId: string; messageIds: string[]; readBy: string }) => {
-      onMessageRead?.(roomId, messageIds, readBy);
+      handlersRef.current.onMessageRead?.(roomId, messageIds, readBy);
     });
 
     // Room events
     socket.on('roomUpdated', (room: ChatRoom) => {
-      onRoomUpdated?.(room);
+      handlersRef.current.onRoomUpdated?.(room);
     });
 
     // Error events
     socket.on('error', ({ message }: { message: string; code: string }) => {
-      onError?.(message);
+      handlersRef.current.onError?.(message);
     });
 
     // Cleanup
@@ -149,7 +162,7 @@ export function useChatWebSocket(options: UseChatWebSocketOptions = {}): UseChat
       socketRef.current = null;
       setIsConnected(false);
     };
-  }, [user, enabled, onNewMessage, onUserOnline, onUserOffline, onUserTyping, onMessageRead, onRoomUpdated, onError]);
+  }, [user, enabled]);
 
   // Join room
   const joinRoom = useCallback((roomId: string) => {

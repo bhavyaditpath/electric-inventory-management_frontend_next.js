@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChatRoom } from '@/types/chat.types';
+import { ChatRoom, User } from '@/types/chat.types';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   MagnifyingGlassIcon,
@@ -19,7 +19,7 @@ interface ChatListProps {
 }
 
 export default function ChatList({
-  rooms,
+  rooms = [],
   activeRoomId,
   onSelectRoom,
   onCreateNewChat,
@@ -31,25 +31,38 @@ export default function ChatList({
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
 
   useEffect(() => {
+    const safeRooms = Array.isArray(rooms) ? rooms : [];
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       setFilteredRooms(
-        rooms.filter(
+        safeRooms.filter(
           (room) =>
-            room.name.toLowerCase().includes(query) ||
-            room.participants.some((p) =>
-              p.username.toLowerCase().includes(query)
+            room.name?.toLowerCase().includes(query) ||
+            (room.participants ?? []).some((p) =>
+              p.username?.toLowerCase().includes(query)
             )
         )
       );
     } else {
-      setFilteredRooms(rooms);
+      setFilteredRooms(safeRooms);
     }
   }, [searchQuery, rooms]);
 
-  const getOtherParticipant = (room: ChatRoom) => {
+  const getOtherParticipant = (room: ChatRoom): User | null => {
     if (room.type === 'direct') {
-      return room.participants.find((p) => p.id !== user?.id?.toString());
+      const participant = (room.participants ?? []).find(
+        (p) => p.id !== user?.id?.toString()
+      );
+      if (participant) return participant;
+      return {
+        id: '',
+        username: room.name,
+        role: 'admin',
+        profilePicture: undefined,
+        branchId: undefined,
+        branchName: undefined,
+        isOnline: false,
+      };
     }
     return null;
   };
@@ -151,7 +164,7 @@ export default function ChatList({
                       />
                     ) : (
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-medium">
-                        {room.name.charAt(0).toUpperCase()}
+                        {(otherParticipant?.username || room.name).charAt(0).toUpperCase()}
                       </div>
                     )}
                     {/* Online indicator */}
