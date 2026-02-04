@@ -358,7 +358,7 @@ export default function ChatPage() {
                     fetchRooms();
                     fetchUsers();
                   }}
-                  className="p-2 rounded-md border border-slate-200 hover:bg-slate-50"
+                  className=" rounded-md border border-slate-200 hover:bg-slate-50"
                   aria-label="Refresh"
                 >
                   <ArrowPathIcon className="w-4 h-4 text-slate-600" />
