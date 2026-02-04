@@ -355,12 +355,12 @@ export default function ChatPage() {
   );
 
   return (
-    <div className="flex min-h-[calc(100vh-64px)] bg-slate-50">
+    <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-slate-50">
       {isMobile ? (
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-0">
           {!showChat && (
-            <div className="flex-1 flex flex-col">
-              <div className="px-4 py-3 border-b border-slate-200 bg-white flex items-center justify-between">
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="px-4 py-2 border-b border-slate-200 bg-white flex items-center justify-between">
                 <div>
                   <h1 className="text-lg font-semibold text-slate-900">
                     Messages
@@ -399,7 +399,7 @@ export default function ChatPage() {
           )}
 
           {showChat && (
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col min-h-0">
               <ChatWindow
                 room={activeRoom}
                 messages={messages}
@@ -416,7 +416,7 @@ export default function ChatPage() {
           )}
         </div>
       ) : (
-        <div className="flex flex-1">
+        <div className="flex flex-1 min-h-0">
           <ChatSidebar
             rooms={rooms}
             users={filteredUsers}
@@ -433,7 +433,7 @@ export default function ChatPage() {
             onSelectUser={handleSelectUser}
           />
 
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col min-h-0">
             <div className="px-5 py-3 border-b border-slate-200 bg-white flex items-center justify-between">
               <div>
                 <h1 className="text-xl font-semibold text-slate-900">
@@ -507,13 +507,13 @@ export default function ChatPage() {
                 value={groupName}
                 onChange={(e) => setGroupName(e.target.value)}
                 placeholder="Group name"
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
               />
               <input
                 value={groupSearch}
                 onChange={(e) => setGroupSearch(e.target.value)}
                 placeholder="Search users..."
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
               />
               <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-lg">
                 {filteredUsers.length === 0 ? (
