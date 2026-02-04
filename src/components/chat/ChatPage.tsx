@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { chatApi } from "@/Services/chat.api";
 import { useAuth } from "@/contexts/AuthContext";
+import { UserRole } from "@/types/enums";
 import { ChatMessage, ChatRoom, ChatUser } from "@/types/chat.types";
 import { useChatWebSocket } from "@/hooks/useChatWebSocket";
 import ChatSidebar from "./ChatSidebar";
@@ -22,9 +23,26 @@ export default function ChatPage() {
   const [typingUserIds, setTypingUserIds] = useState<number[]>([]);
   const [isMobile, setIsMobile] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [groupName, setGroupName] = useState("");
+  const [groupSearch, setGroupSearch] = useState("");
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [showMembers, setShowMembers] = useState(false);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [membersRoom, setMembersRoom] = useState<ChatRoom | null>(null);
   const joinedRoomRef = useRef<number | null>(null);
   const activeRoomIdRef = useRef<number | null>(null);
   const typingTimersRef = useRef<Map<number, NodeJS.Timeout>>(new Map());
+
+  const getBranchLabel = useCallback((value: unknown, fallback?: string) => {
+    if (!value) return fallback || "";
+    if (typeof value === "string") return value;
+    if (typeof value === "object") {
+      const maybeName = (value as { name?: string }).name;
+      if (typeof maybeName === "string") return maybeName;
+    }
+    return fallback || "";
+  }, []);
 
   useEffect(() => {
     activeRoomIdRef.current = activeRoomId;
@@ -66,7 +84,14 @@ export default function ChatPage() {
       setLoadingUsers(true);
       const response = await chatApi.getUsersWithOnlineStatus();
       if (response.success && response.data) {
-        setUsers(response.data);
+        const normalized = response.data.map((u: any) => ({
+          ...u,
+          branch:
+            typeof u.branch === "string"
+              ? u.branch
+              : u.branch?.name || null,
+        }));
+        setUsers(normalized);
       } else {
         setUsers([]);
       }
@@ -252,6 +277,73 @@ export default function ChatPage() {
     [activeRoomId, sendTyping]
   );
 
+  const filteredUsers = useMemo(() => {
+    if (!groupSearch) return users;
+    const query = groupSearch.toLowerCase();
+    return users.filter((u) => {
+      const branchLabel = getBranchLabel(u.branch, u.role);
+      return (
+        u.username.toLowerCase().includes(query) ||
+        branchLabel.toLowerCase().includes(query) ||
+        u.role.toLowerCase().includes(query)
+      );
+    });
+  }, [users, groupSearch, getBranchLabel]);
+
+  const toggleGroupUser = (userId: number) => {
+    setSelectedUserIds((prev) =>
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+    );
+  };
+
+  const handleCreateGroup = async () => {
+    if (!user?.id) return;
+    const name = groupName.trim();
+    if (!name) return;
+    if (selectedUserIds.length < 1) return;
+
+    try {
+      const payload = {
+        name,
+        isGroupChat: true,
+        participantIds: selectedUserIds,
+      };
+      const response = await chatApi.createRoom(payload);
+      if (response.success && response.data) {
+        const room = response.data;
+        setRooms((prev) => [room, ...prev]);
+        setActiveRoomId(room.id);
+        setActiveTab("rooms");
+        setShowCreateGroup(false);
+        setGroupName("");
+        setGroupSearch("");
+        setSelectedUserIds([]);
+        if (isMobile) setShowChat(true);
+      }
+    } catch (error) {
+      console.error("Failed to create group:", error);
+    }
+  };
+
+  const openMembers = useCallback(async () => {
+    if (!activeRoomId) return;
+    setShowMembers(true);
+    setMembersLoading(true);
+    try {
+      const response = await chatApi.getRoom(activeRoomId);
+      if (response.success && response.data) {
+        setMembersRoom(response.data);
+      } else {
+        setMembersRoom(null);
+      }
+    } catch (error) {
+      console.error("Failed to load group members:", error);
+      setMembersRoom(null);
+    } finally {
+      setMembersLoading(false);
+    }
+  }, [activeRoomId]);
+
   const activeRoom = useMemo(
     () => rooms.find((room) => room.id === activeRoomId) || null,
     [rooms, activeRoomId]
@@ -290,11 +382,15 @@ export default function ChatPage() {
               </div>
               <ChatSidebar
                 rooms={rooms}
-                users={users}
+                users={filteredUsers}
                 activeTab={activeTab}
                 activeRoomId={activeRoomId}
                 loadingRooms={loadingRooms}
                 loadingUsers={loadingUsers}
+                canCreateGroup={user?.role === UserRole.ADMIN}
+                onCreateGroup={() => setShowCreateGroup(true)}
+                userSearch={groupSearch}
+                onUserSearchChange={setGroupSearch}
                 onTabChange={setActiveTab}
                 onSelectRoom={handleSelectRoom}
                 onSelectUser={handleSelectUser}
@@ -314,6 +410,7 @@ export default function ChatPage() {
                 onTyping={handleTypingStatus}
                 isMobile
                 onBack={() => setShowChat(false)}
+                onOpenMembers={openMembers}
               />
             </div>
           )}
@@ -322,11 +419,15 @@ export default function ChatPage() {
         <div className="flex flex-1">
           <ChatSidebar
             rooms={rooms}
-            users={users}
+            users={filteredUsers}
             activeTab={activeTab}
             activeRoomId={activeRoomId}
             loadingRooms={loadingRooms}
             loadingUsers={loadingUsers}
+            canCreateGroup={user?.role === UserRole.ADMIN}
+            onCreateGroup={() => setShowCreateGroup(true)}
+            userSearch={groupSearch}
+            onUserSearchChange={setGroupSearch}
             onTabChange={setActiveTab}
             onSelectRoom={handleSelectRoom}
             onSelectUser={handleSelectUser}
@@ -374,7 +475,171 @@ export default function ChatPage() {
               isLoading={loadingMessages}
               onSendMessage={handleSendMessage}
               onTyping={handleTypingStatus}
+              onOpenMembers={openMembers}
             />
+          </div>
+        </div>
+      )}
+
+      {showCreateGroup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-lg bg-white rounded-xl shadow-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">
+                  Create Group
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Select users to add to the group.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowCreateGroup(false)}
+                className="p-2 rounded-full hover:bg-slate-100 text-slate-600"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="px-5 py-4 space-y-3">
+              <input
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                placeholder="Group name"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              <input
+                value={groupSearch}
+                onChange={(e) => setGroupSearch(e.target.value)}
+                placeholder="Search users..."
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-lg">
+                {filteredUsers.length === 0 ? (
+                  <div className="text-sm text-slate-500 p-4 text-center">
+                    No users found.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-slate-200">
+                    {filteredUsers.map((target) => (
+                      <label
+                        key={target.id}
+                        className="flex items-center gap-3 px-4 py-3 text-sm cursor-pointer hover:bg-slate-50"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedUserIds.includes(target.id)}
+                          onChange={() => toggleGroupUser(target.id)}
+                          className="h-4 w-4"
+                        />
+                        <span className="flex-1">
+                          <span className="font-medium text-slate-900">
+                            {target.username}
+                          </span>
+                          <span className="block text-xs text-slate-500">
+                            {getBranchLabel(target.branch, target.role)}
+                          </span>
+                        </span>
+                        <span
+                          className={`text-xs font-medium px-2 py-1 rounded-full ${
+                            target.isOnline
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-slate-100 text-slate-500"
+                          }`}
+                        >
+                          {target.isOnline ? "Online" : "Offline"}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="px-5 py-4 border-t border-slate-200 flex items-center justify-end gap-2">
+              <button
+                onClick={() => setShowCreateGroup(false)}
+                className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateGroup}
+                className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700"
+                disabled={!groupName.trim() || selectedUserIds.length < 1}
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showMembers && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md bg-white rounded-t-xl sm:rounded-xl shadow-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">
+                  Group members
+                </h3>
+                <p className="text-xs text-slate-500">
+                  {membersRoom?.name || "Chat room"}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowMembers(false)}
+                className="p-2 rounded-full hover:bg-slate-100 text-slate-600"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="px-5 py-4 max-h-72 overflow-y-auto">
+              {membersLoading ? (
+                <div className="text-sm text-slate-500 text-center py-6">
+                  Loading members...
+                </div>
+              ) : membersRoom?.participants?.length ? (
+                <div className="divide-y divide-slate-200">
+                  {membersRoom.participants.map((p) => (
+                    <div key={p.userId} className="py-3 flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-semibold">
+                        {(p.user?.username || "U").slice(0, 1).toUpperCase()}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-slate-900">
+                          {p.user?.username || "User"}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {(() => {
+                            const branchValue = (p.user as any)?.branch;
+                            if (typeof branchValue === "string") return branchValue;
+                            if (branchValue && typeof branchValue === "object") {
+                              return branchValue.name || p.user?.role || "";
+                            }
+                            return p.user?.role || "";
+                          })()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-slate-500 text-center py-6">
+                  No members found.
+                </div>
+              )}
+            </div>
+            <div className="px-5 py-4 border-t border-slate-200 flex justify-end">
+              <button
+                onClick={() => setShowMembers(false)}
+                className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

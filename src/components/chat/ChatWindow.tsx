@@ -15,6 +15,7 @@ interface ChatWindowProps {
   isLoading?: boolean;
   isMobile?: boolean;
   onBack?: () => void;
+  onOpenMembers?: () => void;
   onSendMessage: (content: string) => void;
   onTyping: (isTyping: boolean) => void;
 }
@@ -27,6 +28,7 @@ export default function ChatWindow({
   isLoading,
   isMobile,
   onBack,
+  onOpenMembers,
   onSendMessage,
   onTyping,
 }: ChatWindowProps) {
@@ -113,6 +115,16 @@ export default function ChatWindow({
             <EllipsisHorizontalIcon className="w-5 h-5" />
           </button>
         </div>
+        {room.isGroupChat && (
+          <div className="mt-2">
+            <button
+              onClick={onOpenMembers}
+              className="text-xs font-medium text-blue-600 hover:text-blue-700"
+            >
+              View members
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-3">

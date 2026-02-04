@@ -13,6 +13,10 @@ interface ChatSidebarProps {
   activeRoomId: number | null;
   loadingRooms?: boolean;
   loadingUsers?: boolean;
+  canCreateGroup?: boolean;
+  onCreateGroup?: () => void;
+  userSearch?: string;
+  onUserSearchChange?: (value: string) => void;
   onTabChange: (tab: "rooms" | "users") => void;
   onSelectRoom: (roomId: number) => void;
   onSelectUser: (user: ChatUser) => void;
@@ -25,6 +29,10 @@ export default function ChatSidebar({
   activeRoomId,
   loadingRooms,
   loadingUsers,
+  canCreateGroup,
+  onCreateGroup,
+  userSearch,
+  onUserSearchChange,
   onTabChange,
   onSelectRoom,
   onSelectUser,
@@ -118,6 +126,22 @@ export default function ChatSidebar({
           </>
         ) : (
           <>
+            <div className="px-2 space-y-2">
+              <input
+                value={userSearch || ""}
+                onChange={(e) => onUserSearchChange?.(e.target.value)}
+                placeholder="Search users..."
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              {canCreateGroup && (
+                <button
+                  onClick={onCreateGroup}
+                  className="w-full px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors"
+                >
+                  Create Group
+                </button>
+              )}
+            </div>
             {loadingUsers ? (
               <div className="text-sm text-slate-500 px-3 py-6 text-center">
                 Loading users...
@@ -138,14 +162,14 @@ export default function ChatSidebar({
                       <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
                         <UsersIcon className="w-4 h-4" />
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-900 truncate">
-                          {user.username}
-                        </p>
-                        <p className="text-xs text-slate-500 truncate">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 truncate">
+                        {user.username}
+                      </p>
+                      <p className="text-xs text-slate-500 truncate">
                           {user.branch || user.role}
-                        </p>
-                      </div>
+                      </p>
+                    </div>
                     </div>
                     <span
                       className={`text-xs font-medium px-2 py-1 rounded-full ${
