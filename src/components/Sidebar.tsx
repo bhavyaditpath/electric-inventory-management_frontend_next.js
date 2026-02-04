@@ -15,6 +15,7 @@ import {
   PowerIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/outline";
 import { tokenManager } from "@/Services/token.management.service";
 
@@ -32,6 +33,7 @@ const menuItems: MenuItem[] = [
   { name: "Purchase", href: "/admin/purchase", icon: ShoppingBagIcon },
   { name: "Request", href: "/admin/request", icon: ClipboardDocumentListIcon },
   { name: "Reports", href: "/admin/reports", icon: DocumentChartBarIcon },
+  { name: "Chat", href: "/admin/chat", icon: ChatBubbleLeftRightIcon },
   // { name: "Sales", href: "/admin/sales", icon: ChartBarIcon },
   { name: "Alerts", href: "/admin/alert", icon: ExclamationTriangleIcon },
 ];
