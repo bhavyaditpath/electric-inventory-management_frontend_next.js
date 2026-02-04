@@ -20,6 +20,8 @@ export default function ChatPage() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [typingUserIds, setTypingUserIds] = useState<number[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showChat, setShowChat] = useState(false);
   const joinedRoomRef = useRef<number | null>(null);
   const activeRoomIdRef = useRef<number | null>(null);
   const typingTimersRef = useRef<Map<number, NodeJS.Timeout>>(new Map());
@@ -27,6 +29,20 @@ export default function ChatPage() {
   useEffect(() => {
     activeRoomIdRef.current = activeRoomId;
   }, [activeRoomId]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setShowChat(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const fetchRooms = useCallback(async () => {
     try {
@@ -176,27 +192,35 @@ export default function ChatPage() {
     loadMessages();
   }, [activeRoomId, joinRoom, leaveRoom, markAsRead]);
 
-  const handleSelectRoom = useCallback((roomId: number) => {
-    setActiveRoomId(roomId);
-    setActiveTab("rooms");
-  }, []);
+  const handleSelectRoom = useCallback(
+    (roomId: number) => {
+      setActiveRoomId(roomId);
+      setActiveTab("rooms");
+      if (isMobile) setShowChat(true);
+    },
+    [isMobile]
+  );
 
-  const handleSelectUser = useCallback(async (targetUser: ChatUser) => {
-    try {
-      const response = await chatApi.getOrCreateDirectChat(targetUser.id);
-      if (response.success && response.data) {
-        const room = response.data;
-        setRooms((prev) => {
-          const exists = prev.some((r) => r.id === room.id);
-          return exists ? prev : [room, ...prev];
-        });
-        setActiveRoomId(room.id);
-        setActiveTab("rooms");
+  const handleSelectUser = useCallback(
+    async (targetUser: ChatUser) => {
+      try {
+        const response = await chatApi.getOrCreateDirectChat(targetUser.id);
+        if (response.success && response.data) {
+          const room = response.data;
+          setRooms((prev) => {
+            const exists = prev.some((r) => r.id === room.id);
+            return exists ? prev : [room, ...prev];
+          });
+          setActiveRoomId(room.id);
+          setActiveTab("rooms");
+          if (isMobile) setShowChat(true);
+        }
+      } catch (error) {
+        console.error("Failed to start chat:", error);
       }
-    } catch (error) {
-      console.error("Failed to start chat:", error);
-    }
-  }, []);
+    },
+    [isMobile]
+  );
 
   const handleSendMessage = useCallback(
     async (content: string) => {
@@ -239,61 +263,121 @@ export default function ChatPage() {
   );
 
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-slate-50">
-      <ChatSidebar
-        rooms={rooms}
-        users={users}
-        activeTab={activeTab}
-        activeRoomId={activeRoomId}
-        loadingRooms={loadingRooms}
-        loadingUsers={loadingUsers}
-        onTabChange={setActiveTab}
-        onSelectRoom={handleSelectRoom}
-        onSelectUser={handleSelectUser}
-      />
+    <div className="flex min-h-[calc(100vh-64px)] bg-slate-50">
+      {isMobile ? (
+        <div className="flex-1 flex flex-col">
+          {!showChat && (
+            <div className="flex-1 flex flex-col">
+              <div className="px-4 py-3 border-b border-slate-200 bg-white flex items-center justify-between">
+                <div>
+                  <h1 className="text-lg font-semibold text-slate-900">
+                    Messages
+                  </h1>
+                  <p className="text-xs text-slate-500">
+                    {user?.role} user · {isConnected ? "Connected" : "Offline"}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    fetchRooms();
+                    fetchUsers();
+                  }}
+                  className="p-2 rounded-md border border-slate-200 hover:bg-slate-50"
+                  aria-label="Refresh"
+                >
+                  <ArrowPathIcon className="w-4 h-4 text-slate-600" />
+                </button>
+              </div>
+              <ChatSidebar
+                rooms={rooms}
+                users={users}
+                activeTab={activeTab}
+                activeRoomId={activeRoomId}
+                loadingRooms={loadingRooms}
+                loadingUsers={loadingUsers}
+                onTabChange={setActiveTab}
+                onSelectRoom={handleSelectRoom}
+                onSelectUser={handleSelectUser}
+              />
+            </div>
+          )}
 
-      <div className="flex-1 flex flex-col">
-        <div className="px-5 py-3 border-b border-slate-200 bg-white flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-slate-900">Messages</h1>
-            <p className="text-sm text-slate-500">
-              {user?.role} user · {isConnected ? "Connected" : "Offline"}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
-                isConnected
-                  ? "bg-emerald-100 text-emerald-700"
-                  : "bg-slate-100 text-slate-500"
-              }`}
-            >
-              <SignalIcon className="w-4 h-4" />
-              {isConnected ? "Live" : "Connecting"}
-            </span>
-            <button
-              onClick={() => {
-                fetchRooms();
-                fetchUsers();
-              }}
-              className="p-2 rounded-md border border-slate-200 hover:bg-slate-50"
-              aria-label="Refresh"
-            >
-              <ArrowPathIcon className="w-4 h-4 text-slate-600" />
-            </button>
+          {showChat && (
+            <div className="flex-1 flex flex-col">
+              <ChatWindow
+                room={activeRoom}
+                messages={messages}
+                currentUserId={user?.id}
+                typingUsers={typingUsers}
+                isLoading={loadingMessages}
+                onSendMessage={handleSendMessage}
+                onTyping={handleTypingStatus}
+                isMobile
+                onBack={() => setShowChat(false)}
+              />
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-1">
+          <ChatSidebar
+            rooms={rooms}
+            users={users}
+            activeTab={activeTab}
+            activeRoomId={activeRoomId}
+            loadingRooms={loadingRooms}
+            loadingUsers={loadingUsers}
+            onTabChange={setActiveTab}
+            onSelectRoom={handleSelectRoom}
+            onSelectUser={handleSelectUser}
+          />
+
+          <div className="flex-1 flex flex-col">
+            <div className="px-5 py-3 border-b border-slate-200 bg-white flex items-center justify-between">
+              <div>
+                <h1 className="text-xl font-semibold text-slate-900">
+                  Messages
+                </h1>
+                <p className="text-sm text-slate-500">
+                  {user?.role} user · {isConnected ? "Connected" : "Offline"}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
+                    isConnected
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-slate-100 text-slate-500"
+                  }`}
+                >
+                  <SignalIcon className="w-4 h-4" />
+                  {isConnected ? "Live" : "Connecting"}
+                </span>
+                <button
+                  onClick={() => {
+                    fetchRooms();
+                    fetchUsers();
+                  }}
+                  className="p-2 rounded-md border border-slate-200 hover:bg-slate-50"
+                  aria-label="Refresh"
+                >
+                  <ArrowPathIcon className="w-4 h-4 text-slate-600" />
+                </button>
+              </div>
+            </div>
+
+            <ChatWindow
+              room={activeRoom}
+              messages={messages}
+              currentUserId={user?.id}
+              typingUsers={typingUsers}
+              isLoading={loadingMessages}
+              onSendMessage={handleSendMessage}
+              onTyping={handleTypingStatus}
+            />
           </div>
         </div>
-
-        <ChatWindow
-          room={activeRoom}
-          messages={messages}
-          currentUserId={user?.id}
-          typingUsers={typingUsers}
-          isLoading={loadingMessages}
-          onSendMessage={handleSendMessage}
-          onTyping={handleTypingStatus}
-        />
-      </div>
+      )}
     </div>
   );
 }
