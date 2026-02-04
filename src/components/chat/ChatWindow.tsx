@@ -85,7 +85,7 @@ export default function ChatWindow({
             {isMobile && onBack && (
               <button
                 onClick={onBack}
-                className="p-2 rounded-full hover:bg-slate-100 text-slate-600"
+                className="p-2 rounded-full hover:bg-blue-50 text-slate-600"
                 aria-label="Back to chats"
               >
                 <span className="sr-only">Back</span>

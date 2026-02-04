@@ -39,7 +39,7 @@ export default function ChatSidebar({
 }: ChatSidebarProps) {
   return (
     <aside className="w-full lg:w-80 border-r border-slate-200 bg-white flex flex-col">
-      <div className="px-4 py-4 border-b border-slate-200">
+      <div className="px-4 py-4 border-b border-slate-200 bg-white">
         <h2 className="text-lg font-semibold text-slate-900">Chat</h2>
         <p className="text-sm text-slate-500">Message Admin and Branches</p>
       </div>
@@ -50,7 +50,7 @@ export default function ChatSidebar({
             onClick={() => onTabChange("rooms")}
             className={`flex-1 text-sm font-medium px-3 py-2 rounded-md transition-colors ${
               activeTab === "rooms"
-                ? "bg-white text-slate-900 shadow-sm"
+                ? "bg-white text-blue-700 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -60,7 +60,7 @@ export default function ChatSidebar({
             onClick={() => onTabChange("users")}
             className={`flex-1 text-sm font-medium px-3 py-2 rounded-md transition-colors ${
               activeTab === "users"
-                ? "bg-white text-slate-900 shadow-sm"
+                ? "bg-white text-blue-700 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -131,12 +131,12 @@ export default function ChatSidebar({
                 value={userSearch || ""}
                 onChange={(e) => onUserSearchChange?.(e.target.value)}
                 placeholder="Search users..."
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {canCreateGroup && (
                 <button
                   onClick={onCreateGroup}
-                  className="w-full px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors"
+                  className="w-full px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
                 >
                   Create Group
                 </button>
@@ -155,11 +155,11 @@ export default function ChatSidebar({
                 <button
                   key={user.id}
                   onClick={() => onSelectUser(user)}
-                  className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-emerald-200 hover:bg-emerald-50/40 transition-all"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+                    className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-blue-200 hover:bg-blue-50/40 transition-all"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
                         <UsersIcon className="w-4 h-4" />
                       </div>
                     <div className="min-w-0">
