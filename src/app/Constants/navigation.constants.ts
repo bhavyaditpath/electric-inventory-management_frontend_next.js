@@ -12,7 +12,6 @@ export const NAVIGATION = {
     purchase: '/admin/purchase',
     request: '/admin/request',
     reports: '/admin/reports',
-    chat: '/admin/chat',
   },
   branch: {
     dashboard: '/branch/dashboard',
@@ -21,6 +20,5 @@ export const NAVIGATION = {
     requestedpurchase: '/branch/requestedpurchase',
     sales: '/branch/sales',
     alerts: '/branch/alerts',
-    chat: '/branch/chat',
   },
 };
