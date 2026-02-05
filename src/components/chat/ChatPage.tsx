@@ -28,6 +28,10 @@ export default function ChatPage() {
   const [groupSearch, setGroupSearch] = useState("");
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [showMembers, setShowMembers] = useState(false);
+  const [showAddMembers, setShowAddMembers] = useState(false);
+  const [addMembersSearch, setAddMembersSearch] = useState("");
+  const [selectedAddUserIds, setSelectedAddUserIds] = useState<number[]>([]);
+  const [addingMembers, setAddingMembers] = useState(false);
   const [membersLoading, setMembersLoading] = useState(false);
   const [membersRoom, setMembersRoom] = useState<ChatRoom | null>(null);
   const joinedRoomRef = useRef<number | null>(null);
@@ -300,8 +304,31 @@ export default function ChatPage() {
     });
   }, [users, groupSearch, getBranchLabel]);
 
+  const eligibleAddUsers = useMemo(() => {
+    const participantIds = new Set(
+      (membersRoom?.participants || []).map((p) => p.userId)
+    );
+    const baseList = users.filter((u) => !participantIds.has(u.id));
+    if (!addMembersSearch) return baseList;
+    const query = addMembersSearch.toLowerCase();
+    return baseList.filter((u) => {
+      const branchLabel = getBranchLabel(u.branch, u.role);
+      return (
+        u.username.toLowerCase().includes(query) ||
+        branchLabel.toLowerCase().includes(query) ||
+        u.role.toLowerCase().includes(query)
+      );
+    });
+  }, [users, membersRoom, addMembersSearch, getBranchLabel]);
+
   const toggleGroupUser = useCallback((userId: number) => {
     setSelectedUserIds((prev) =>
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+    );
+  }, []);
+
+  const toggleAddMemberUser = useCallback((userId: number) => {
+    setSelectedAddUserIds((prev) =>
       prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
     );
   }, []);
@@ -314,8 +341,21 @@ export default function ChatPage() {
     setShowCreateGroup(false);
   }, []);
 
+  const handleOpenAddMembers = useCallback(() => {
+    setShowAddMembers(true);
+  }, []);
+
+  const handleCloseAddMembers = useCallback(() => {
+    setShowAddMembers(false);
+    setAddMembersSearch("");
+    setSelectedAddUserIds([]);
+  }, []);
+
   const handleCloseMembers = useCallback(() => {
     setShowMembers(false);
+    setShowAddMembers(false);
+    setAddMembersSearch("");
+    setSelectedAddUserIds([]);
   }, []);
 
   const handleBackToList = useCallback(() => {
@@ -348,6 +388,26 @@ export default function ChatPage() {
       }
     } catch (error) {
       console.error("Failed to create group:", error);
+    }
+  };
+
+  const handleAddMembers = async () => {
+    if (!activeRoomId) return;
+    if (selectedAddUserIds.length === 0) return;
+
+    try {
+      setAddingMembers(true);
+      const response = await chatApi.addParticipants(activeRoomId, {
+        participantIds: selectedAddUserIds,
+      });
+      if (response.success && response.data) {
+        setMembersRoom(response.data);
+      }
+      handleCloseAddMembers();
+    } catch (error) {
+      console.error("Failed to add participants:", error);
+    } finally {
+      setAddingMembers(false);
     }
   };
 
@@ -652,12 +712,108 @@ export default function ChatPage() {
                 </div>
               )}
             </div>
-            <div className="px-5 py-4 border-t border-slate-200 flex justify-end">
+            <div className="px-5 py-4 border-t border-slate-200 flex items-center justify-between gap-2">
+              {membersRoom?.isGroupChat && (
+                <button
+                  onClick={handleOpenAddMembers}
+                  className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                >
+                  Add members
+                </button>
+              )}
               <button
                 onClick={handleCloseMembers}
                 className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAddMembers && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-lg bg-white rounded-xl shadow-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">
+                  Add members
+                </h3>
+                <p className="text-xs text-slate-500">
+                  {membersRoom?.name || "Chat room"}
+                </p>
+              </div>
+              <button
+                onClick={handleCloseAddMembers}
+                className="p-2 rounded-full hover:bg-slate-100 text-slate-600"
+                aria-label="Close"
+              >
+                x
+              </button>
+            </div>
+
+            <div className="px-5 py-4 space-y-3">
+              <input
+                value={addMembersSearch}
+                onChange={(e) => setAddMembersSearch(e.target.value)}
+                placeholder="Search users..."
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+              />
+              <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-lg">
+                {eligibleAddUsers.length === 0 ? (
+                  <div className="text-sm text-slate-500 p-4 text-center">
+                    No users available.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-slate-200">
+                    {eligibleAddUsers.map((target) => (
+                      <label
+                        key={target.id}
+                        className="flex items-center gap-3 px-4 py-3 text-sm cursor-pointer hover:bg-slate-50"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedAddUserIds.includes(target.id)}
+                          onChange={() => toggleAddMemberUser(target.id)}
+                          className="h-4 w-4"
+                        />
+                        <span className="flex-1">
+                          <span className="font-medium text-slate-900">
+                            {target.username}
+                          </span>
+                          <span className="block text-xs text-slate-500">
+                            {getBranchLabel(target.branch, target.role)}
+                          </span>
+                        </span>
+                        <span
+                          className={`text-xs font-medium px-2 py-1 rounded-full ${target.isOnline
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-slate-100 text-slate-500"
+                            }`}
+                        >
+                          {target.isOnline ? "Online" : "Offline"}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="px-5 py-4 border-t border-slate-200 flex items-center justify-end gap-2">
+              <button
+                onClick={handleCloseAddMembers}
+                className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddMembers}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-60"
+                disabled={selectedAddUserIds.length < 1 || addingMembers}
+              >
+                {addingMembers ? "Adding..." : "Add"}
               </button>
             </div>
           </div>

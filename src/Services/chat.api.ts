@@ -17,6 +17,10 @@ export interface SendMessagePayload {
   content: string;
 }
 
+export interface AddParticipantsPayload {
+  participantIds: number[];
+}
+
 export const chatApi = {
   createRoom: (payload: CreateChatRoomPayload) =>
     apiClient.post<ChatRoom>("/chat/rooms", payload),
@@ -36,6 +40,9 @@ export const chatApi = {
 
   getUsersWithOnlineStatus: () =>
     apiClient.get<ChatUser[]>("/chat/users/online-status"),
+
+  addParticipants: (roomId: number, payload: AddParticipantsPayload) =>
+    apiClient.post<ChatRoom>(`/chat/rooms/${roomId}/participants`, payload),
 
   sendMessage: (payload: SendMessagePayload) =>
     apiClient.post<ChatMessage>("/chat/messages", payload),
