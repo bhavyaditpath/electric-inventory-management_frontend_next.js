@@ -19,9 +19,12 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
 
+    const isFormData =
+      typeof FormData !== "undefined" && options.body instanceof FormData;
+
     const config: RequestInit = {
       headers: {
-        'Content-Type': 'application/json',
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
         ...options.headers,
       },
       ...options,
@@ -127,6 +130,13 @@ class ApiClient {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  }
+
+  async postForm<T>(endpoint: string, data: FormData): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      method: "POST",
+      body: data,
     });
   }
 

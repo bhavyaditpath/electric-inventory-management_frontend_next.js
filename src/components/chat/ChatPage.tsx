@@ -262,17 +262,22 @@ export default function ChatPage() {
   );
 
   const handleSendMessage = useCallback(
-    async (content: string) => {
+    async (content: string, files?: File[]) => {
       if (!activeRoomId) return;
-      if (isConnected) {
-        sendMessage(activeRoomId, content);
+      const trimmed = content.trim();
+      const hasFiles = !!files && files.length > 0;
+      if (!trimmed && !hasFiles) return;
+
+      if (isConnected && !hasFiles) {
+        sendMessage(activeRoomId, trimmed);
         return;
       }
+
       try {
-        const response = await chatApi.sendMessage({
-          chatRoomId: activeRoomId,
-          content,
-        });
+        const response = await chatApi.sendMessage(
+          { chatRoomId: activeRoomId, content: trimmed },
+          files
+        );
         if (response.success && response.data) {
           handleIncomingMessage(response.data);
         }

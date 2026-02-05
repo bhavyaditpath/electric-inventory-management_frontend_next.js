@@ -14,7 +14,7 @@ export interface CreateChatRoomPayload {
 
 export interface SendMessagePayload {
   chatRoomId: number;
-  content: string;
+  content?: string;
 }
 
 export interface AddParticipantsPayload {
@@ -44,8 +44,18 @@ export const chatApi = {
   addParticipants: (roomId: number, payload: AddParticipantsPayload) =>
     apiClient.post<ChatRoom>(`/chat/rooms/${roomId}/participants`, payload),
 
-  sendMessage: (payload: SendMessagePayload) =>
-    apiClient.post<ChatMessage>("/chat/messages", payload),
+  sendMessage: (payload: SendMessagePayload, files?: File[]) => {
+    if (files && files.length > 0) {
+      const formData = new FormData();
+      formData.append("chatRoomId", String(payload.chatRoomId));
+      if (payload.content) {
+        formData.append("content", payload.content);
+      }
+      files.forEach((file) => formData.append("files", file));
+      return apiClient.postForm<ChatMessage>("/chat/messages", formData);
+    }
+    return apiClient.post<ChatMessage>("/chat/messages", payload);
+  },
 
   getMessages: (roomId: number, page: number = 1, limit: number = 50) =>
     apiClient.get<ChatMessagesResponse>(

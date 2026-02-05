@@ -1,10 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import { ChatMessage, ChatRoom, ChatUser } from "@/types/chat.types";
 import {
   PaperAirplaneIcon,
   EllipsisHorizontalIcon,
+  PaperClipIcon,
 } from "@heroicons/react/24/outline";
 
 interface ChatWindowProps {
@@ -16,7 +24,7 @@ interface ChatWindowProps {
   isMobile?: boolean;
   onBack?: () => void;
   onOpenMembers?: () => void;
-  onSendMessage: (content: string) => void;
+  onSendMessage: (content: string, files?: File[]) => void;
   onTyping: (isTyping: boolean) => void;
 }
 
@@ -33,8 +41,17 @@ export default function ChatWindow({
   onTyping,
 }: ChatWindowProps) {
   const [messageInput, setMessageInput] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [fileWarning, setFileWarning] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+  const MAX_FILES = 10;
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -42,6 +59,8 @@ export default function ChatWindow({
 
   useEffect(() => {
     setMessageInput("");
+    setSelectedFiles([]);
+    setFileWarning(null);
   }, [room?.id]);
 
   useEffect(() => {
@@ -54,10 +73,12 @@ export default function ChatWindow({
 
   const handleSend = useCallback(() => {
     const trimmed = messageInput.trim();
-    if (!trimmed || !room) return;
-    onSendMessage(trimmed);
+    if (!room) return;
+    if (!trimmed && selectedFiles.length === 0) return;
+    onSendMessage(trimmed, selectedFiles);
     setMessageInput("");
-  }, [messageInput, onSendMessage, room]);
+    setSelectedFiles([]);
+  }, [messageInput, onSendMessage, room, selectedFiles]);
 
   const handleTypingChange = useCallback(
     (value: string) => {
@@ -73,6 +94,65 @@ export default function ChatWindow({
     () => typingUsers.filter((user) => user.id !== currentUserId),
     [typingUsers, currentUserId]
   );
+
+  const previewFiles = useMemo(
+    () =>
+      selectedFiles.map((file) => ({
+        id: `${file.name}-${file.size}-${file.lastModified}`,
+        name: file.name,
+        type: file.type,
+        url: URL.createObjectURL(file),
+      })),
+    [selectedFiles]
+  );
+
+  useEffect(() => {
+    return () => {
+      previewFiles.forEach((file) => URL.revokeObjectURL(file.url));
+    };
+  }, [previewFiles]);
+
+  const resolveAttachmentUrl = useCallback(
+    (url: string) => {
+      if (!url) return url;
+      if (url.startsWith("http://") || url.startsWith("https://")) return url;
+      const normalized = url.startsWith("/") ? url : `/${url}`;
+      return `${API_BASE_URL}${normalized}`;
+    },
+    [API_BASE_URL]
+  );
+
+  const handlePickFiles = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFilesSelected = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(event.target.files || []);
+      if (files.length === 0) return;
+      setFileWarning(null);
+      const filtered = files.filter(
+        (file) =>
+          file.type.startsWith("image/") ||
+          file.type === "application/pdf"
+      );
+      const sizeOk = filtered.filter((file) => file.size <= MAX_FILE_SIZE);
+      if (sizeOk.length < filtered.length) {
+        setFileWarning("Some files were too large (max 10 MB) and were skipped.");
+      }
+      const combined = [...selectedFiles, ...sizeOk].slice(0, MAX_FILES);
+      if (combined.length < selectedFiles.length + sizeOk.length) {
+        setFileWarning("You can attach up to 10 files per message.");
+      }
+      setSelectedFiles(combined);
+      event.target.value = "";
+    },
+    [selectedFiles]
+  );
+
+  const handleRemoveFile = useCallback((index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  }, []);
 
   if (!room) {
     return (
@@ -90,7 +170,7 @@ export default function ChatWindow({
   }
 
   return (
-    <section className="flex-1 flex flex-col bg-slate-50">
+    <section className="flex-1 flex flex-col min-h-0 bg-slate-50">
       <div className="sticky top-0 z-10 px-4 sm:px-5 py-2 sm:py-2 border-b border-slate-200 bg-white">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -149,7 +229,7 @@ export default function ChatWindow({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-3 scrollbar-default">
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-4 space-y-3 scrollbar-default">
         {isLoading ? (
           <div className="text-sm text-slate-500 px-3 py-6 text-center">
             Loading messages...
@@ -177,9 +257,59 @@ export default function ChatWindow({
                       {message.sender?.username || "User"}
                     </p>
                   )}
-                  <p className="whitespace-pre-wrap break-words">
-                    {message.content}
-                  </p>
+                  {message.content?.trim() && (
+                    <p className="whitespace-pre-wrap break-words">
+                      {message.content}
+                    </p>
+                  )}
+                  {message.attachments && message.attachments.length > 0 && (
+                    <div className="mt-2 space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        {message.attachments.map((attachment) => {
+                          const isImage = attachment.mimeType.startsWith("image/");
+                          const url = resolveAttachmentUrl(attachment.url);
+                          return (
+                            <div
+                              key={attachment.id}
+                              className={`rounded-lg border ${isMe
+                                  ? "border-blue-500/40"
+                                  : "border-slate-200"
+                                } bg-white/80`}
+                            >
+                              {isImage ? (
+                                <img
+                                  src={url}
+                                  alt={attachment.fileName}
+                                  className="h-28 w-full object-cover rounded-lg"
+                                  loading="lazy"
+                                  onClick={() =>
+                                    setLightbox({
+                                      url,
+                                      name: attachment.fileName,
+                                    })
+                                  }
+                                />
+                              ) : (
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center gap-2 p-2 text-xs text-slate-700 hover:text-slate-900"
+                                >
+                                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-slate-600">
+                                    PDF
+                                  </span>
+                                  <span className="line-clamp-2">
+                                    {attachment.fileName}
+                                  </span>
+                                </a>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                   <p
                     className={`text-[10px] mt-1 ${isMe ? "text-blue-100" : "text-slate-400"
                       }`}
@@ -203,7 +333,57 @@ export default function ChatWindow({
       </div>
 
       <div className="sticky bottom-0 z-10 px-3 sm:px-4 py-3 sm:py-4 border-t border-slate-200 bg-white">
+        {previewFiles.length > 0 && (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {previewFiles.map((file, index) => (
+              <div
+                key={file.id}
+                className="relative border border-slate-200 rounded-lg overflow-hidden bg-slate-50"
+              >
+                {file.type.startsWith("image/") ? (
+                  <img
+                    src={file.url}
+                    alt={file.name}
+                    className="h-20 w-20 object-cover"
+                    onClick={() =>
+                      setLightbox({
+                        url: file.url,
+                        name: file.name,
+                      })
+                    }
+                  />
+                ) : (
+                  <div className="h-20 w-20 flex items-center justify-center text-xs text-slate-600">
+                    PDF
+                  </div>
+                )}
+                <button
+                  onClick={() => handleRemoveFile(index)}
+                  className="absolute top-1 right-1 h-5 w-5 rounded-full bg-white/90 text-slate-600 text-xs hover:bg-white"
+                  aria-label="Remove file"
+                >
+                  x
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="flex items-center gap-2 sm:gap-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,application/pdf"
+            multiple
+            className="hidden"
+            onChange={handleFilesSelected}
+          />
+          <button
+            onClick={handlePickFiles}
+            className="p-2.5 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50"
+            aria-label="Attach files"
+          >
+            <PaperClipIcon className="w-4 h-4" />
+          </button>
           <input
             value={messageInput}
             onChange={(e) => handleTypingChange(e.target.value)}
@@ -224,7 +404,37 @@ export default function ChatWindow({
             <PaperAirplaneIcon className="w-4 h-4" />
           </button>
         </div>
+        <div className="mt-2 text-[11px] text-slate-500 flex flex-wrap items-center gap-2">
+          <span>Max 10 files per message.</span>
+          <span>Images and PDFs only.</span>
+          {fileWarning && (
+            <span className="text-amber-600">{fileWarning}</span>
+          )}
+        </div>
       </div>
+      {lightbox && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="max-w-4xl w-full">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm text-white truncate">{lightbox.name}</p>
+              <button
+                onClick={() => setLightbox(null)}
+                className="h-8 w-8 rounded-full bg-white/10 text-white hover:bg-white/20"
+                aria-label="Close preview"
+              >
+                x
+              </button>
+            </div>
+            <div className="bg-black/40 rounded-lg overflow-hidden">
+              <img
+                src={lightbox.url}
+                alt={lightbox.name}
+                className="w-full max-h-[75vh] object-contain"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

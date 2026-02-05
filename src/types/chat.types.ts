@@ -30,8 +30,17 @@ export interface ChatMessage {
   content: string;
   createdAt: string;
   sender?: ChatUser;
+  attachments?: ChatAttachment[];
   isRead?: boolean;
   readAt?: string | null;
+}
+
+export interface ChatAttachment {
+  id: number;
+  url: string;
+  mimeType: string;
+  fileName: string;
+  size: number;
 }
 
 export interface ChatMessagesResponse {
