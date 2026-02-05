@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserRole } from '../types/enums';
 import { tokenManager } from '@/Services/token.management.service';
@@ -45,6 +45,41 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const expiryTimeoutRef = useRef<number | null>(null);
+
+  const clearExpiryTimeout = () => {
+    if (expiryTimeoutRef.current !== null) {
+      window.clearTimeout(expiryTimeoutRef.current);
+      expiryTimeoutRef.current = null;
+    }
+  };
+
+  const handleSessionExpiry = () => {
+    clearExpiryTimeout();
+    tokenManager.removeToken();
+    setUser(null);
+    router.push('/auth/login');
+  };
+
+  const scheduleTokenExpiryLogout = (token?: string) => {
+    const accessToken = token ?? tokenManager.getAccessToken();
+    if (!accessToken) return;
+
+    const decoded = tokenManager.decodeToken(accessToken);
+    const exp = decoded?.exp;
+    if (!exp) return;
+
+    const msUntilExpiry = exp * 1000 - Date.now();
+    if (msUntilExpiry <= 0) {
+      handleSessionExpiry();
+      return;
+    }
+
+    clearExpiryTimeout();
+    expiryTimeoutRef.current = window.setTimeout(() => {
+      handleSessionExpiry();
+    }, msUntilExpiry);
+  };
 
   const fetchProfile = async () => {
     try {
@@ -64,39 +99,34 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Check if user is logged in on app start
     const token = tokenManager.getToken();
     if (token) {
-      // ❌ DO NOT logout on access-token expiry
-      // Refresh token will be handled by interceptor
-
       const decoded = tokenManager.decodeToken(token);
-      if (decoded) {
+      const exp = decoded?.exp ? decoded.exp * 1000 : null;
+
+      if (exp && exp <= Date.now()) {
+        handleSessionExpiry();
+      } else if (decoded) {
         setUser({
           id: decoded.sub || 0,
-          username: decoded.username || '',
+          username: decoded.username || "",
           role: (decoded.role as UserRole) || UserRole.BRANCH,
           branchId: decoded.branchId || 0,
         });
         fetchProfile();
+        scheduleTokenExpiryLogout(token);
       }
     }
 
     // Listen for session expiry event from API
-    const handleSessionExpiry = () => {
-      tokenManager.removeToken(); // Ensure clean state
-      setUser(null);
-      router.push('/auth/login');
-    };
-
-    window.addEventListener('auth:session-expired', handleSessionExpiry);
+    window.addEventListener("auth:session-expired", handleSessionExpiry);
 
     setIsLoading(false);
 
     return () => {
-      window.removeEventListener('auth:session-expired', handleSessionExpiry);
+      window.removeEventListener("auth:session-expired", handleSessionExpiry);
+      clearExpiryTimeout();
     };
   }, []);
 
-  // ❌ REMOVED: interval-based logout on token expiry
-  // Refresh token flow must handle this via interceptor
 
   const login = (token: string, userData?: User) => {
     tokenManager.setAccessToken(token);
@@ -104,9 +134,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(userData);
       fetchProfile();
     }
+    scheduleTokenExpiryLogout(token);
   };
 
   const logout = () => {
+    clearExpiryTimeout();
     tokenManager.removeToken();
     setUser(null);
     router.push('/auth/login');
@@ -127,3 +159,4 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     </AuthContext.Provider>
   );
 };
+

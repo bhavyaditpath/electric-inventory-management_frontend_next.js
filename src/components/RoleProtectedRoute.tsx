@@ -3,6 +3,7 @@
 import { useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
+import { tokenManager } from "../Services/token.management.service";
 import { UserRole } from "../types/enums";
 
 interface RoleProtectedRouteProps {
@@ -11,11 +12,16 @@ interface RoleProtectedRouteProps {
 }
 
 export default function RoleProtectedRoute({ children, requiredRole }: RoleProtectedRouteProps) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoading) {
+      const accessToken = tokenManager.getAccessToken();
+      if (accessToken && tokenManager.isTokenExpired()) {
+        logout();
+        return;
+      }
       if (!user) {
         router.push("/auth/login");
       } else if (user.role !== requiredRole) {
@@ -29,7 +35,7 @@ export default function RoleProtectedRoute({ children, requiredRole }: RoleProte
         }
       }
     }
-  }, [user, isLoading, router, requiredRole]);
+  }, [user, isLoading, router, requiredRole, logout]);
 
   // Show loading while checking authentication
   if (isLoading) {

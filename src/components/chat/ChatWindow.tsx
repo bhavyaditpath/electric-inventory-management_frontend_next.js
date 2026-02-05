@@ -69,6 +69,11 @@ export default function ChatWindow({
     [onTyping]
   );
 
+  const visibleTypingUsers = useMemo(
+    () => typingUsers.filter((user) => user.id !== currentUserId),
+    [typingUsers, currentUserId]
+  );
+
   if (!room) {
     return (
       <section className="flex-1 flex items-center justify-center bg-slate-50">
@@ -83,11 +88,6 @@ export default function ChatWindow({
       </section>
     );
   }
-
-  const visibleTypingUsers = useMemo(
-    () => typingUsers.filter((user) => user.id !== currentUserId),
-    [typingUsers, currentUserId]
-  );
 
   return (
     <section className="flex-1 flex flex-col bg-slate-50">
