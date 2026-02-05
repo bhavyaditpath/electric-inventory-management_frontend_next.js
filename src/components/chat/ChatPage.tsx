@@ -49,6 +49,13 @@ export default function ChatPage() {
   }, [activeRoomId]);
 
   useEffect(() => {
+    return () => {
+      typingTimersRef.current.forEach((timer) => clearTimeout(timer));
+      typingTimersRef.current.clear();
+    };
+  }, []);
+
+  useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
@@ -84,14 +91,7 @@ export default function ChatPage() {
       setLoadingUsers(true);
       const response = await chatApi.getUsersWithOnlineStatus();
       if (response.success && response.data) {
-        const normalized = response.data.map((u: any) => ({
-          ...u,
-          branch:
-            typeof u.branch === "string"
-              ? u.branch
-              : u.branch?.name || null,
-        }));
-        setUsers(normalized);
+        setUsers(response.data);
       } else {
         setUsers([]);
       }
@@ -144,9 +144,14 @@ export default function ChatPage() {
       if (timer) clearTimeout(timer);
       const timeout = setTimeout(() => {
         setTypingUserIds((prev) => prev.filter((id) => id !== payload.userId));
+        typingTimersRef.current.delete(payload.userId);
       }, 1500);
       typingTimersRef.current.set(payload.userId, timeout);
+      return;
     }
+    const timer = typingTimersRef.current.get(payload.userId);
+    if (timer) clearTimeout(timer);
+    typingTimersRef.current.delete(payload.userId);
   }, []);
 
   const handleUserOnline = useCallback((userId: number) => {
@@ -176,6 +181,11 @@ export default function ChatPage() {
   });
 
   useEffect(() => {
+    fetchRooms();
+    fetchUsers();
+  }, [fetchRooms, fetchUsers]);
+
+  const refreshData = useCallback(() => {
     fetchRooms();
     fetchUsers();
   }, [fetchRooms, fetchUsers]);
@@ -290,11 +300,27 @@ export default function ChatPage() {
     });
   }, [users, groupSearch, getBranchLabel]);
 
-  const toggleGroupUser = (userId: number) => {
+  const toggleGroupUser = useCallback((userId: number) => {
     setSelectedUserIds((prev) =>
       prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
     );
-  };
+  }, []);
+
+  const handleOpenCreateGroup = useCallback(() => {
+    setShowCreateGroup(true);
+  }, []);
+
+  const handleCloseCreateGroup = useCallback(() => {
+    setShowCreateGroup(false);
+  }, []);
+
+  const handleCloseMembers = useCallback(() => {
+    setShowMembers(false);
+  }, []);
+
+  const handleBackToList = useCallback(() => {
+    setShowChat(false);
+  }, []);
 
   const handleCreateGroup = async () => {
     if (!user?.id) return;
@@ -354,6 +380,8 @@ export default function ChatPage() {
     [users, typingUserIds]
   );
 
+  const isAdmin = user?.role === UserRole.ADMIN;
+
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-slate-50">
       {isMobile ? (
@@ -366,14 +394,11 @@ export default function ChatPage() {
                     Messages
                   </h1>
                   <p className="text-xs text-slate-500">
-                    {user?.role} user · {isConnected ? "Connected" : "Offline"}
+                    {user?.role} user - {isConnected ? "Connected" : "Offline"}
                   </p>
                 </div>
                 <button
-                  onClick={() => {
-                    fetchRooms();
-                    fetchUsers();
-                  }}
+                  onClick={refreshData}
                   className="p-2 rounded-md border border-slate-200 hover:bg-slate-50"
                   aria-label="Refresh"
                 >
@@ -387,8 +412,8 @@ export default function ChatPage() {
                 activeRoomId={activeRoomId}
                 loadingRooms={loadingRooms}
                 loadingUsers={loadingUsers}
-                canCreateGroup={user?.role === UserRole.ADMIN}
-                onCreateGroup={() => setShowCreateGroup(true)}
+                canCreateGroup={isAdmin}
+                onCreateGroup={handleOpenCreateGroup}
                 userSearch={groupSearch}
                 onUserSearchChange={setGroupSearch}
                 onTabChange={setActiveTab}
@@ -409,7 +434,7 @@ export default function ChatPage() {
                 onSendMessage={handleSendMessage}
                 onTyping={handleTypingStatus}
                 isMobile
-                onBack={() => setShowChat(false)}
+                onBack={handleBackToList}
                 onOpenMembers={openMembers}
               />
             </div>
@@ -424,8 +449,8 @@ export default function ChatPage() {
             activeRoomId={activeRoomId}
             loadingRooms={loadingRooms}
             loadingUsers={loadingUsers}
-            canCreateGroup={user?.role === UserRole.ADMIN}
-            onCreateGroup={() => setShowCreateGroup(true)}
+            canCreateGroup={isAdmin}
+            onCreateGroup={handleOpenCreateGroup}
             userSearch={groupSearch}
             onUserSearchChange={setGroupSearch}
             onTabChange={setActiveTab}
@@ -440,24 +465,21 @@ export default function ChatPage() {
                   Messages
                 </h1>
                 <p className="text-sm text-slate-500">
-                  {user?.role} user · {isConnected ? "Connected" : "Offline"}
+                  {user?.role} user - {isConnected ? "Connected" : "Offline"}
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <span
                   className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${isConnected
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "bg-slate-100 text-slate-500"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-slate-100 text-slate-500"
                     }`}
                 >
                   <SignalIcon className="w-4 h-4" />
                   {isConnected ? "Live" : "Connecting"}
                 </span>
                 <button
-                  onClick={() => {
-                    fetchRooms();
-                    fetchUsers();
-                  }}
+                  onClick={refreshData}
                   className="p-2 rounded-md border border-slate-200 hover:bg-slate-50"
                   aria-label="Refresh"
                 >
@@ -493,11 +515,11 @@ export default function ChatPage() {
                 </p>
               </div>
               <button
-                onClick={() => setShowCreateGroup(false)}
+                onClick={handleCloseCreateGroup}
                 className="p-2 rounded-full hover:bg-slate-100 text-slate-600"
                 aria-label="Close"
               >
-                ✕
+                x
               </button>
             </div>
 
@@ -542,8 +564,8 @@ export default function ChatPage() {
                         </span>
                         <span
                           className={`text-xs font-medium px-2 py-1 rounded-full ${target.isOnline
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-slate-100 text-slate-500"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-slate-100 text-slate-500"
                             }`}
                         >
                           {target.isOnline ? "Online" : "Offline"}
@@ -557,7 +579,7 @@ export default function ChatPage() {
 
             <div className="px-5 py-4 border-t border-slate-200 flex items-center justify-end gap-2">
               <button
-                onClick={() => setShowCreateGroup(false)}
+                onClick={handleCloseCreateGroup}
                 className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50"
               >
                 Cancel
@@ -587,11 +609,11 @@ export default function ChatPage() {
                 </p>
               </div>
               <button
-                onClick={() => setShowMembers(false)}
+                onClick={handleCloseMembers}
                 className="p-2 rounded-full hover:bg-slate-100 text-slate-600"
                 aria-label="Close"
               >
-                ✕
+                x
               </button>
             </div>
             <div className="px-5 py-4 max-h-72 overflow-y-auto">
@@ -632,7 +654,7 @@ export default function ChatPage() {
             </div>
             <div className="px-5 py-4 border-t border-slate-200 flex justify-end">
               <button
-                onClick={() => setShowMembers(false)}
+                onClick={handleCloseMembers}
                 className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50"
               >
                 Close

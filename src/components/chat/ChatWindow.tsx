@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChatMessage, ChatRoom, ChatUser } from "@/types/chat.types";
 import {
   PaperAirplaneIcon,
@@ -44,19 +44,30 @@ export default function ChatWindow({
     setMessageInput("");
   }, [room?.id]);
 
-  const handleSend = () => {
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleSend = useCallback(() => {
     const trimmed = messageInput.trim();
     if (!trimmed || !room) return;
     onSendMessage(trimmed);
     setMessageInput("");
-  };
+  }, [messageInput, onSendMessage, room]);
 
-  const handleTypingChange = (value: string) => {
-    setMessageInput(value);
-    onTyping(true);
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = setTimeout(() => onTyping(false), 800);
-  };
+  const handleTypingChange = useCallback(
+    (value: string) => {
+      setMessageInput(value);
+      onTyping(true);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => onTyping(false), 800);
+    },
+    [onTyping]
+  );
 
   if (!room) {
     return (
@@ -73,8 +84,9 @@ export default function ChatWindow({
     );
   }
 
-  const visibleTypingUsers = typingUsers.filter(
-    (user) => user.id !== currentUserId
+  const visibleTypingUsers = useMemo(
+    () => typingUsers.filter((user) => user.id !== currentUserId),
+    [typingUsers, currentUserId]
   );
 
   return (

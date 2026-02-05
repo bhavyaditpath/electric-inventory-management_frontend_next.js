@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { ChatRoom, ChatUser } from "@/types/chat.types";
 import {
   ChatBubbleLeftRightIcon,
@@ -22,7 +23,7 @@ interface ChatSidebarProps {
   onSelectUser: (user: ChatUser) => void;
 }
 
-export default function ChatSidebar({
+const ChatSidebar = ({
   rooms,
   users,
   activeTab,
@@ -36,7 +37,7 @@ export default function ChatSidebar({
   onTabChange,
   onSelectRoom,
   onSelectUser,
-}: ChatSidebarProps) {
+}: ChatSidebarProps) => {
   return (
     <aside className="w-full lg:w-80 border-r border-slate-200 bg-white flex flex-col">
       <div className="px-4 py-4 border-b border-slate-200 bg-white">
@@ -184,4 +185,6 @@ export default function ChatSidebar({
       </div>
     </aside>
   );
-}
+};
+
+export default memo(ChatSidebar);
