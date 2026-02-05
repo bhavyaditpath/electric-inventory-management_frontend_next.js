@@ -48,21 +48,19 @@ export default function ChatSidebar({
         <div className="flex gap-2 bg-slate-100 rounded-lg p-1">
           <button
             onClick={() => onTabChange("rooms")}
-            className={`flex-1 text-sm font-medium px-3 py-2 rounded-md transition-colors ${
-              activeTab === "rooms"
+            className={`flex-1 text-sm font-medium px-3 py-2 rounded-md transition-colors ${activeTab === "rooms"
                 ? "bg-white text-blue-700 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
-            }`}
+              }`}
           >
             Chats
           </button>
           <button
             onClick={() => onTabChange("users")}
-            className={`flex-1 text-sm font-medium px-3 py-2 rounded-md transition-colors ${
-              activeTab === "users"
+            className={`flex-1 text-sm font-medium px-3 py-2 rounded-md transition-colors ${activeTab === "users"
                 ? "bg-white text-blue-700 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
-            }`}
+              }`}
           >
             Users
           </button>
@@ -87,20 +85,18 @@ export default function ChatSidebar({
                   <button
                     key={room.id}
                     onClick={() => onSelectRoom(room.id)}
-                    className={`w-full text-left p-3 rounded-lg border transition-all ${
-                      isActive
+                    className={`w-full text-left p-3 rounded-lg border transition-all ${isActive
                         ? "border-blue-200 bg-blue-50"
                         : "border-slate-200 hover:border-blue-200 hover:bg-blue-50/50"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between gap-3 text-black">
                       <div className="flex items-center gap-2 min-w-0">
                         <div
-                          className={`w-9 h-9 rounded-full flex items-center justify-center ${
-                            isActive
+                          className={`w-9 h-9 rounded-full flex items-center justify-center ${isActive
                               ? "bg-blue-500 text-white"
                               : "bg-slate-100 text-black"
-                          }`}
+                            }`}
                         >
                           <ChatBubbleLeftRightIcon className="w-4 h-4" />
                         </div>
@@ -155,28 +151,27 @@ export default function ChatSidebar({
                 <button
                   key={user.id}
                   onClick={() => onSelectUser(user)}
-                    className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-blue-200 hover:bg-blue-50/40 transition-all"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+                  className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-blue-200 hover:bg-blue-50/40 transition-all"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
                         <UsersIcon className="w-4 h-4" />
                       </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-900 truncate">
-                        {user.username}
-                      </p>
-                      <p className="text-xs text-slate-500 truncate">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-900 truncate">
+                          {user.username}
+                        </p>
+                        <p className="text-xs text-slate-500 truncate">
                           {user.branch || user.role}
-                      </p>
-                    </div>
+                        </p>
+                      </div>
                     </div>
                     <span
-                      className={`text-xs font-medium px-2 py-1 rounded-full ${
-                        user.isOnline
+                      className={`text-xs font-medium px-2 py-1 rounded-full ${user.isOnline
                           ? "bg-emerald-100 text-emerald-700"
                           : "bg-slate-100 text-slate-500"
-                      }`}
+                        }`}
                     >
                       {user.isOnline ? "Online" : "Offline"}
                     </span>

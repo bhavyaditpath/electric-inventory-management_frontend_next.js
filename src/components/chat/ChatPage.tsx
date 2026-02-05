@@ -445,11 +445,10 @@ export default function ChatPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span
-                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
-                    isConnected
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${isConnected
                       ? "bg-emerald-100 text-emerald-700"
                       : "bg-slate-100 text-slate-500"
-                  }`}
+                    }`}
                 >
                   <SignalIcon className="w-4 h-4" />
                   {isConnected ? "Live" : "Connecting"}
@@ -542,11 +541,10 @@ export default function ChatPage() {
                           </span>
                         </span>
                         <span
-                          className={`text-xs font-medium px-2 py-1 rounded-full ${
-                            target.isOnline
+                          className={`text-xs font-medium px-2 py-1 rounded-full ${target.isOnline
                               ? "bg-emerald-100 text-emerald-700"
                               : "bg-slate-100 text-slate-500"
-                          }`}
+                            }`}
                         >
                           {target.isOnline ? "Online" : "Offline"}
                         </span>

@@ -155,11 +155,10 @@ export default function ChatWindow({
                 className={`flex ${isMe ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm shadow-sm ${
-                    isMe
+                  className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm shadow-sm ${isMe
                       ? "bg-blue-600 text-white rounded-br-md"
                       : "bg-white text-slate-800 border border-slate-200 rounded-bl-md"
-                  }`}
+                    }`}
                 >
                   {!isMe && (
                     <p className="text-xs font-semibold text-slate-500 mb-1">
@@ -170,9 +169,8 @@ export default function ChatWindow({
                     {message.content}
                   </p>
                   <p
-                    className={`text-[10px] mt-1 ${
-                      isMe ? "text-blue-100" : "text-slate-400"
-                    }`}
+                    className={`text-[10px] mt-1 ${isMe ? "text-blue-100" : "text-slate-400"
+                      }`}
                   >
                     {new Date(message.createdAt).toLocaleTimeString([], {
                       hour: "2-digit",
