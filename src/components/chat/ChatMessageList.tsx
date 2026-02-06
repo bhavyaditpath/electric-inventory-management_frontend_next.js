@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChatMessage, ChatUser } from "@/types/chat.types";
+import { ChatAttachment, ChatMessage, ChatUser } from "@/types/chat.types";
 import { EllipsisHorizontalIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { chatApi } from "@/Services/chat.api";
 
 interface ChatMessageListProps {
   messages: ChatMessage[];
@@ -32,6 +33,9 @@ export default function ChatMessageList({
   const [openMenuMessageId, setOpenMenuMessageId] = useState<number | null>(
     null
   );
+  const [openAttachmentMenuId, setOpenAttachmentMenuId] = useState<number | null>(
+    null
+  );
 
   const getFileExtension = (name: string) => {
     const parts = name.split(".");
@@ -57,6 +61,22 @@ export default function ChatMessageList({
   const hasText = (value?: string) => !!value && value.trim().length > 0;
 
   const isImageAttachment = (mimeType: string) => mimeType.startsWith("image/");
+
+  const handleDownloadAttachment = async (attachment: ChatAttachment) => {
+    try {
+      const { blob, filename } = await chatApi.downloadAttachment(attachment.id);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename || attachment.fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to download attachment:", error);
+    }
+  };
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-4 space-y-3 scrollbar-default">
@@ -123,13 +143,70 @@ export default function ChatMessageList({
                         );
                       }
 
+                      const isPdf = extension === "PDF";
+
+                      if (isPdf) {
+                        return (
+                          <div
+                            key={attachment.id}
+                            className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${isMe ? "bg-white/10 border-white/20 text-white" : "bg-slate-50 border-slate-200 text-slate-700"
+                              }`}
+                          >
+                            <a
+                              href={fileUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+                            >
+                              <span
+                                className={`inline-flex items-center justify-center rounded-full border px-2 py-1 text-[10px] font-semibold ${getFileAccent(
+                                  extension
+                                )}`}
+                              >
+                                {extension}
+                              </span>
+                              <span className="truncate flex-1">
+                                {attachment.fileName}
+                              </span>
+                            </a>
+                            <div className="relative">
+                              <button
+                                onClick={() =>
+                                  setOpenAttachmentMenuId((prev) =>
+                                    prev === attachment.id ? null : attachment.id
+                                  )
+                                }
+                                className={`p-1 rounded-full cursor-pointer ${isMe ? "text-blue-100 hover:text-white" : "text-slate-400 hover:text-slate-600"
+                                  }`}
+                                aria-label="Attachment actions"
+                              >
+                                <EllipsisHorizontalIcon className="w-4 h-4" />
+                              </button>
+                              {openAttachmentMenuId === attachment.id && (
+                                <div className="absolute right-0 top-6 w-32 rounded-lg border border-slate-200 bg-white shadow-lg z-10">
+                                  <button
+                                    onClick={() => {
+                                      handleDownloadAttachment(attachment);
+                                      setOpenAttachmentMenuId(null);
+                                    }}
+                                    className="w-full px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 cursor-pointer"
+                                  >
+                                    Download
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+
                       return (
                         <a
                           key={attachment.id}
                           href={fileUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-xs cursor-pointer ${isMe ? "bg-white/10 border-white/20 text-white" : "bg-slate-50 border-slate-200 text-slate-700"
+                          className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-xs cursor-pointer ${isMe ? "bg-white border-white/20 text-white" : "bg-slate-50 border-slate-200 text-slate-700"
                             }`}
                         >
                           <span

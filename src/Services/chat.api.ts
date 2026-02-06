@@ -77,4 +77,36 @@ export const chatApi = {
 
   deleteRoom: (roomId: number) =>
     apiClient.delete<null>(`/chat/rooms/${roomId}`),
+
+  downloadAttachment: async (attachmentId: number) => {
+    const API_BASE_URL =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    const token =
+      localStorage.getItem("access_token") || localStorage.getItem("token");
+
+    const response = await fetch(
+      `${API_BASE_URL}/chat/attachments/${attachmentId}/download`,
+      {
+        method: "GET",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Download failed with status ${response.status}`
+      );
+    }
+
+    const blob = await response.blob();
+    const disposition = response.headers.get("Content-Disposition") || "";
+    const filenameMatch = disposition.match(/filename\*?=(?:UTF-8''|")?([^";]+)"/i);
+    const filename = filenameMatch
+      ? decodeURIComponent(filenameMatch[1])
+      : null;
+
+    return { blob, filename };
+  },
 };
