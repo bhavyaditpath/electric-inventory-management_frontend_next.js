@@ -52,6 +52,10 @@ export default function ChatMessageList({
     [typingUsers, currentUserId]
   );
 
+  const hasText = (value?: string) => !!value && value.trim().length > 0;
+
+  const isImageAttachment = (mimeType: string) => mimeType.startsWith("image/");
+
   return (
     <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-4 space-y-3 scrollbar-default">
       {isLoading ? (
@@ -105,6 +109,62 @@ export default function ChatMessageList({
                         </button>
                       </div>
                     )}
+                  </div>
+                )}
+                {hasText(message.content) && (
+                  <p className="text-sm leading-relaxed break-words">
+                    {message.content}
+                  </p>
+                )}
+                {message.attachments && message.attachments.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    {message.attachments.map((attachment) => {
+                      const fileUrl = resolveAttachmentUrl(attachment.url);
+                      const extension = getFileExtension(attachment.fileName);
+                      const accent = getFileAccent(extension);
+                      const isImage = isImageAttachment(attachment.mimeType);
+
+                      if (isImage) {
+                        return (
+                          <button
+                            key={attachment.id}
+                            onClick={() =>
+                              onOpenLightbox(fileUrl, attachment.fileName)
+                            }
+                            className="w-full overflow-hidden rounded-lg border border-white/20"
+                            aria-label={`Open ${attachment.fileName}`}
+                          >
+                            <img
+                              src={fileUrl}
+                              alt={attachment.fileName}
+                              className="w-full max-h-56 object-cover"
+                            />
+                          </button>
+                        );
+                      }
+
+                      return (
+                        <a
+                          key={attachment.id}
+                          href={fileUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-xs ${isMe ? "bg-white/10 border-white/20 text-white" : "bg-slate-50 border-slate-200 text-slate-700"
+                            }`}
+                        >
+                          <span
+                            className={`inline-flex items-center justify-center rounded-full border px-2 py-1 text-[10px] font-semibold ${getFileAccent(
+                              extension
+                            )}`}
+                          >
+                            {extension}
+                          </span>
+                          <span className="truncate flex-1">
+                            {attachment.fileName}
+                          </span>
+                        </a>
+                      );
+                    })}
                   </div>
                 )}
                 <p
