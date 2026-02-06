@@ -76,7 +76,7 @@ const ChatSidebar = ({
             className={`flex-1 text-sm font-medium px-3 py-2 rounded-md transition-colors ${activeTab === "rooms"
               ? "bg-white text-blue-700 shadow-sm"
               : "text-slate-600 hover:text-slate-900"
-              }`}
+              } cursor-pointer`}
           >
             Chats
           </button>
@@ -85,7 +85,7 @@ const ChatSidebar = ({
             className={`flex-1 text-sm font-medium px-3 py-2 rounded-md transition-colors ${activeTab === "users"
               ? "bg-white text-blue-700 shadow-sm"
               : "text-slate-600 hover:text-slate-900"
-              }`}
+              } cursor-pointer`}
           >
             Users
           </button>
@@ -162,7 +162,7 @@ const ChatSidebar = ({
                                   prev === room.id ? null : room.id
                                 );
                               }}
-                              className="p-1 rounded-full border border-slate-200 text-slate-500 hover:text-slate-700"
+                              className="p-1 rounded-full border border-slate-200 text-slate-500 hover:text-slate-700 cursor-pointer"
                               aria-label="Room actions"
                             >
                               <EllipsisVerticalIcon className="w-4 h-4" />
@@ -176,7 +176,7 @@ const ChatSidebar = ({
                                       onPinRoom(room.id, !room.pinned);
                                       closeMenu();
                                     }}
-                                    className="w-full px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                    className="w-full px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
                                   >
                                     <BookmarkIcon className="w-4 h-4" />
                                     {room.pinned ? "Unpin" : "Pin"}
@@ -189,7 +189,7 @@ const ChatSidebar = ({
                                       onDeleteRoom(room.id);
                                       closeMenu();
                                     }}
-                                    className="w-full px-3 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+                                    className="w-full px-3 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer"
                                   >
                                     <TrashIcon className="w-4 h-4" />
                                     Delete
@@ -223,7 +223,7 @@ const ChatSidebar = ({
               {canCreateGroup && (
                 <button
                   onClick={onCreateGroup}
-                  className="w-full px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+                  className="w-full px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors cursor-pointer"
                 >
                   Create Group
                 </button>
@@ -242,7 +242,7 @@ const ChatSidebar = ({
                 <button
                   key={user.id}
                   onClick={() => onSelectUser(user)}
-                  className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-blue-200 hover:bg-blue-50/40 transition-all"
+                  className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-blue-200 hover:bg-blue-50/40 transition-all cursor-pointer"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 min-w-0">

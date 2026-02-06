@@ -33,7 +33,7 @@ export default function ConfirmDeleteModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-slate-100 text-slate-600"
+            className="p-2 rounded-full hover:bg-slate-100 text-slate-600 cursor-pointer"
             aria-label="Close"
             disabled={isLoading}
           >
@@ -43,14 +43,14 @@ export default function ConfirmDeleteModal({
         <div className="px-5 py-4 border-t border-slate-200 flex items-center justify-end gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50"
+            className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 cursor-pointer"
             disabled={isLoading}
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 rounded-lg bg-rose-600 text-white text-sm font-medium hover:bg-rose-700"
+            className="px-4 py-2 rounded-lg bg-rose-600 text-white text-sm font-medium hover:bg-rose-700 cursor-pointer"
             disabled={isLoading}
           >
             {isLoading ? "Deleting..." : confirmLabel}

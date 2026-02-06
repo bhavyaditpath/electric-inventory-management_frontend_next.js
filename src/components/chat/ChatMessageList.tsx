@@ -100,7 +100,7 @@ export default function ChatMessageList({
                             onClick={() =>
                               onOpenLightbox(fileUrl, attachment.fileName)
                             }
-                            className="w-full overflow-hidden rounded-lg border border-white/20"
+                            className="w-full overflow-hidden rounded-lg border border-white/20 cursor-pointer"
                             aria-label={`Open ${attachment.fileName}`}
                           >
                             <img
@@ -118,7 +118,7 @@ export default function ChatMessageList({
                           href={fileUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-xs ${isMe ? "bg-white/10 border-white/20 text-white" : "bg-slate-50 border-slate-200 text-slate-700"
+                          className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-xs cursor-pointer ${isMe ? "bg-white/10 border-white/20 text-white" : "bg-slate-50 border-slate-200 text-slate-700"
                             }`}
                         >
                           <span
@@ -148,18 +148,18 @@ export default function ChatMessageList({
                   </p>
                   {canDelete && (
                     <div className="flex justify-end relative">
-                      <button
-                        onClick={() =>
-                          setOpenMenuMessageId((prev) =>
-                            prev === message.id ? null : message.id
-                          )
-                        }
-                        className={`p-1 rounded-full ${isMe ? "text-blue-100 hover:text-white" : "text-slate-400 hover:text-slate-600"
-                          }`}
-                        aria-label="Message actions"
-                      >
-                        <EllipsisHorizontalIcon className="w-4 h-4" />
-                      </button>
+                    <button
+                      onClick={() =>
+                        setOpenMenuMessageId((prev) =>
+                          prev === message.id ? null : message.id
+                        )
+                      }
+                      className={`p-1 rounded-full cursor-pointer ${isMe ? "text-blue-100 hover:text-white" : "text-slate-400 hover:text-slate-600"
+                        }`}
+                      aria-label="Message actions"
+                    >
+                      <EllipsisHorizontalIcon className="w-4 h-4" />
+                    </button>
                       {openMenuMessageId === message.id && (
                         <div className="absolute right-0 top-6 w-32 rounded-lg border border-slate-200 bg-white shadow-lg z-10">
                           <button
@@ -167,7 +167,7 @@ export default function ChatMessageList({
                               onDeleteMessage?.(message.id);
                               setOpenMenuMessageId(null);
                             }}
-                            className="w-full px-3 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+                            className="w-full px-3 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer"
                           >
                             <TrashIcon className="w-4 h-4" />
                             Delete

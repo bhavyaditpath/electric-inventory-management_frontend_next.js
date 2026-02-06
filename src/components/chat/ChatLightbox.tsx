@@ -30,7 +30,7 @@ export default function ChatLightbox({ lightbox, onClose }: ChatLightboxProps) {
           <p className="text-sm text-white truncate">{lightbox.name}</p>
           <button
             onClick={onClose}
-            className="h-8 w-8 rounded-full bg-white/10 text-white hover:bg-white/20"
+            className="h-8 w-8 rounded-full bg-white/10 text-white hover:bg-white/20 cursor-pointer"
             aria-label="Close preview"
           >
             x

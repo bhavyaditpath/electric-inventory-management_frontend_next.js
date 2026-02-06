@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { chatApi } from "@/Services/chat.api";
+import { showError } from "@/Services/toast.service";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/types/enums";
 import { ChatMessage, ChatRoom, ChatUser } from "@/types/chat.types";
@@ -90,10 +91,12 @@ export default function ChatPage() {
         setRooms(response.data);
       } else {
         setRooms([]);
+        if (response.message) showError(response.message);
       }
     } catch (error) {
       console.error("Failed to fetch rooms:", error);
       setRooms([]);
+      showError("Failed to fetch rooms");
     } finally {
       setLoadingRooms(false);
     }
@@ -107,10 +110,12 @@ export default function ChatPage() {
         setUsers(response.data);
       } else {
         setUsers([]);
+        if (response.message) showError(response.message);
       }
     } catch (error) {
       console.error("Failed to fetch users:", error);
       setUsers([]);
+      showError("Failed to fetch users");
     } finally {
       setLoadingUsers(false);
     }
@@ -231,6 +236,7 @@ export default function ChatPage() {
           setMessages(response.data.messages || []);
         } else {
           setMessages([]);
+          if (response.message) showError(response.message);
         }
 
         await chatApi.markAsRead(activeRoomId);
@@ -243,6 +249,7 @@ export default function ChatPage() {
       } catch (error) {
         console.error("Failed to fetch messages:", error);
         setMessages([]);
+        showError("Failed to fetch messages");
       } finally {
         setLoadingMessages(false);
       }
@@ -273,9 +280,12 @@ export default function ChatPage() {
           setActiveRoomId(room.id);
           setActiveTab("rooms");
           if (isMobile) setShowChat(true);
+        } else if (response.message) {
+          showError(response.message);
         }
       } catch (error) {
         console.error("Failed to start chat:", error);
+        showError("Failed to start chat");
       }
     },
     [isMobile]
@@ -300,9 +310,12 @@ export default function ChatPage() {
         );
         if (response.success && response.data) {
           handleIncomingMessage(response.data);
+        } else if (response.message) {
+          showError(response.message);
         }
       } catch (error) {
         console.error("Failed to send message:", error);
+        showError("Failed to send message");
       }
     },
     [activeRoomId, handleIncomingMessage, isConnected, sendMessage]
@@ -331,9 +344,12 @@ export default function ChatPage() {
               )
             )
           );
+        } else if (response.message) {
+          showError(response.message);
         }
       } catch (error) {
         console.error("Failed to update pin:", error);
+        showError("Failed to update pin");
       }
     },
     [sortRooms]
@@ -350,9 +366,12 @@ export default function ChatPage() {
             setActiveRoomId(null);
             setMessages([]);
           }
+        } else if (response.message) {
+          showError(response.message);
         }
       } catch (error) {
         console.error("Failed to delete room:", error);
+        showError("Failed to delete room");
       } finally {
         setDeleteLoading(false);
       }
@@ -368,9 +387,12 @@ export default function ChatPage() {
         if (response.success) {
           setMessages((prev) => prev.filter((m) => m.id !== messageId));
           fetchRooms();
+        } else if (response.message) {
+          showError(response.message);
         }
       } catch (error) {
         console.error("Failed to delete message:", error);
+        showError("Failed to delete message");
       } finally {
         setDeleteLoading(false);
       }
@@ -503,9 +525,12 @@ export default function ChatPage() {
         setGroupSearch("");
         setSelectedUserIds([]);
         if (isMobile) setShowChat(true);
+      } else if (response.message) {
+        showError(response.message);
       }
     } catch (error) {
       console.error("Failed to create group:", error);
+      showError("Failed to create group");
     }
   };
 
@@ -520,10 +545,13 @@ export default function ChatPage() {
       });
       if (response.success && response.data) {
         setMembersRoom(response.data);
+      } else if (response.message) {
+        showError(response.message);
       }
       handleCloseAddMembers();
     } catch (error) {
       console.error("Failed to add participants:", error);
+      showError("Failed to add participants");
     } finally {
       setAddingMembers(false);
     }
@@ -539,10 +567,12 @@ export default function ChatPage() {
         setMembersRoom(response.data);
       } else {
         setMembersRoom(null);
+        if (response.message) showError(response.message);
       }
     } catch (error) {
       console.error("Failed to load group members:", error);
       setMembersRoom(null);
+      showError("Failed to load group members");
     } finally {
       setMembersLoading(false);
     }
@@ -577,7 +607,7 @@ export default function ChatPage() {
                 </div>
                 <button
                   onClick={refreshData}
-                  className="p-2 rounded-md border border-slate-200 hover:bg-slate-50"
+                  className="p-2 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer"
                   aria-label="Refresh"
                 >
                   <ArrowPathIcon className="w-4 h-4 text-slate-600" />
@@ -664,7 +694,7 @@ export default function ChatPage() {
                 </span>
                 <button
                   onClick={refreshData}
-                  className="p-2 rounded-md border border-slate-200 hover:bg-slate-50"
+                  className="p-2 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer"
                   aria-label="Refresh"
                 >
                   <ArrowPathIcon className="w-4 h-4 text-slate-600" />

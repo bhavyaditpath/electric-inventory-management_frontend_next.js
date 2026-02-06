@@ -129,7 +129,7 @@ export default function ChatComposer({
                 <img
                   src={file.url}
                   alt={file.name}
-                  className="h-20 w-20 object-cover"
+                  className="h-20 w-20 object-cover cursor-pointer"
                   onClick={() => onOpenLightbox(file.url, file.name)}
                 />
               ) : (
@@ -139,7 +139,7 @@ export default function ChatComposer({
               )}
               <button
                 onClick={() => handleRemoveFile(index)}
-                className="absolute top-1 right-1 h-5 w-5 rounded-full bg-white/90 text-slate-600 text-xs hover:bg-white"
+                className="absolute top-1 right-1 h-5 w-5 rounded-full bg-white/90 text-slate-600 text-xs hover:bg-white cursor-pointer"
                 aria-label="Remove file"
               >
                 x
@@ -159,7 +159,7 @@ export default function ChatComposer({
         />
         <button
           onClick={handlePickFiles}
-          className="p-2.5 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50"
+          className="p-2.5 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer"
           aria-label="Attach files"
         >
           <PaperClipIcon className="w-4 h-4" />
@@ -178,7 +178,7 @@ export default function ChatComposer({
         />
         <button
           onClick={handleSend}
-          className="p-2.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+          className="p-2.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors cursor-pointer"
           aria-label="Send message"
         >
           <PaperAirplaneIcon className="w-4 h-4" />

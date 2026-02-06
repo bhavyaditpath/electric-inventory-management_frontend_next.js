@@ -33,7 +33,7 @@ export default function MembersModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-slate-100 text-slate-600"
+            className="p-2 rounded-full hover:bg-slate-100 text-slate-600 cursor-pointer"
             aria-label="Close"
           >
             x
@@ -79,14 +79,14 @@ export default function MembersModal({
           {room?.isGroupChat && (
             <button
               onClick={onOpenAddMembers}
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+              className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 cursor-pointer"
             >
               Add members
             </button>
           )}
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50"
+            className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 cursor-pointer"
           >
             Close
           </button>

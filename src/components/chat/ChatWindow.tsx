@@ -84,7 +84,7 @@ export default function ChatWindow({
             {isMobile && onBack && (
               <button
                 onClick={onBack}
-                className="p-2 rounded-full hover:bg-blue-50 text-slate-600"
+                className="p-2 rounded-full hover:bg-blue-50 text-slate-600 cursor-pointer"
                 aria-label="Back to chats"
               >
                 <span className="sr-only">Back</span>
@@ -104,12 +104,12 @@ export default function ChatWindow({
             {room.isGroupChat && (
               <button
                 onClick={onOpenMembers}
-                className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-full border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-full border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 cursor-pointer"
               >
                 Members
               </button>
             )}
-            <button className="p-2 rounded-full hover:bg-slate-100 text-slate-500">
+            <button className="p-2 rounded-full hover:bg-slate-100 text-slate-500 cursor-pointer">
               <EllipsisHorizontalIcon className="w-5 h-5" />
             </button>
           </div>
@@ -118,7 +118,7 @@ export default function ChatWindow({
           <div className="mt-2 sm:hidden">
             <button
               onClick={onOpenMembers}
-              className="text-xs font-medium text-blue-600 hover:text-blue-700"
+              className="text-xs font-medium text-blue-600 hover:text-blue-700 cursor-pointer"
             >
               View members
             </button>
