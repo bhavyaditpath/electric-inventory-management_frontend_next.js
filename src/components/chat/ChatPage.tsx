@@ -12,6 +12,7 @@ import { ArrowPathIcon, SignalIcon } from "@heroicons/react/24/outline";
 import CreateGroupModal from "./CreateGroupModal";
 import MembersModal from "./MembersModal";
 import AddMembersModal from "./AddMembersModal";
+import ConfirmDeleteModal from "./ConfirmDeleteModal";
 
 export default function ChatPage() {
   const { user } = useAuth();
@@ -37,6 +38,11 @@ export default function ChatPage() {
   const [addingMembers, setAddingMembers] = useState(false);
   const [membersLoading, setMembersLoading] = useState(false);
   const [membersRoom, setMembersRoom] = useState<ChatRoom | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{
+    type: "room" | "message";
+    id: number;
+  } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const joinedRoomRef = useRef<number | null>(null);
   const activeRoomIdRef = useRef<number | null>(null);
   const typingTimersRef = useRef<Map<number, NodeJS.Timeout>>(new Map());
@@ -335,7 +341,7 @@ export default function ChatPage() {
 
   const handleDeleteRoom = useCallback(
     async (roomId: number) => {
-      if (!window.confirm("Delete this chat room?")) return;
+      setDeleteLoading(true);
       try {
         const response = await chatApi.deleteRoom(roomId);
         if (response.success) {
@@ -347,6 +353,8 @@ export default function ChatPage() {
         }
       } catch (error) {
         console.error("Failed to delete room:", error);
+      } finally {
+        setDeleteLoading(false);
       }
     },
     [activeRoomId]
@@ -354,7 +362,7 @@ export default function ChatPage() {
 
   const handleDeleteMessage = useCallback(
     async (messageId: number) => {
-      if (!window.confirm("Delete this message?")) return;
+      setDeleteLoading(true);
       try {
         const response = await chatApi.deleteMessage(messageId);
         if (response.success) {
@@ -363,10 +371,35 @@ export default function ChatPage() {
         }
       } catch (error) {
         console.error("Failed to delete message:", error);
+      } finally {
+        setDeleteLoading(false);
       }
     },
     [fetchRooms]
   );
+
+  const requestDeleteRoom = useCallback((roomId: number) => {
+    setConfirmDelete({ type: "room", id: roomId });
+  }, []);
+
+  const requestDeleteMessage = useCallback((messageId: number) => {
+    setConfirmDelete({ type: "message", id: messageId });
+  }, []);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!confirmDelete) return;
+    if (confirmDelete.type === "room") {
+      await handleDeleteRoom(confirmDelete.id);
+    } else {
+      await handleDeleteMessage(confirmDelete.id);
+    }
+    setConfirmDelete(null);
+  }, [confirmDelete, handleDeleteMessage, handleDeleteRoom]);
+
+  const handleCloseDelete = useCallback(() => {
+    if (deleteLoading) return;
+    setConfirmDelete(null);
+  }, [deleteLoading]);
 
   const handleTypingStatus = useCallback(
     (isTyping: boolean) => {
@@ -565,7 +598,7 @@ export default function ChatPage() {
                 onSelectRoom={handleSelectRoom}
                 onSelectUser={handleSelectUser}
                 onPinRoom={handlePinRoom}
-                onDeleteRoom={handleDeleteRoom}
+                onDeleteRoom={requestDeleteRoom}
               />
             </div>
           )}
@@ -584,7 +617,7 @@ export default function ChatPage() {
                 isMobile
                 onBack={handleBackToList}
                 onOpenMembers={openMembers}
-                onDeleteMessage={handleDeleteMessage}
+                onDeleteMessage={requestDeleteMessage}
               />
             </div>
           )}
@@ -606,7 +639,7 @@ export default function ChatPage() {
             onSelectRoom={handleSelectRoom}
             onSelectUser={handleSelectUser}
             onPinRoom={handlePinRoom}
-            onDeleteRoom={handleDeleteRoom}
+            onDeleteRoom={requestDeleteRoom}
           />
 
           <div className="flex-1 flex flex-col min-h-0">
@@ -649,7 +682,7 @@ export default function ChatPage() {
               onSendMessage={handleSendMessage}
               onTyping={handleTypingStatus}
               onOpenMembers={openMembers}
-              onDeleteMessage={handleDeleteMessage}
+              onDeleteMessage={requestDeleteMessage}
             />
           </div>
         </div>
@@ -689,6 +722,24 @@ export default function ChatPage() {
         onToggleUser={toggleAddMemberUser}
         onClose={handleCloseAddMembers}
         onAdd={handleAddMembers}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={!!confirmDelete}
+        title={
+          confirmDelete?.type === "room"
+            ? "Delete chat room"
+            : "Delete message"
+        }
+        description={
+          confirmDelete?.type === "room"
+            ? "This will permanently delete the chat room and its messages."
+            : "This will permanently delete the selected message."
+        }
+        confirmLabel="Delete"
+        isLoading={deleteLoading}
+        onConfirm={handleConfirmDelete}
+        onClose={handleCloseDelete}
       />
     </div>
   );

@@ -77,40 +77,10 @@ export default function ChatMessageList({
             >
               <div
                 className={`max-w-[50%] w-fit rounded-2xl px-4 py-2 text-sm shadow-sm ${isMe
-                    ? "bg-blue-600 text-white rounded-br-md"
-                    : "bg-white text-slate-800 border border-slate-200 rounded-bl-md"
+                  ? "bg-blue-600 text-white rounded-br-md"
+                  : "bg-white text-slate-800 border border-slate-200 rounded-bl-md"
                   }`}
               >
-                {canDelete && (
-                  <div className="flex justify-end relative">
-                    <button
-                      onClick={() =>
-                        setOpenMenuMessageId((prev) =>
-                          prev === message.id ? null : message.id
-                        )
-                      }
-                      className={`p-1 rounded-full ${isMe ? "text-blue-100 hover:text-white" : "text-slate-400 hover:text-slate-600"
-                        }`}
-                      aria-label="Message actions"
-                    >
-                      <EllipsisHorizontalIcon className="w-4 h-4" />
-                    </button>
-                    {openMenuMessageId === message.id && (
-                      <div className="absolute right-0 top-6 w-32 rounded-lg border border-slate-200 bg-white shadow-lg z-10">
-                        <button
-                          onClick={() => {
-                            onDeleteMessage?.(message.id);
-                            setOpenMenuMessageId(null);
-                          }}
-                          className="w-full px-3 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2"
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
                 {hasText(message.content) && (
                   <p className="text-sm leading-relaxed break-words">
                     {message.content}
@@ -121,7 +91,6 @@ export default function ChatMessageList({
                     {message.attachments.map((attachment) => {
                       const fileUrl = resolveAttachmentUrl(attachment.url);
                       const extension = getFileExtension(attachment.fileName);
-                      const accent = getFileAccent(extension);
                       const isImage = isImageAttachment(attachment.mimeType);
 
                       if (isImage) {
@@ -167,15 +136,47 @@ export default function ChatMessageList({
                     })}
                   </div>
                 )}
-                <p
-                  className={`text-[10px] mt-0 ${isMe ? "text-blue-100" : "text-slate-400"
-                    }`}
-                >
-                  {new Date(message.createdAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
+                <div className="flex items-center justify-between gap-2">
+                  <p
+                    className={`text-[10px] mt-0 ${isMe ? "text-blue-100" : "text-slate-400"
+                      }`}
+                  >
+                    {new Date(message.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                  {canDelete && (
+                    <div className="flex justify-end relative">
+                      <button
+                        onClick={() =>
+                          setOpenMenuMessageId((prev) =>
+                            prev === message.id ? null : message.id
+                          )
+                        }
+                        className={`p-1 rounded-full ${isMe ? "text-blue-100 hover:text-white" : "text-slate-400 hover:text-slate-600"
+                          }`}
+                        aria-label="Message actions"
+                      >
+                        <EllipsisHorizontalIcon className="w-4 h-4" />
+                      </button>
+                      {openMenuMessageId === message.id && (
+                        <div className="absolute right-0 top-6 w-32 rounded-lg border border-slate-200 bg-white shadow-lg z-10">
+                          <button
+                            onClick={() => {
+                              onDeleteMessage?.(message.id);
+                              setOpenMenuMessageId(null);
+                            }}
+                            className="w-full px-3 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           );
