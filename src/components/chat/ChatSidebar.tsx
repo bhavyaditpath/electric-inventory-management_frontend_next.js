@@ -82,6 +82,16 @@ const ChatSidebar = ({
             ) : (
               rooms.map((room) => {
                 const isActive = room.id === activeRoomId;
+                const lastMessageLabel = (() => {
+                  const last = room.lastMessage;
+                  if (!last) return "No messages yet";
+                  if (last.content && last.content.trim()) return last.content;
+                  if (last.attachments && last.attachments.length > 0) {
+                    const count = last.attachments.length;
+                    return count === 1 ? "Attachment" : `${count} attachments`;
+                  }
+                  return "No messages yet";
+                })();
                 return (
                   <button
                     key={room.id}
@@ -106,7 +116,7 @@ const ChatSidebar = ({
                             {room.name}
                           </p>
                           <p className="text-xs text-slate-500 truncate">
-                            {room.lastMessage?.content || "No messages yet"}
+                            {lastMessageLabel}
                           </p>
                         </div>
                       </div>

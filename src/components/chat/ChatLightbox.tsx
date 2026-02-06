@@ -1,11 +1,26 @@
 "use client";
 
+import { useEffect } from "react";
+
 interface ChatLightboxProps {
   lightbox: { url: string; name: string } | null;
   onClose: () => void;
 }
 
 export default function ChatLightbox({ lightbox, onClose }: ChatLightboxProps) {
+  useEffect(() => {
+    if (!lightbox) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightbox, onClose]);
+
   if (!lightbox) return null;
 
   return (
