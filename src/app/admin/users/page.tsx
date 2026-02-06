@@ -11,7 +11,7 @@ import ConfirmModal from "@/components/ConfirmModal";
 import InputField from "@/components/InputField";
 import { UserRole } from "@/types/enums";
 import { showSuccess, showError } from "@/Services/toast.service";
-import { User, PaginatedResponse } from "@/types/api-types";
+import { User, Branch, PaginatedResponse } from "@/types/api-types";
 
 export default function UserPage() {
     const [users, setUsers] = useState<User[]>([]);
@@ -21,7 +21,7 @@ export default function UserPage() {
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deletingUser, setDeletingUser] = useState<User | null>(null);
-    const [branches, setBranches] = useState<{ id: number; name: string }[]>([]);
+    const [branches, setBranches] = useState<Branch[]>([]);
     const [formData, setFormData] = useState({ username: '', password: '', role: UserRole.BRANCH, branchId: 0 });
     const [errors, setErrors] = useState({ username: '', password: '', branchId: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,8 +41,10 @@ export default function UserPage() {
     const loadBranches = useCallback(async () => {
         if (branches.length > 0) return;
         const response = await branchApi.getAll();
-        if (response.success && Array.isArray(response.data)) {
-            setBranches(response.data);
+        if (response.success) {
+            const data = response.data;
+            const paginatedData = data as PaginatedResponse<Branch>;
+            setBranches(paginatedData.items);
         }
     }, [branches]);
 

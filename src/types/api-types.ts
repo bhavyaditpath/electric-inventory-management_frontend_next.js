@@ -15,6 +15,18 @@ export interface User {
     isRemoved: boolean;
 }
 
+export interface Branch {
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: number | null;
+  updatedBy: number | null;
+  isRemoved: boolean;
+  name: string;
+  address: string;
+  phone: string;
+}
+
 // Generic pagination response interface for reuse across modules
 export interface PaginatedResponse<T> {
   items: T[];
