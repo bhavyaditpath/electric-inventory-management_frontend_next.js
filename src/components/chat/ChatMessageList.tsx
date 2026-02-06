@@ -9,6 +9,7 @@ interface ChatMessageListProps {
   currentUserId?: number;
   typingUsers: ChatUser[];
   isLoading?: boolean;
+  isGroupChat?: boolean;
   bottomRef: React.RefObject<HTMLDivElement | null>;
   resolveAttachmentUrl: (url: string) => string;
   onOpenLightbox: (url: string, name: string) => void;
@@ -21,6 +22,7 @@ export default function ChatMessageList({
   currentUserId,
   typingUsers,
   isLoading,
+  isGroupChat,
   bottomRef,
   resolveAttachmentUrl,
   onOpenLightbox,
@@ -70,6 +72,7 @@ export default function ChatMessageList({
         messages.map((message) => {
           const isMe = message.senderId === currentUserId;
           const canDelete = !!onDeleteMessage && (isMe || isAdmin);
+          const senderName = message.sender?.username || "Unknown";
           return (
             <div
               key={message.id}
@@ -81,6 +84,14 @@ export default function ChatMessageList({
                   : "bg-white text-slate-800 border border-slate-200 rounded-bl-md"
                   }`}
               >
+                {isGroupChat && (
+                  <p
+                    className={`text-[11px] font-semibold mb-1 ${isMe ? "text-blue-100" : "text-slate-500"
+                      }`}
+                  >
+                    {senderName}
+                  </p>
+                )}
                 {hasText(message.content) && (
                   <p className="text-sm leading-relaxed break-words">
                     {message.content}

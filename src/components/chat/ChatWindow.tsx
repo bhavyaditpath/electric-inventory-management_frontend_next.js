@@ -131,6 +131,7 @@ export default function ChatWindow({
         currentUserId={currentUserId}
         typingUsers={typingUsers}
         isLoading={isLoading}
+        isGroupChat={room.isGroupChat}
         bottomRef={bottomRef}
         resolveAttachmentUrl={resolveAttachmentUrl}
         onOpenLightbox={(url, name) => setLightbox({ url, name })}
