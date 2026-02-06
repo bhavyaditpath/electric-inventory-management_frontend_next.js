@@ -21,6 +21,7 @@ export interface ChatRoom {
   updatedAt?: string;
   lastMessage?: ChatMessage | null;
   unreadCount?: number;
+  pinned?: boolean;
 }
 
 export interface ChatMessage {

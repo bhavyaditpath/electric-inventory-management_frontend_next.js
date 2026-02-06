@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ChatMessage, ChatUser } from "@/types/chat.types";
+import { EllipsisHorizontalIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 interface ChatMessageListProps {
   messages: ChatMessage[];
@@ -11,6 +12,8 @@ interface ChatMessageListProps {
   bottomRef: React.RefObject<HTMLDivElement | null>;
   resolveAttachmentUrl: (url: string) => string;
   onOpenLightbox: (url: string, name: string) => void;
+  isAdmin?: boolean;
+  onDeleteMessage?: (messageId: number) => void;
 }
 
 export default function ChatMessageList({
@@ -21,7 +24,13 @@ export default function ChatMessageList({
   bottomRef,
   resolveAttachmentUrl,
   onOpenLightbox,
+  isAdmin,
+  onDeleteMessage,
 }: ChatMessageListProps) {
+  const [openMenuMessageId, setOpenMenuMessageId] = useState<number | null>(
+    null
+  );
+
   const getFileExtension = (name: string) => {
     const parts = name.split(".");
     if (parts.length < 2) return "FILE";
@@ -56,82 +65,51 @@ export default function ChatMessageList({
       ) : (
         messages.map((message) => {
           const isMe = message.senderId === currentUserId;
+          const canDelete = !!onDeleteMessage && (isMe || isAdmin);
           return (
             <div
               key={message.id}
               className={`flex ${isMe ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[50%] w-fit rounded-2xl px-4 py-2 text-sm shadow-sm ${
-                  isMe
+                className={`max-w-[50%] w-fit rounded-2xl px-4 py-2 text-sm shadow-sm ${isMe
                     ? "bg-blue-600 text-white rounded-br-md"
                     : "bg-white text-slate-800 border border-slate-200 rounded-bl-md"
-                }`}
+                  }`}
               >
-                {message.content?.trim() && (
-                  <p className="whitespace-pre-wrap break-words">
-                    {message.content}
-                  </p>
-                )}
-                {message.attachments && message.attachments.length > 0 && (
-                  <div className="mt-2 space-y-2">
-                    <div className="space-y-2">
-                      {message.attachments.map((attachment) => {
-                        const isImage = attachment.mimeType.startsWith("image/");
-                        const url = resolveAttachmentUrl(attachment.url);
-                        const ext = getFileExtension(attachment.fileName || "");
-                        const accent = getFileAccent(ext);
-                        return (
-                          isImage ? (
-                            <div
-                              key={attachment.id}
-                              className={`rounded-lg border ${
-                                isMe
-                                  ? "border-blue-500/40"
-                                  : "border-slate-200"
-                              } bg-white/80`}
-                            >
-                              <img
-                                src={url}
-                                alt={attachment.fileName}
-                                className="h-28 w-full object-cover rounded-lg"
-                                loading="lazy"
-                                onClick={() =>
-                                  onOpenLightbox(url, attachment.fileName)
-                                }
-                              />
-                            </div>
-                          ) : (
-                            <a
-                              key={attachment.id}
-                              href={url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className={`flex items-center gap-3 rounded-lg border ${
-                                isMe
-                                  ? "border-blue-500/40"
-                                  : "border-slate-200"
-                              } bg-white/80 px-3 py-2 text-xs text-slate-700 hover:text-slate-900`}
-                            >
-                              <span
-                                className={`inline-flex h-9 w-9 items-center justify-center rounded-md border text-[10px] font-semibold ${accent}`}
-                              >
-                                {ext}
-                              </span>
-                              <span className="line-clamp-2">
-                                {attachment.fileName}
-                              </span>
-                            </a>
-                          )
-                        );
-                      })}
-                    </div>
+                {canDelete && (
+                  <div className="flex justify-end relative">
+                    <button
+                      onClick={() =>
+                        setOpenMenuMessageId((prev) =>
+                          prev === message.id ? null : message.id
+                        )
+                      }
+                      className={`p-1 rounded-full ${isMe ? "text-blue-100 hover:text-white" : "text-slate-400 hover:text-slate-600"
+                        }`}
+                      aria-label="Message actions"
+                    >
+                      <EllipsisHorizontalIcon className="w-4 h-4" />
+                    </button>
+                    {openMenuMessageId === message.id && (
+                      <div className="absolute right-0 top-6 w-32 rounded-lg border border-slate-200 bg-white shadow-lg z-10">
+                        <button
+                          onClick={() => {
+                            onDeleteMessage?.(message.id);
+                            setOpenMenuMessageId(null);
+                          }}
+                          className="w-full px-3 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
                 <p
-                  className={`text-[10px] mt-0 ${
-                    isMe ? "text-blue-100" : "text-slate-400"
-                  }`}
+                  className={`text-[10px] mt-0 ${isMe ? "text-blue-100" : "text-slate-400"
+                    }`}
                 >
                   {new Date(message.createdAt).toLocaleTimeString([], {
                     hour: "2-digit",

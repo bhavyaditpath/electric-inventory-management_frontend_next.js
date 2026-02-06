@@ -17,10 +17,12 @@ interface ChatWindowProps {
   typingUsers: ChatUser[];
   isLoading?: boolean;
   isMobile?: boolean;
+  isAdmin?: boolean;
   onBack?: () => void;
   onOpenMembers?: () => void;
   onSendMessage: (content: string, files?: File[]) => void;
   onTyping: (isTyping: boolean) => void;
+  onDeleteMessage?: (messageId: number) => void;
 }
 
 export default function ChatWindow({
@@ -30,10 +32,12 @@ export default function ChatWindow({
   typingUsers,
   isLoading,
   isMobile,
+  isAdmin,
   onBack,
   onOpenMembers,
   onSendMessage,
   onTyping,
+  onDeleteMessage,
 }: ChatWindowProps) {
   const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(
     null
@@ -130,6 +134,8 @@ export default function ChatWindow({
         bottomRef={bottomRef}
         resolveAttachmentUrl={resolveAttachmentUrl}
         onOpenLightbox={(url, name) => setLightbox({ url, name })}
+        isAdmin={isAdmin}
+        onDeleteMessage={onDeleteMessage}
       />
 
       <ChatComposer

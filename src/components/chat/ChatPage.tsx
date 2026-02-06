@@ -182,6 +182,17 @@ export default function ChatPage() {
     markAsRead,
   } = useChatWebSocket({
     onMessage: handleIncomingMessage,
+    onMessageDeleted: (payload) => {
+      setMessages((prev) => prev.filter((m) => m.id !== payload.id));
+      setRooms((prev) =>
+        prev.map((room) =>
+          room.id === payload.chatRoomId
+            ? { ...room, lastMessage: null }
+            : room
+        )
+      );
+      fetchRooms();
+    },
     onTyping: handleTyping,
     onUserOnline: handleUserOnline,
     onUserOffline: handleUserOffline,
@@ -289,6 +300,72 @@ export default function ChatPage() {
       }
     },
     [activeRoomId, handleIncomingMessage, isConnected, sendMessage]
+  );
+
+  const sortRooms = useCallback((list: ChatRoom[]) => {
+    return [...list].sort((a, b) => {
+      const ap = a.pinned ? 0 : 1;
+      const bp = b.pinned ? 0 : 1;
+      if (ap !== bp) return ap - bp;
+      const ad = a.updatedAt ? Date.parse(a.updatedAt) : 0;
+      const bd = b.updatedAt ? Date.parse(b.updatedAt) : 0;
+      return bd - ad;
+    });
+  }, []);
+
+  const handlePinRoom = useCallback(
+    async (roomId: number, pinned: boolean) => {
+      try {
+        const response = await chatApi.pinRoom(roomId, { pinned });
+        if (response.success) {
+          setRooms((prev) =>
+            sortRooms(
+              prev.map((room) =>
+                room.id === roomId ? { ...room, pinned } : room
+              )
+            )
+          );
+        }
+      } catch (error) {
+        console.error("Failed to update pin:", error);
+      }
+    },
+    [sortRooms]
+  );
+
+  const handleDeleteRoom = useCallback(
+    async (roomId: number) => {
+      if (!window.confirm("Delete this chat room?")) return;
+      try {
+        const response = await chatApi.deleteRoom(roomId);
+        if (response.success) {
+          setRooms((prev) => prev.filter((room) => room.id !== roomId));
+          if (activeRoomId === roomId) {
+            setActiveRoomId(null);
+            setMessages([]);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to delete room:", error);
+      }
+    },
+    [activeRoomId]
+  );
+
+  const handleDeleteMessage = useCallback(
+    async (messageId: number) => {
+      if (!window.confirm("Delete this message?")) return;
+      try {
+        const response = await chatApi.deleteMessage(messageId);
+        if (response.success) {
+          setMessages((prev) => prev.filter((m) => m.id !== messageId));
+          fetchRooms();
+        }
+      } catch (error) {
+        console.error("Failed to delete message:", error);
+      }
+    },
+    [fetchRooms]
   );
 
   const handleTypingStatus = useCallback(
@@ -487,6 +564,8 @@ export default function ChatPage() {
                 onTabChange={setActiveTab}
                 onSelectRoom={handleSelectRoom}
                 onSelectUser={handleSelectUser}
+                onPinRoom={handlePinRoom}
+                onDeleteRoom={handleDeleteRoom}
               />
             </div>
           )}
@@ -499,11 +578,13 @@ export default function ChatPage() {
                 currentUserId={user?.id}
                 typingUsers={typingUsers}
                 isLoading={loadingMessages}
+                isAdmin={isAdmin}
                 onSendMessage={handleSendMessage}
                 onTyping={handleTypingStatus}
                 isMobile
                 onBack={handleBackToList}
                 onOpenMembers={openMembers}
+                onDeleteMessage={handleDeleteMessage}
               />
             </div>
           )}
@@ -524,6 +605,8 @@ export default function ChatPage() {
             onTabChange={setActiveTab}
             onSelectRoom={handleSelectRoom}
             onSelectUser={handleSelectUser}
+            onPinRoom={handlePinRoom}
+            onDeleteRoom={handleDeleteRoom}
           />
 
           <div className="flex-1 flex flex-col min-h-0">
@@ -562,9 +645,11 @@ export default function ChatPage() {
               currentUserId={user?.id}
               typingUsers={typingUsers}
               isLoading={loadingMessages}
+              isAdmin={isAdmin}
               onSendMessage={handleSendMessage}
               onTyping={handleTypingStatus}
               onOpenMembers={openMembers}
+              onDeleteMessage={handleDeleteMessage}
             />
           </div>
         </div>

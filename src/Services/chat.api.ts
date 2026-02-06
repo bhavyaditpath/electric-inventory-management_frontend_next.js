@@ -21,6 +21,10 @@ export interface AddParticipantsPayload {
   participantIds: number[];
 }
 
+export interface PinRoomPayload {
+  pinned: boolean;
+}
+
 export const chatApi = {
   createRoom: (payload: CreateChatRoomPayload) =>
     apiClient.post<ChatRoom>("/chat/rooms", payload),
@@ -44,6 +48,9 @@ export const chatApi = {
   addParticipants: (roomId: number, payload: AddParticipantsPayload) =>
     apiClient.post<ChatRoom>(`/chat/rooms/${roomId}/participants`, payload),
 
+  pinRoom: (roomId: number, payload: PinRoomPayload) =>
+    apiClient.post<{ pinned: boolean }>(`/chat/rooms/${roomId}/pin`, payload),
+
   sendMessage: (payload: SendMessagePayload, files?: File[]) => {
     if (files && files.length > 0) {
       const formData = new FormData();
@@ -64,4 +71,10 @@ export const chatApi = {
 
   markAsRead: (roomId: number) =>
     apiClient.post<null>(`/chat/rooms/${roomId}/read`, {}),
+
+  deleteMessage: (messageId: number) =>
+    apiClient.delete<null>(`/chat/messages/${messageId}`),
+
+  deleteRoom: (roomId: number) =>
+    apiClient.delete<null>(`/chat/rooms/${roomId}`),
 };

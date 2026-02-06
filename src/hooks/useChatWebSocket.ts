@@ -18,6 +18,7 @@ interface UserStatusPayload {
 
 interface UseChatWebSocketOptions {
   onMessage?: (message: ChatMessage) => void;
+  onMessageDeleted?: (payload: { id: number; chatRoomId: number }) => void;
   onTyping?: (payload: TypingPayload) => void;
   onUserOnline?: (userId: number) => void;
   onUserOffline?: (userId: number) => void;
@@ -50,6 +51,9 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions = {}) => {
     socket.on("disconnect", () => setIsConnected(false));
     socket.on("newMessage", (message: ChatMessage) => {
       handlersRef.current.onMessage?.(message);
+    });
+    socket.on("messageDeleted", (payload: { id: number; chatRoomId: number }) => {
+      handlersRef.current.onMessageDeleted?.(payload);
     });
     socket.on("userTyping", (payload: TypingPayload) => {
       handlersRef.current.onTyping?.(payload);
