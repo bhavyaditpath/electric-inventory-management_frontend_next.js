@@ -25,6 +25,11 @@ export interface PinRoomPayload {
   pinned: boolean;
 }
 
+export interface RemoveParticipantPayload {
+  userId?: number;
+  newAdminId?: number;
+}
+
 export const chatApi = {
   createRoom: (payload: CreateChatRoomPayload) =>
     apiClient.post<ChatRoom>("/chat/rooms", payload),
@@ -47,6 +52,9 @@ export const chatApi = {
 
   addParticipants: (roomId: number, payload: AddParticipantsPayload) =>
     apiClient.post<ChatRoom>(`/chat/rooms/${roomId}/participants`, payload),
+
+  removeParticipant: (roomId: number, payload: RemoveParticipantPayload) =>
+    apiClient.post<null>(`/chat/rooms/${roomId}/participants/remove`, payload),
 
   pinRoom: (roomId: number, payload: PinRoomPayload) =>
     apiClient.post<{ pinned: boolean }>(`/chat/rooms/${roomId}/pin`, payload),

@@ -6,6 +6,8 @@ interface MembersModalProps {
   isOpen: boolean;
   room: ChatRoom | null;
   isLoading: boolean;
+  currentUserId?: number;
+  onRequestRemove?: (userId: number) => void;
   onClose: () => void;
   onOpenAddMembers: () => void;
 }
@@ -14,10 +16,17 @@ export default function MembersModal({
   isOpen,
   room,
   isLoading,
+  currentUserId,
+  onRequestRemove,
   onClose,
   onOpenAddMembers,
 }: MembersModalProps) {
   if (!isOpen) return null;
+  const isGroupAdmin = !!room && room.createdBy === currentUserId;
+  const canLeaveGroup =
+    !!room?.isGroupChat &&
+    !!currentUserId &&
+    !!room?.participants?.some((p) => p.userId === currentUserId);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4">
@@ -66,6 +75,23 @@ export default function MembersModal({
                       })()}
                     </p>
                   </div>
+                  {(room.createdBy
+                    ? room.createdBy === p.userId
+                    : (p.user?.role || "").toLowerCase() === "admin") && (
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                      Admin
+                    </span>
+                  )}
+                  {isGroupAdmin &&
+                    p.userId !== currentUserId &&
+                    room.isGroupChat && (
+                      <button
+                        onClick={() => onRequestRemove?.(p.userId)}
+                        className="text-xs font-medium text-rose-600 hover:text-rose-700 cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    )}
                 </div>
               ))}
             </div>
@@ -82,6 +108,14 @@ export default function MembersModal({
               className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 cursor-pointer"
             >
               Add members
+            </button>
+          )}
+          {canLeaveGroup && (
+            <button
+              onClick={() => onRequestRemove?.(currentUserId!)}
+              className="px-4 py-2 rounded-lg border border-rose-200 text-sm text-rose-600 hover:bg-rose-50 cursor-pointer"
+            >
+              Leave group
             </button>
           )}
           <button

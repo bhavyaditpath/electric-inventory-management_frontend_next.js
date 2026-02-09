@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { chatApi } from "@/Services/chat.api";
-import { showError } from "@/Services/toast.service";
+import { showError, showSuccess } from "@/Services/toast.service";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/types/enums";
 import { ChatMessage, ChatRoom, ChatUser } from "@/types/chat.types";
@@ -14,6 +14,7 @@ import CreateGroupModal from "./CreateGroupModal";
 import MembersModal from "./MembersModal";
 import AddMembersModal from "./AddMembersModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
+import RemoveParticipantModal from "./RemoveParticipantModal";
 
 export default function ChatPage() {
   const { user } = useAuth();
@@ -39,6 +40,11 @@ export default function ChatPage() {
   const [addingMembers, setAddingMembers] = useState(false);
   const [membersLoading, setMembersLoading] = useState(false);
   const [membersRoom, setMembersRoom] = useState<ChatRoom | null>(null);
+  const [removeParticipant, setRemoveParticipant] = useState<{
+    userId: number;
+  } | null>(null);
+  const [removeLoading, setRemoveLoading] = useState(false);
+  const [newAdminId, setNewAdminId] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{
     type: "room" | "message";
     id: number;
@@ -496,6 +502,13 @@ export default function ChatPage() {
     setShowAddMembers(false);
     setAddMembersSearch("");
     setSelectedAddUserIds([]);
+    setRemoveParticipant(null);
+    setNewAdminId(null);
+  }, []);
+
+  const requestRemoveParticipant = useCallback((userId: number) => {
+    setRemoveParticipant({ userId });
+    setNewAdminId(null);
   }, []);
 
   const handleBackToList = useCallback(() => {
@@ -578,6 +591,75 @@ export default function ChatPage() {
     }
   }, [activeRoomId]);
 
+  const handleRemoveParticipant = useCallback(async () => {
+    if (!activeRoomId || !removeParticipant || !user?.id) return;
+    const removingSelf = removeParticipant.userId === user.id;
+    const isGroupAdmin = membersRoom?.createdBy === user.id;
+    const adminRemovingSelf = removingSelf && isGroupAdmin;
+    const participantCount = membersRoom?.participants?.length || 0;
+
+    if (adminRemovingSelf && !newAdminId) {
+      showError("Admin must transfer admin role before leaving");
+      return;
+    }
+
+    if (adminRemovingSelf && participantCount <= 1) {
+      showError("Cannot leave the group as the only member.");
+      return;
+    }
+
+    setRemoveLoading(true);
+    try {
+      const payload: { userId?: number; newAdminId?: number } = {
+        userId: removeParticipant.userId,
+      };
+      if (adminRemovingSelf && newAdminId) {
+        payload.newAdminId = newAdminId;
+      }
+
+      const response = await chatApi.removeParticipant(activeRoomId, payload);
+      if (response.success) {
+        if (response.message) {
+          showSuccess(response.message);
+        } else {
+          showSuccess(removingSelf ? "Left the group" : "Participant removed");
+        }
+        if (removingSelf) {
+          setRooms((prev) => prev.filter((room) => room.id !== activeRoomId));
+          if (activeRoomId === activeRoomIdRef.current) {
+            setActiveRoomId(null);
+            setMessages([]);
+          }
+          setShowMembers(false);
+          setMembersRoom(null);
+        } else {
+          const refreshed = await chatApi.getRoom(activeRoomId);
+          if (refreshed.success && refreshed.data) {
+            setMembersRoom(refreshed.data);
+          }
+          fetchRooms();
+        }
+        setRemoveParticipant(null);
+        setNewAdminId(null);
+      } else if (response.message) {
+        showError(response.message);
+      } else {
+        showError("Failed to remove participant");
+      }
+    } catch (error) {
+      console.error("Failed to remove participant:", error);
+      showError("Failed to remove participant");
+    } finally {
+      setRemoveLoading(false);
+    }
+  }, [activeRoomId, fetchRooms, membersRoom?.createdBy, newAdminId, removeParticipant, user?.id]);
+
+  const handleCloseRemove = useCallback(() => {
+    if (removeLoading) return;
+    setRemoveParticipant(null);
+    setNewAdminId(null);
+  }, [removeLoading]);
+
   const activeRoom = useMemo(
     () => rooms.find((room) => room.id === activeRoomId) || null,
     [rooms, activeRoomId]
@@ -589,6 +671,9 @@ export default function ChatPage() {
   );
 
   const isAdmin = user?.role === UserRole.ADMIN;
+  const removingSelf = removeParticipant?.userId === user?.id;
+  const adminRemovingSelf =
+    removingSelf && membersRoom?.createdBy === user?.id;
 
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-slate-50">
@@ -736,6 +821,8 @@ export default function ChatPage() {
         isOpen={showMembers}
         room={membersRoom}
         isLoading={membersLoading}
+        currentUserId={user?.id}
+        onRequestRemove={requestRemoveParticipant}
         onClose={handleCloseMembers}
         onOpenAddMembers={handleOpenAddMembers}
       />
@@ -770,6 +857,33 @@ export default function ChatPage() {
         isLoading={deleteLoading}
         onConfirm={handleConfirmDelete}
         onClose={handleCloseDelete}
+      />
+
+      <RemoveParticipantModal
+        isOpen={!!removeParticipant}
+        title={
+          adminRemovingSelf
+            ? "Transfer admin and leave"
+            : removingSelf
+            ? "Leave group"
+            : "Remove participant"
+        }
+        description={
+          adminRemovingSelf
+            ? "Select a new admin before leaving this group."
+            : removingSelf
+            ? "You will be removed from this group."
+            : "This member will be removed from the group."
+        }
+        confirmLabel={adminRemovingSelf ? "Transfer & Leave" : "Remove"}
+        isLoading={removeLoading}
+        showAdminTransfer={!!adminRemovingSelf}
+        participants={membersRoom?.participants || []}
+        currentUserId={user?.id}
+        newAdminId={newAdminId}
+        onChangeNewAdminId={setNewAdminId}
+        onConfirm={handleRemoveParticipant}
+        onClose={handleCloseRemove}
       />
     </div>
   );
