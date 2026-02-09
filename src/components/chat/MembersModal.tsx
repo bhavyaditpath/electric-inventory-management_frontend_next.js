@@ -22,7 +22,7 @@ export default function MembersModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-md bg-white rounded-t-xl sm:rounded-xl shadow-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+        <div className="px-5 py-2 border-b border-slate-200 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-slate-900">
               Group members
@@ -39,7 +39,7 @@ export default function MembersModal({
             x
           </button>
         </div>
-        <div className="px-5 py-4 max-h-72 overflow-y-auto">
+        <div className="max-h-72 overflow-y-auto">
           {isLoading ? (
             <div className="text-sm text-slate-500 text-center py-6">
               Loading members...
@@ -47,7 +47,7 @@ export default function MembersModal({
           ) : room?.participants?.length ? (
             <div className="divide-y divide-slate-200">
               {room.participants.map((p) => (
-                <div key={p.userId} className="py-3 flex items-center gap-3">
+                <div key={p.userId} className="py-3 px-5 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-semibold">
                     {(p.user?.username || "U").slice(0, 1).toUpperCase()}
                   </div>

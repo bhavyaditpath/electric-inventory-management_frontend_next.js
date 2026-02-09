@@ -154,7 +154,10 @@ const ChatSidebar = ({
                       </div>
                       <div className="flex items-center gap-2">
                         {(onPinRoom || onDeleteRoom) && (
-                          <div className="relative" ref={menuRef}>
+                          <div
+                            className="relative"
+                            ref={openMenuRoomId === room.id ? menuRef : null}
+                          >
                             <button
                               onClick={(event) => {
                                 event.stopPropagation();

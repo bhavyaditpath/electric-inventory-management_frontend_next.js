@@ -26,7 +26,7 @@ export default function ConfirmDeleteModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+        <div className="px-5 py-3 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
             <p className="text-xs text-slate-500">{description}</p>
@@ -40,17 +40,17 @@ export default function ConfirmDeleteModal({
             x
           </button>
         </div>
-        <div className="px-5 py-4 border-t border-slate-200 flex items-center justify-end gap-2">
+        <div className="px-5 py-2 flex items-center justify-end gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 cursor-pointer"
+            className="px-3 py-1 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 cursor-pointer"
             disabled={isLoading}
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 rounded-lg bg-rose-600 text-white text-sm font-medium hover:bg-rose-700 cursor-pointer"
+            className="px-3 py-1 rounded-lg bg-rose-600 text-white text-sm font-medium hover:bg-rose-700 cursor-pointer"
             disabled={isLoading}
           >
             {isLoading ? "Deleting..." : confirmLabel}
