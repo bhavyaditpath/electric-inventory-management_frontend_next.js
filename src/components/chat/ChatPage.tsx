@@ -141,12 +141,13 @@ export default function ChatPage() {
         fetchRooms();
         return prev;
       }
-      return prev.map((room) => {
+      const next = prev.map((room) => {
         if (room.id !== message.chatRoomId) return room;
         const unreadCount =
           currentRoomId === room.id ? 0 : (room.unreadCount || 0) + 1;
         return { ...room, lastMessage: message, unreadCount };
       });
+      return sortRooms(next);
     });
   }, [fetchRooms]);
 
@@ -332,9 +333,18 @@ export default function ChatPage() {
       const ap = a.pinned ? 0 : 1;
       const bp = b.pinned ? 0 : 1;
       if (ap !== bp) return ap - bp;
+      const aHasMessage = !!a.lastMessage;
+      const bHasMessage = !!b.lastMessage;
+      if (aHasMessage !== bHasMessage) return aHasMessage ? -1 : 1;
+      if (aHasMessage && bHasMessage) {
+        const aTime = Date.parse(a.lastMessage!.createdAt);
+        const bTime = Date.parse(b.lastMessage!.createdAt);
+        if (aTime !== bTime) return bTime - aTime;
+      }
       const ad = a.updatedAt ? Date.parse(a.updatedAt) : 0;
       const bd = b.updatedAt ? Date.parse(b.updatedAt) : 0;
-      return bd - ad;
+      if (ad !== bd) return bd - ad;
+      return b.id - a.id;
     });
   }, []);
 
