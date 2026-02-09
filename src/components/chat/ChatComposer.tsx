@@ -117,13 +117,13 @@ export default function ChatComposer({
   }, [previewFiles]);
 
   return (
-    <div className="sticky bottom-0 z-10 px-3 sm:px-4 py-3 sm:py-4 border-t border-slate-200 bg-white">
+    <div className="sticky bottom-0 z-10 px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-200 bg-white/95">
       {previewFiles.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-2">
           {previewFiles.map((file, index) => (
             <div
               key={file.id}
-              className="relative border border-slate-200 rounded-lg overflow-hidden bg-slate-50"
+              className="relative border border-slate-200 rounded-lg overflow-hidden bg-slate-50 shadow-sm"
             >
               {file.type.startsWith("image/") ? (
                 <img
@@ -159,7 +159,7 @@ export default function ChatComposer({
         />
         <button
           onClick={handlePickFiles}
-          className="p-2.5 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer"
+          className="p-2.5 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 cursor-pointer"
           aria-label="Attach files"
         >
           <PaperClipIcon className="w-4 h-4" />
@@ -174,11 +174,11 @@ export default function ChatComposer({
             }
           }}
           placeholder="Type a message..."
-          className="flex-1 border border-slate-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+          className="flex-1 border border-slate-200 rounded-full px-4 py-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
         />
         <button
           onClick={handleSend}
-          className="p-2.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors cursor-pointer"
+          className="p-2.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm cursor-pointer"
           aria-label="Send message"
         >
           <PaperAirplaneIcon className="w-4 h-4" />

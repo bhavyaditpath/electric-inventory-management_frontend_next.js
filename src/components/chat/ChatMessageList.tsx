@@ -79,7 +79,7 @@ export default function ChatMessageList({
   };
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-4 space-y-3 scrollbar-default">
+    <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 space-y-4 scrollbar-default bg-slate-50">
       {isLoading ? (
         <div className="text-sm text-slate-500 px-3 py-6 text-center">
           Loading messages...
@@ -99,8 +99,8 @@ export default function ChatMessageList({
               className={`flex ${isMe ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[50%] w-fit rounded-2xl px-4 py-2 text-sm shadow-sm ${isMe
-                  ? "bg-blue-600 text-white rounded-br-md"
+                className={`max-w-[75%] md:max-w-[60%] w-fit rounded-2xl px-4 py-2 text-sm shadow-sm ${isMe
+                  ? "bg-blue-600 text-white border border-blue-600 rounded-br-md"
                   : "bg-white text-slate-800 border border-slate-200 rounded-bl-md"
                   }`}
               >
@@ -131,7 +131,10 @@ export default function ChatMessageList({
                             onClick={() =>
                               onOpenLightbox(fileUrl, attachment.fileName)
                             }
-                            className="w-full overflow-hidden rounded-lg border border-white/20 cursor-pointer"
+                            className={`w-full overflow-hidden rounded-lg border cursor-pointer ${isMe
+                              ? "border-white/20"
+                              : "border-slate-200"
+                              }`}
                             aria-label={`Open ${attachment.fileName}`}
                           >
                             <img
@@ -149,7 +152,9 @@ export default function ChatMessageList({
                         return (
                           <div
                             key={attachment.id}
-                            className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${isMe ? "bg-white/10 border-white/20 text-white" : "bg-slate-50 border-slate-200 text-slate-700"
+                            className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${isMe
+                              ? "bg-white/10 border-white/20 text-white"
+                              : "bg-slate-50 border-slate-200 text-slate-700"
                               }`}
                           >
                             <a
@@ -176,14 +181,16 @@ export default function ChatMessageList({
                                     prev === attachment.id ? null : attachment.id
                                   )
                                 }
-                                className={`p-1 rounded-full cursor-pointer ${isMe ? "text-blue-100 hover:text-white" : "text-slate-400 hover:text-slate-600"
+                                className={`p-1 rounded-full cursor-pointer ${isMe
+                                  ? "text-blue-100 hover:text-white"
+                                  : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
                                   }`}
                                 aria-label="Attachment actions"
                               >
                                 <EllipsisHorizontalIcon className="w-4 h-4" />
                               </button>
                               {openAttachmentMenuId === attachment.id && (
-                                <div className="absolute right-0 top-6 w-32 rounded-lg border border-slate-200 bg-white shadow-lg z-10">
+                                <div className="absolute right-0 top-6 w-32 rounded-lg border border-slate-200 bg-white shadow-lg z-20">
                                   <button
                                     onClick={() => {
                                       handleDownloadAttachment(attachment);
@@ -206,7 +213,9 @@ export default function ChatMessageList({
                           href={fileUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-xs cursor-pointer ${isMe ? "bg-white border-white/20 text-white" : "bg-slate-50 border-slate-200 text-slate-700"
+                          className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-xs cursor-pointer ${isMe
+                            ? "bg-white/10 border-white/20 text-white"
+                            : "bg-slate-50 border-slate-200 text-slate-700"
                             }`}
                         >
                           <span
@@ -242,14 +251,16 @@ export default function ChatMessageList({
                           prev === message.id ? null : message.id
                         )
                       }
-                      className={`p-1 rounded-full cursor-pointer ${isMe ? "text-blue-100 hover:text-white" : "text-slate-400 hover:text-slate-600"
+                      className={`p-1 rounded-full cursor-pointer ${isMe
+                        ? "text-blue-100 hover:text-white"
+                        : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
                         }`}
                       aria-label="Message actions"
                     >
                       <EllipsisHorizontalIcon className="w-4 h-4" />
                     </button>
                       {openMenuMessageId === message.id && (
-                        <div className="absolute right-0 top-6 w-32 rounded-lg border border-slate-200 bg-white shadow-lg z-10">
+                        <div className="absolute right-0 top-6 w-32 rounded-lg border border-slate-200 bg-white shadow-lg z-20">
                           <button
                             onClick={() => {
                               onDeleteMessage?.(message.id);

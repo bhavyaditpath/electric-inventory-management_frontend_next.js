@@ -686,12 +686,12 @@ export default function ChatPage() {
     removingSelf && membersRoom?.createdBy === user?.id;
 
   return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-slate-50">
+    <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-slate-100/60">
       {isMobile ? (
         <div className="flex-1 flex flex-col min-h-0">
           {!showChat && (
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="px-4 py-2 border-b border-slate-200 bg-white flex items-center justify-between">
+              <div className="px-4 py-3 border-b border-slate-200 bg-white/95 flex items-center justify-between">
                 <div>
                   <h1 className="text-lg font-semibold text-slate-900">
                     Messages
@@ -702,7 +702,7 @@ export default function ChatPage() {
                 </div>
                 <button
                   onClick={refreshData}
-                  className="p-2 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer"
+                  className="p-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer"
                   aria-label="Refresh"
                 >
                   <ArrowPathIcon className="w-4 h-4 text-slate-600" />
@@ -768,7 +768,7 @@ export default function ChatPage() {
           />
 
           <div className="flex-1 flex flex-col min-h-0">
-            <div className="px-5 py-3 border-b border-slate-200 bg-white flex items-center justify-between">
+            <div className="px-5 py-3 border-b border-slate-200 bg-white/95 flex items-center justify-between">
               <div>
                 <h1 className="text-xl font-semibold text-slate-900">
                   Messages
@@ -789,7 +789,7 @@ export default function ChatPage() {
                 </span>
                 <button
                   onClick={refreshData}
-                  className="p-2 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer"
+                  className="p-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer"
                   aria-label="Refresh"
                 >
                   <ArrowPathIcon className="w-4 h-4 text-slate-600" />

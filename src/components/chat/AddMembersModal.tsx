@@ -32,9 +32,9 @@ export default function AddMembersModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg bg-white rounded-xl shadow-xl overflow-hidden">
-        <div className="px-5 py-2 border-b border-slate-200 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+        <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-slate-900">
               Add members
@@ -57,9 +57,9 @@ export default function AddMembersModal({
             value={search}
             onChange={(e) => onChangeSearch(e.target.value)}
             placeholder="Search users..."
-            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
           />
-          <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-lg">
+          <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-lg bg-white">
             {eligibleUsers.length === 0 ? (
               <div className="text-sm text-slate-500 p-4 text-center">
                 No users available.
@@ -110,7 +110,7 @@ export default function AddMembersModal({
           </button>
           <button
             onClick={onAdd}
-            className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-60 cursor-pointer"
+            className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-60 shadow-sm cursor-pointer"
             disabled={selectedUserIds.length < 1 || addingMembers}
           >
             {addingMembers ? "Adding..." : "Add"}

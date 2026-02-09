@@ -63,18 +63,18 @@ const ChatSidebar = ({
   }, [openMenuRoomId, closeMenu]);
 
   return (
-    <aside className="w-full lg:w-80 border-r border-slate-200 bg-white flex flex-col">
-      <div className="px-4 py-4 border-b border-slate-200 bg-white">
+    <aside className="w-full lg:w-80 border-r border-slate-200 bg-white/95 flex flex-col">
+      <div className="px-4 py-4 border-b border-slate-200/80 bg-white">
         <h2 className="text-lg font-semibold text-slate-900">Chat</h2>
         <p className="text-sm text-slate-500">Message Admin and Branches</p>
       </div>
 
       <div className="px-3 pt-3">
-        <div className="flex gap-2 bg-slate-100 rounded-lg p-1">
+        <div className="flex gap-2 bg-slate-100 rounded-xl p-1.5 border border-slate-200/70">
           <button
             onClick={() => onTabChange("rooms")}
-            className={`flex-1 text-sm font-medium px-3 py-2 rounded-md transition-colors ${activeTab === "rooms"
-              ? "bg-white text-blue-700 shadow-sm"
+            className={`flex-1 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${activeTab === "rooms"
+              ? "bg-white text-blue-700 shadow-sm ring-1 ring-slate-200/70"
               : "text-slate-600 hover:text-slate-900"
               } cursor-pointer`}
           >
@@ -82,8 +82,8 @@ const ChatSidebar = ({
           </button>
           <button
             onClick={() => onTabChange("users")}
-            className={`flex-1 text-sm font-medium px-3 py-2 rounded-md transition-colors ${activeTab === "users"
-              ? "bg-white text-blue-700 shadow-sm"
+            className={`flex-1 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${activeTab === "users"
+              ? "bg-white text-blue-700 shadow-sm ring-1 ring-slate-200/70"
               : "text-slate-600 hover:text-slate-900"
               } cursor-pointer`}
           >
@@ -92,7 +92,7 @@ const ChatSidebar = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2 py-3 space-y-2">
+      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2 scrollbar-hide">
         {activeTab === "rooms" ? (
           <>
             {loadingRooms ? (
@@ -128,17 +128,17 @@ const ChatSidebar = ({
                         onSelectRoom(room.id);
                       }
                     }}
-                    className={`w-full text-left p-3 rounded-lg border transition-all cursor-pointer ${isActive
-                      ? "border-blue-200 bg-blue-50"
-                      : "border-slate-200 hover:border-blue-200 hover:bg-blue-50/50"
+                    className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer shadow-sm ${isActive
+                      ? "border-blue-200 bg-blue-50/70"
+                      : "border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/40 hover:shadow-md"
                       }`}
                   >
                     <div className="flex items-center justify-between gap-3 text-black">
                       <div className="flex items-center gap-2 min-w-0">
                         <div
                           className={`w-9 h-9 rounded-full flex items-center justify-center ${isActive
-                            ? "bg-blue-500 text-white"
-                            : "bg-slate-100 text-black"
+                            ? "bg-blue-600 text-white"
+                            : "bg-slate-100 text-slate-600"
                             }`}
                         >
                           <ChatBubbleLeftRightIcon className="w-4 h-4" />
@@ -165,13 +165,13 @@ const ChatSidebar = ({
                                   prev === room.id ? null : room.id
                                 );
                               }}
-                              className="p-1 rounded-full border border-slate-200 text-slate-500 hover:text-slate-700 cursor-pointer"
+                              className="p-1 rounded-full border border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 cursor-pointer"
                               aria-label="Room actions"
                             >
                               <EllipsisVerticalIcon className="w-4 h-4" />
                             </button>
                             {openMenuRoomId === room.id && (
-                              <div className="absolute right-0 mt-2 w-36 rounded-lg border border-slate-200 bg-white shadow-lg z-10">
+                              <div className="absolute right-0 mt-2 w-36 rounded-lg border border-slate-200 bg-white shadow-lg z-20">
                                 {onPinRoom && (
                                   <button
                                     onClick={(event) => {
@@ -221,12 +221,12 @@ const ChatSidebar = ({
                 value={userSearch || ""}
                 onChange={(e) => onUserSearchChange?.(e.target.value)}
                 placeholder="Search users..."
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
               />
               {canCreateGroup && (
                 <button
                   onClick={onCreateGroup}
-                  className="w-full px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors cursor-pointer"
+                  className="w-full px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm cursor-pointer"
                 >
                   Create Group
                 </button>
@@ -245,7 +245,7 @@ const ChatSidebar = ({
                 <button
                   key={user.id}
                   onClick={() => onSelectUser(user)}
-                  className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-blue-200 hover:bg-blue-50/40 transition-all cursor-pointer"
+                  className="w-full text-left p-3 rounded-xl border border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/40 transition-all shadow-sm hover:shadow-md cursor-pointer"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 min-w-0">

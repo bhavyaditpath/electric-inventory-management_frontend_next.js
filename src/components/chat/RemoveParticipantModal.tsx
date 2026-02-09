@@ -43,8 +43,8 @@ export default function RemoveParticipantModal({
     (showAdminTransfer && (!newAdminId || eligibleAdmins.length === 0));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
         <div className="px-5 py-3 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
@@ -69,7 +69,7 @@ export default function RemoveParticipantModal({
               onChange={(e) =>
                 onChangeNewAdminId(e.target.value ? Number(e.target.value) : null)
               }
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
               disabled={isLoading}
             >
               <option value="">Choose a member</option>
@@ -96,7 +96,7 @@ export default function RemoveParticipantModal({
           </button>
           <button
             onClick={onConfirm}
-            className="px-3 py-1 rounded-lg bg-rose-600 text-white text-sm font-medium hover:bg-rose-700 cursor-pointer"
+            className="px-3 py-1 rounded-lg bg-rose-600 text-white text-sm font-medium hover:bg-rose-700 shadow-sm cursor-pointer"
             disabled={disableConfirm}
           >
             {isLoading ? "Removing..." : confirmLabel}

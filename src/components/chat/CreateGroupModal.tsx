@@ -32,9 +32,9 @@ export default function CreateGroupModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg bg-white rounded-xl shadow-xl overflow-hidden">
-        <div className="px-5 py-2 border-b border-slate-200 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+        <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-slate-900">
               Create Group
@@ -57,15 +57,15 @@ export default function CreateGroupModal({
             value={groupName}
             onChange={(e) => onChangeGroupName(e.target.value)}
             placeholder="Group name"
-            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
           />
           <input
             value={groupSearch}
             onChange={(e) => onChangeSearch(e.target.value)}
             placeholder="Search users..."
-            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
           />
-          <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-lg">
+          <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-lg bg-white">
             {filteredUsers.length === 0 ? (
               <div className="text-sm text-slate-500 p-4 text-center">
                 No users found.
@@ -116,7 +116,7 @@ export default function CreateGroupModal({
           </button>
           <button
             onClick={onCreate}
-            className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 cursor-pointer"
+            className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 shadow-sm cursor-pointer"
             disabled={!groupName.trim() || selectedUserIds.length < 1}
           >
             Create

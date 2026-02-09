@@ -24,8 +24,8 @@ export default function ConfirmDeleteModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
         <div className="px-5 py-3 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
@@ -50,7 +50,7 @@ export default function ConfirmDeleteModal({
           </button>
           <button
             onClick={onConfirm}
-            className="px-3 py-1 rounded-lg bg-rose-600 text-white text-sm font-medium hover:bg-rose-700 cursor-pointer"
+            className="px-3 py-1 rounded-lg bg-rose-600 text-white text-sm font-medium hover:bg-rose-700 shadow-sm cursor-pointer"
             disabled={isLoading}
           >
             {isLoading ? "Deleting..." : confirmLabel}

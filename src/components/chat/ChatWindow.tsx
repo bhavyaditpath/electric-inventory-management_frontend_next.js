@@ -78,7 +78,7 @@ export default function ChatWindow({
 
   return (
     <section className="flex-1 flex flex-col min-h-0 bg-slate-50">
-      <div className="sticky top-0 z-10 px-4 sm:px-5 py-2 sm:py-2 border-b border-slate-200 bg-white">
+      <div className="sticky top-0 z-10 px-4 sm:px-6 py-2 sm:py-3 border-b border-slate-200 bg-white/95">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             {isMobile && onBack && (
@@ -104,7 +104,7 @@ export default function ChatWindow({
             {room.isGroupChat && (
               <button
                 onClick={onOpenMembers}
-                className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-full border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 cursor-pointer"
+                className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs font-medium text-slate-600 hover:bg-slate-50 cursor-pointer"
               >
                 Members
               </button>

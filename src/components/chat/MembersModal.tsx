@@ -29,9 +29,9 @@ export default function MembersModal({
     !!room?.participants?.some((p) => p.userId === currentUserId);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md bg-white rounded-t-xl sm:rounded-xl shadow-xl overflow-hidden">
-        <div className="px-5 py-2 border-b border-slate-200 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+        <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-slate-900">
               Group members
@@ -105,7 +105,7 @@ export default function MembersModal({
           {room?.isGroupChat && (
             <button
               onClick={onOpenAddMembers}
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 cursor-pointer"
+              className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 shadow-sm cursor-pointer"
             >
               Add members
             </button>
