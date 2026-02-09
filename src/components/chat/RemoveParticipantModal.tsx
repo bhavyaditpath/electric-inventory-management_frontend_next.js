@@ -43,8 +43,8 @@ export default function RemoveParticipantModal({
     (showAdminTransfer && (!newAdminId || eligibleAdmins.length === 0));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md max-h-[85vh] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-200 overflow-y-auto">
         <div className="px-5 py-3 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-slate-900">{title}</h3>

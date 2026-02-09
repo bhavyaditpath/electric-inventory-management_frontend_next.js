@@ -828,7 +828,7 @@ export default function ChatPage() {
       />
 
       <MembersModal
-        isOpen={showMembers}
+        isOpen={showMembers && !removeParticipant}
         room={membersRoom}
         isLoading={membersLoading}
         currentUserId={user?.id}
