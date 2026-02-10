@@ -2,13 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChatMessage, ChatRoom, ChatUser } from "@/types/chat.types";
+import { CallState, CallType } from "@/types/enums";
 import {
   ArrowLeftIcon,
+  ClockIcon,
   EllipsisHorizontalIcon,
 } from "@heroicons/react/24/outline";
 import ChatComposer from "./ChatComposer";
 import ChatMessageList from "./ChatMessageList";
 import ChatLightbox from "./ChatLightbox";
+import { PhoneIcon, VideoCameraIcon } from "@heroicons/react/24/outline";
 
 interface ChatWindowProps {
   room: ChatRoom | null;
@@ -23,6 +26,17 @@ interface ChatWindowProps {
   onSendMessage: (content: string, files?: File[]) => void;
   onTyping: (isTyping: boolean) => void;
   onDeleteMessage?: (messageId: number) => void;
+
+  onStartCall?: (userId: number, kind: CallType) => void;
+  onEndCall?: () => void;
+  onAcceptCall?: () => void;
+  onRejectCall?: () => void;
+  incomingCall?: number | null;
+  callState?: CallState;
+  onOpenCallLogs?: (options?: {
+    tab?: "history" | "missed" | "room";
+    type?: "all" | CallType;
+  }) => void;
 }
 
 export default function ChatWindow({
@@ -38,10 +52,18 @@ export default function ChatWindow({
   onSendMessage,
   onTyping,
   onDeleteMessage,
+  onStartCall,
+  onEndCall,
+  onAcceptCall,
+  onRejectCall,
+  incomingCall,
+  callState = CallState.Idle,
+  onOpenCallLogs,
 }: ChatWindowProps) {
   const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(
     null
   );
+  const [showCallMenu, setShowCallMenu] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const API_BASE_URL =
@@ -60,6 +82,21 @@ export default function ChatWindow({
     },
     [API_BASE_URL]
   );
+
+  const otherUserId = useMemo(() => {
+
+    if (!room || room.isGroupChat) return null;
+
+    const other = room.participants?.find(
+      (p) => p.userId !== currentUserId
+    );
+
+    return other?.userId ?? null;
+  }, [room, currentUserId]);
+
+  const canDirectCall = !!otherUserId && !room?.isGroupChat;
+  const canOpenLogs = !!onOpenCallLogs;
+
 
   if (!room) {
     return (
@@ -109,9 +146,136 @@ export default function ChatWindow({
                 Members
               </button>
             )}
-            <button className="p-2 rounded-full hover:bg-slate-100 text-slate-500 cursor-pointer">
-              <EllipsisHorizontalIcon className="w-5 h-5" />
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowCallMenu((v) => !v)}
+                className="p-2 rounded-full hover:bg-slate-100 text-slate-500 cursor-pointer"
+              >
+                <EllipsisHorizontalIcon className="w-5 h-5" />
+              </button>
+
+              {showCallMenu && (
+                <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+                  <div className="px-4 pt-3 pb-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                      Call Actions
+                    </p>
+                  </div>
+                  <div className="px-2 pb-2">
+                    <button
+                      onClick={() => {
+                        if (!canDirectCall) return;
+                        setShowCallMenu(false);
+                        onStartCall?.(otherUserId!, CallType.Audio);
+                      }}
+                      disabled={!canDirectCall}
+                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
+                        canDirectCall
+                          ? "text-gray-700 hover:bg-gray-100"
+                          : "text-gray-300 cursor-not-allowed"
+                      }`}
+                      title={!canDirectCall ? "Available in direct chats only" : "Start audio call"}
+                    >
+                      <PhoneIcon className="w-4 h-4" />
+                      Audio Call
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (!canDirectCall) return;
+                        setShowCallMenu(false);
+                        onStartCall?.(otherUserId!, CallType.Video);
+                      }}
+                      disabled={!canDirectCall}
+                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
+                        canDirectCall
+                          ? "text-gray-700 hover:bg-gray-100"
+                          : "text-gray-300 cursor-not-allowed"
+                      }`}
+                      title={!canDirectCall ? "Available in direct chats only" : "Start video call"}
+                    >
+                      <VideoCameraIcon className="w-4 h-4" />
+                      Video Call
+                    </button>
+                  </div>
+
+                  <div className="border-t border-gray-100" />
+
+                  <div className="px-4 pt-3 pb-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                      Call History
+                    </p>
+                  </div>
+                  <div className="px-2 pb-3">
+                    <button
+                      onClick={() => {
+                        if (!canOpenLogs) return;
+                        setShowCallMenu(false);
+                        onOpenCallLogs?.({ tab: "history", type: "all" });
+                      }}
+                      disabled={!canOpenLogs}
+                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
+                        canOpenLogs
+                          ? "text-gray-700 hover:bg-gray-100"
+                          : "text-gray-300 cursor-not-allowed"
+                      }`}
+                    >
+                      <ClockIcon className="w-4 h-4" />
+                      All Calls
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!canOpenLogs) return;
+                        setShowCallMenu(false);
+                        onOpenCallLogs?.({ tab: "history", type: CallType.Audio });
+                      }}
+                      disabled={!canOpenLogs}
+                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
+                        canOpenLogs
+                          ? "text-gray-700 hover:bg-gray-100"
+                          : "text-gray-300 cursor-not-allowed"
+                      }`}
+                    >
+                      <PhoneIcon className="w-4 h-4" />
+                      Audio Calls
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!canOpenLogs) return;
+                        setShowCallMenu(false);
+                        onOpenCallLogs?.({ tab: "history", type: CallType.Video });
+                      }}
+                      disabled={!canOpenLogs}
+                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
+                        canOpenLogs
+                          ? "text-gray-700 hover:bg-gray-100"
+                          : "text-gray-300 cursor-not-allowed"
+                      }`}
+                    >
+                      <VideoCameraIcon className="w-4 h-4" />
+                      Video Calls
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!canOpenLogs) return;
+                        setShowCallMenu(false);
+                        onOpenCallLogs?.({ tab: "missed", type: "all" });
+                      }}
+                      disabled={!canOpenLogs}
+                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
+                        canOpenLogs
+                          ? "text-gray-700 hover:bg-gray-100"
+                          : "text-gray-300 cursor-not-allowed"
+                      }`}
+                    >
+                      <ClockIcon className="w-4 h-4" />
+                      Missed Calls
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
           </div>
         </div>
         {room.isGroupChat && (

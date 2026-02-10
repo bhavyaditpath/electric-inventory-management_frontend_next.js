@@ -29,3 +29,16 @@ export enum RequestStatus {
   IN_TRANSIT = 'InTransit',
   DELIVERED = 'Delivered',
 }
+
+export enum CallState {
+  Idle = "idle",
+  Calling = "calling",
+  Ringing = "ringing",
+  Connecting = "connecting",
+  Connected = "connected",
+}
+
+export enum CallType {
+  Audio = "audio",
+  Video = "video",
+}

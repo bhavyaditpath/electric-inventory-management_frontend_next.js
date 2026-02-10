@@ -15,6 +15,11 @@ import MembersModal from "./MembersModal";
 import AddMembersModal from "./AddMembersModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import RemoveParticipantModal from "./RemoveParticipantModal";
+import { useCallWebSocket } from "@/hooks/useCallWebSocket";
+import CallOverlay from "./CallOverlay";
+import { CallState } from "@/types/enums";
+import { CallType } from "@/types/enums";
+import CallLogsModal from "./CallLogsModal";
 
 export default function ChatPage() {
   const { user } = useAuth();
@@ -50,6 +55,13 @@ export default function ChatPage() {
     id: number;
   } | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  // ===== CALL STATE =====
+  const [incomingCall, setIncomingCall] = useState<number | null>(null);
+  const [callingUserId, setCallingUserId] = useState<number | null>(null);
+  const [callKind, setCallKind] = useState<CallType | null>(null);
+  const [showCallLogs, setShowCallLogs] = useState(false);
+  const [callLogsTab, setCallLogsTab] = useState<"history" | "missed" | "room">("history");
+  const [callLogsType, setCallLogsType] = useState<"all" | CallType>("all");
   const joinedRoomRef = useRef<number | null>(null);
   const activeRoomIdRef = useRef<number | null>(null);
   const typingTimersRef = useRef<Map<number, NodeJS.Timeout>>(new Map());
@@ -216,6 +228,39 @@ export default function ChatPage() {
     onUserOffline: handleUserOffline,
   });
 
+  const {
+    callState,
+    callerId,
+    connectedAt,
+    callUser,
+    acceptCall,
+    rejectCall,
+    endCall,
+  } = useCallWebSocket();
+
+  // ================= CALL STATE LISTENER =================
+  useEffect(() => {
+    // someone is calling me
+    if (callState === CallState.Ringing && callerId) {
+      setIncomingCall(callerId);
+    }
+
+    // call connected
+    if (callState === CallState.Connected) {
+      setIncomingCall(null);
+      setCallingUserId(null);
+    }
+
+    // call ended / rejected / cancelled
+    if (callState === CallState.Idle) {
+      setIncomingCall(null);
+      setCallingUserId(null);
+      setCallKind(null);
+    }
+  }, [callState, callerId]);
+
+
+
   useEffect(() => {
     fetchRooms();
     fetchUsers();
@@ -246,6 +291,15 @@ export default function ChatPage() {
           if (response.message) showError(response.message);
         }
 
+        const roomResponse = await chatApi.getRoom(activeRoomId);
+        if (roomResponse.success && roomResponse.data) {
+          setRooms((prev) =>
+            prev.map((room) =>
+              room.id === activeRoomId ? { ...room, ...roomResponse.data } : room
+            )
+          );
+        }
+
         await chatApi.markAsRead(activeRoomId);
         markAsRead(activeRoomId);
         setRooms((prev) =>
@@ -273,6 +327,37 @@ export default function ChatPage() {
     },
     [isMobile]
   );
+  const handleStartCall = useCallback((userId: number, kind: CallType) => {
+    if (!activeRoomId) return;
+    setCallKind(kind);
+    setCallingUserId(userId);
+    callUser(userId, activeRoomId);
+  }, [activeRoomId, callUser]);
+
+  const handleAcceptCall = useCallback(() => {
+    acceptCall();
+    setIncomingCall(null);
+  }, [acceptCall]);
+
+  const handleRejectCall = useCallback(() => {
+    rejectCall();
+    setIncomingCall(null);
+  }, [rejectCall]);
+
+  const handleEndCall = useCallback(() => {
+    endCall();
+  }, [endCall]);
+
+  const handleOpenCallLogs = useCallback((options?: { tab?: "history" | "missed" | "room"; type?: "all" | CallType }) => {
+    if (options?.tab) setCallLogsTab(options.tab);
+    if (options?.type) setCallLogsType(options.type);
+    setShowCallLogs(true);
+  }, []);
+
+  const handleCloseCallLogs = useCallback(() => {
+    setShowCallLogs(false);
+  }, []);
+
 
   const handleSelectUser = useCallback(
     async (targetUser: ChatUser) => {
@@ -743,6 +828,13 @@ export default function ChatPage() {
                 onBack={handleBackToList}
                 onOpenMembers={openMembers}
                 onDeleteMessage={requestDeleteMessage}
+                onStartCall={handleStartCall}
+                callState={callState}
+                onEndCall={handleEndCall}
+                onAcceptCall={handleAcceptCall}
+                onRejectCall={handleRejectCall}
+                incomingCall={incomingCall}
+                onOpenCallLogs={handleOpenCallLogs}
               />
             </div>
           )}
@@ -808,6 +900,13 @@ export default function ChatPage() {
               onTyping={handleTypingStatus}
               onOpenMembers={openMembers}
               onDeleteMessage={requestDeleteMessage}
+              onStartCall={handleStartCall}
+              callState={callState}
+              onEndCall={handleEndCall}
+              onAcceptCall={handleAcceptCall}
+              onRejectCall={handleRejectCall}
+              incomingCall={incomingCall}
+              onOpenCallLogs={handleOpenCallLogs}
             />
           </div>
         </div>
@@ -875,15 +974,15 @@ export default function ChatPage() {
           adminRemovingSelf
             ? "Transfer admin and leave"
             : removingSelf
-            ? "Leave group"
-            : "Remove participant"
+              ? "Leave group"
+              : "Remove participant"
         }
         description={
           adminRemovingSelf
             ? "Select a new admin before leaving this group."
             : removingSelf
-            ? "You will be removed from this group."
-            : "This member will be removed from the group."
+              ? "You will be removed from this group."
+              : "This member will be removed from the group."
         }
         confirmLabel={adminRemovingSelf ? "Transfer & Leave" : "Remove"}
         isLoading={removeLoading}
@@ -895,6 +994,27 @@ export default function ChatPage() {
         onConfirm={handleRemoveParticipant}
         onClose={handleCloseRemove}
       />
+
+      <CallOverlay
+        visible={callState !== CallState.Idle}
+        state={callState}
+        userId={incomingCall ?? callingUserId}
+        incoming={callState === CallState.Ringing}
+        callKind={callKind}
+        connectedAt={connectedAt}
+        onAccept={handleAcceptCall}
+        onReject={handleRejectCall}
+        onEnd={handleEndCall}
+      />
+
+      <CallLogsModal
+        isOpen={showCallLogs}
+        onClose={handleCloseCallLogs}
+        roomId={activeRoom?.id}
+        initialTab={callLogsTab}
+        initialType={callLogsType}
+      />
+
     </div>
   );
 }
