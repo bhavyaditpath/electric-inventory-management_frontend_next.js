@@ -11,15 +11,15 @@ export type CallLogStatus = "MISSED" | "ANSWERED" | "REJECTED" | "CANCELLED";
 export interface CallLog {
   id: number;
   roomId: number;
-  callerId?: number;
-  receiverId?: number;
-  type?: CallType | null;
+  callType?: CallType | string | null;
   status: CallLogStatus | string;
   startedAt?: string | null;
   createdAt?: string | null;
   endedAt?: string | null;
   duration?: number | null;
   participants?: CallParticipant[];
+  callerName?: string | null;
+  receiverName?: string | null;
 }
 
 export const callApi = {

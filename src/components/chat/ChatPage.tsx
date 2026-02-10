@@ -59,6 +59,7 @@ export default function ChatPage() {
   const [incomingCall, setIncomingCall] = useState<number | null>(null);
   const [callingUserId, setCallingUserId] = useState<number | null>(null);
   const [callKind, setCallKind] = useState<CallType | null>(null);
+  const [incomingCallerName, setIncomingCallerName] = useState<string | null>(null);
   const [showCallLogs, setShowCallLogs] = useState(false);
   const [callLogsTab, setCallLogsTab] = useState<"history" | "missed" | "room">("history");
   const [callLogsType, setCallLogsType] = useState<"all" | CallType>("all");
@@ -231,6 +232,8 @@ export default function ChatPage() {
   const {
     callState,
     callerId,
+    callerName,
+    incomingCallType,
     connectedAt,
     callUser,
     acceptCall,
@@ -243,6 +246,8 @@ export default function ChatPage() {
     // someone is calling me
     if (callState === CallState.Ringing && callerId) {
       setIncomingCall(callerId);
+      setIncomingCallerName(callerName ?? null);
+      if (incomingCallType) setCallKind(incomingCallType);
     }
 
     // call connected
@@ -256,8 +261,9 @@ export default function ChatPage() {
       setIncomingCall(null);
       setCallingUserId(null);
       setCallKind(null);
+      setIncomingCallerName(null);
     }
-  }, [callState, callerId]);
+  }, [callState, callerId, callerName, incomingCallType]);
 
 
 
@@ -331,7 +337,7 @@ export default function ChatPage() {
     if (!activeRoomId) return;
     setCallKind(kind);
     setCallingUserId(userId);
-    callUser(userId, activeRoomId);
+    callUser(userId, activeRoomId, kind);
   }, [activeRoomId, callUser]);
 
   const handleAcceptCall = useCallback(() => {
@@ -999,6 +1005,7 @@ export default function ChatPage() {
         visible={callState !== CallState.Idle}
         state={callState}
         userId={incomingCall ?? callingUserId}
+        displayName={incomingCallerName ?? undefined}
         incoming={callState === CallState.Ringing}
         callKind={callKind}
         connectedAt={connectedAt}

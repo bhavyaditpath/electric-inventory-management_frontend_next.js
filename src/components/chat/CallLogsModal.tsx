@@ -40,6 +40,14 @@ const statusLabel = (status?: CallLogStatus | string) => {
   }
 };
 
+const normalizeCallType = (value: unknown): CallType | null => {
+  if (!value) return null;
+  const raw = String(value).toLowerCase();
+  if (raw === "audio") return CallType.Audio;
+  if (raw === "video") return CallType.Video;
+  return null;
+};
+
 const formatDuration = (value?: number | null) => {
   if (value == null) return "N/A";
   const total = Math.max(0, Math.floor(value));
@@ -55,15 +63,11 @@ const formatDate = (value?: string | null) => {
   return dt.toLocaleString();
 };
 
-const getParticipantsLabel = (log: CallLog) => {
-  const names = log.participants
-    ?.map((p) => p.username)
-    .filter(Boolean);
-  if (names && names.length > 0) return names.join(", ");
-  if (log.callerId && log.receiverId) {
-    return `Caller #${log.callerId} -> Receiver #${log.receiverId}`;
+const getNamesLabel = (log: CallLog) => {
+  if (log.callerName || log.receiverName) {
+    return `${log.callerName || "Unknown"} -> ${log.receiverName || "Unknown"}`;
   }
-  return `Room #${log.roomId}`;
+  return null;
 };
 
 export default function CallLogsModal({
@@ -80,23 +84,22 @@ export default function CallLogsModal({
   const [roomLogs, setRoomLogs] = useState<CallLog[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const extractList = (response: any): CallLog[] => {
+    if (Array.isArray(response)) return response;
+    if (Array.isArray(response?.data)) return response.data;
+    if (Array.isArray(response?.items)) return response.items;
+    if (Array.isArray(response?.data?.data)) return response.data.data;
+    if (Array.isArray(response?.data?.items)) return response.data.items;
+    return [];
+  };
+
   const loadHistory = useCallback(async () => {
     setLoading(true);
     try {
       const response = await callApi.getCallHistory();
-      if (Array.isArray(response)) {
-        setHistory(response);
-      } else if (response.success && response.data) {
-        const list = Array.isArray(response.data)
-          ? response.data
-          : (response.data as { data?: CallLog[]; items?: CallLog[] })?.data ||
-            (response.data as { data?: CallLog[]; items?: CallLog[] })?.items ||
-            [];
-        setHistory(list);
-      } else {
-        setHistory([]);
-        if (response.message) showError(response.message);
-      }
+      const list = extractList(response);
+      setHistory(list);
+      if (!list.length && response?.message) showError(response.message);
     } catch (error) {
       console.error("Failed to fetch call history:", error);
       setHistory([]);
@@ -110,19 +113,9 @@ export default function CallLogsModal({
     setLoading(true);
     try {
       const response = await callApi.getMissedCalls();
-      if (Array.isArray(response)) {
-        setMissed(response);
-      } else if (response.success && response.data) {
-        const list = Array.isArray(response.data)
-          ? response.data
-          : (response.data as { data?: CallLog[]; items?: CallLog[] })?.data ||
-            (response.data as { data?: CallLog[]; items?: CallLog[] })?.items ||
-            [];
-        setMissed(list);
-      } else {
-        setMissed([]);
-        if (response.message) showError(response.message);
-      }
+      const list = extractList(response);
+      setMissed(list);
+      if (!list.length && response?.message) showError(response.message);
     } catch (error) {
       console.error("Failed to fetch missed calls:", error);
       setMissed([]);
@@ -137,19 +130,9 @@ export default function CallLogsModal({
     setLoading(true);
     try {
       const response = await callApi.getRoomCallHistory(roomId);
-      if (Array.isArray(response)) {
-        setRoomLogs(response);
-      } else if (response.success && response.data) {
-        const list = Array.isArray(response.data)
-          ? response.data
-          : (response.data as { data?: CallLog[]; items?: CallLog[] })?.data ||
-            (response.data as { data?: CallLog[]; items?: CallLog[] })?.items ||
-            [];
-        setRoomLogs(list);
-      } else {
-        setRoomLogs([]);
-        if (response.message) showError(response.message);
-      }
+      const list = extractList(response);
+      setRoomLogs(list);
+      if (!list.length && response?.message) showError(response.message);
     } catch (error) {
       console.error("Failed to fetch room calls:", error);
       setRoomLogs([]);
@@ -191,7 +174,7 @@ export default function CallLogsModal({
 
   const filteredLogs = useMemo(() => {
     if (typeFilter === "all") return activeLogs;
-    return activeLogs.filter((log) => log.type === typeFilter);
+    return activeLogs.filter((log) => normalizeCallType(log.callType) === typeFilter);
   }, [activeLogs, typeFilter]);
 
   const renderLogs = () => {
@@ -213,11 +196,16 @@ export default function CallLogsModal({
           const statusKey = String(log.status || "").toUpperCase();
           const badgeClass =
             statusStyles[statusKey] || "bg-gray-50 text-gray-700 border-gray-100";
+          const typeLabel = normalizeCallType(log.callType)
+            ? normalizeCallType(log.callType) === CallType.Audio
+              ? "Audio"
+              : "Video"
+            : "Unknown";
           return (
             <div key={log.id} className="py-3 flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-gray-900 truncate">
-                  {getParticipantsLabel(log)}
+                  {getNamesLabel(log)}
                 </p>
                 <p className="text-xs text-gray-500">
                   Started: {formatDate(log.startedAt || log.createdAt)}
@@ -230,6 +218,7 @@ export default function CallLogsModal({
                 <span className={`text-xs font-medium px-2 py-1 rounded-full border ${badgeClass}`}>
                   {statusLabel(log.status)}
                 </span>
+                <span className="text-xs text-gray-500">{typeLabel}</span>
                 <span className="text-xs text-gray-500">{formatDuration(log.duration)}</span>
               </div>
             </div>

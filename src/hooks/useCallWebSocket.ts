@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { useWebRTC } from "./useWebRTC";
-import { CallState } from "@/types/enums";
+import { CallState, CallType } from "@/types/enums";
 
 const SOCKET_BASE_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
@@ -13,9 +13,11 @@ export const useCallWebSocket = () => {
     const targetUserIdRef = useRef<number | null>(null);
     const callerIdRef = useRef<number | null>(null);
 
-  const [callState, setCallState] = useState<CallState>(CallState.Idle);
-  const [callerId, setCallerId] = useState<number | null>(null);
-  const [connectedAt, setConnectedAt] = useState<number | null>(null);
+    const [callState, setCallState] = useState<CallState>(CallState.Idle);
+    const [callerId, setCallerId] = useState<number | null>(null);
+    const [connectedAt, setConnectedAt] = useState<number | null>(null);
+    const [callerName, setCallerName] = useState<string | null>(null);
+    const [incomingCallType, setIncomingCallType] = useState<CallType | null>(null);
 
     const audioCtxRef = useRef<AudioContext | null>(null);
     const toneRef = useRef<{
@@ -80,24 +82,34 @@ export const useCallWebSocket = () => {
         toneRef.current = { osc, gain, timeoutId: window.setTimeout(() => { }, 0) };
     };
 
-  const resetCallState = () => {
-    callerIdRef.current = null;
-    targetUserIdRef.current = null;
-    setCallerId(null);
-    setCallState(CallState.Idle);
-    setConnectedAt(null);
-  };
+    const resetCallState = () => {
+        callerIdRef.current = null;
+        targetUserIdRef.current = null;
+        setCallerId(null);
+        setCallerName(null);
+        setIncomingCallType(null);
+        setCallState(CallState.Idle);
+        setConnectedAt(null);
+    };
+
+    const normalizeCallType = (value: unknown): CallType | null => {
+        if (!value) return null;
+        const raw = String(value).toLowerCase();
+        if (raw === "audio") return CallType.Audio;
+        if (raw === "video") return CallType.Video;
+        return null;
+    };
 
     // Attach WebRTC (IMPORTANT: pass refs)
-  const webrtc = useWebRTC(
-    socketRef,
-    targetUserIdRef,
-    () => {
-      setCallState(CallState.Connected);
-      setConnectedAt(Date.now());
-    },
-    () => resetCallState()
-  );
+    const webrtc = useWebRTC(
+        socketRef,
+        targetUserIdRef,
+        () => {
+            setCallState(CallState.Connected);
+            setConnectedAt(Date.now());
+        },
+        () => resetCallState()
+    );
 
     useEffect(() => {
         if (callState === CallState.Ringing) {
@@ -137,9 +149,11 @@ export const useCallWebSocket = () => {
         socketRef.current = socket;
 
         // ---------- INCOMING CALL ----------
-        socket.on("incomingCall", async ({ callerId }) => {
+        socket.on("incomingCall", async ({ callerId, callerName, callType }) => {
             callerIdRef.current = callerId;
             setCallerId(callerId);
+            setCallerName(callerName ?? null);
+            if (callType) setIncomingCallType(normalizeCallType(callType));
             setCallState(CallState.Ringing);
 
             // prepare peer BEFORE offer arrives (critical)
@@ -163,6 +177,17 @@ export const useCallWebSocket = () => {
 
         // ---------- CALL ENDED ----------
         socket.on("callEnded", () => {
+            webrtc.endCall();
+            resetCallState();
+        });
+
+        // ---------- NO ANSWER / MISSED ----------
+        socket.on("callNoAnswer", () => {
+            webrtc.endCall();
+            resetCallState();
+        });
+
+        socket.on("missedCall", () => {
             webrtc.endCall();
             resetCallState();
         });
@@ -197,13 +222,14 @@ export const useCallWebSocket = () => {
 
     // ================= ACTIONS =================
 
-    const callUser = (userId: number, roomId: number) => {
+    const callUser = (userId: number, roomId: number, callType?: CallType) => {
         targetUserIdRef.current = userId;
         setCallState(CallState.Calling);
 
         socketRef.current?.emit("callUser", {
             targetUserId: userId,
             roomId,
+            callType,
         });
     };
 
@@ -237,13 +263,15 @@ export const useCallWebSocket = () => {
         resetCallState();
     };
 
-  return {
-    callState,
-    callerId,
-    connectedAt,
-    callUser,
-    acceptCall,
-    rejectCall,
-    endCall,
-  };
+    return {
+        callState,
+        callerId,
+        callerName,
+        incomingCallType,
+        connectedAt,
+        callUser,
+        acceptCall,
+        rejectCall,
+        endCall,
+    };
 };

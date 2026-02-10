@@ -9,6 +9,7 @@ interface Props {
   visible: boolean;
   state: CallState;
   userId?: number | null;
+  displayName?: string;
   incoming?: boolean;
   callKind?: CallType | null;
   connectedAt?: number | null;
@@ -21,6 +22,7 @@ export default function CallOverlay({
   visible,
   state,
   userId,
+  displayName,
   incoming,
   callKind,
   connectedAt,
@@ -28,8 +30,6 @@ export default function CallOverlay({
   onReject,
   onEnd,
 }: Props) {
-  if (!visible) return null;
-
   const callKindLabel = callKind
     ? callKind === CallType.Audio
       ? CallType.Audio
@@ -82,6 +82,8 @@ export default function CallOverlay({
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   }, [elapsed]);
 
+  if (!visible) return null;
+
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-slate-800/80 flex items-center justify-center z-[999]">
       <div className="bg-white rounded-3xl shadow-2xl w-[360px] p-6 text-center space-y-6 border border-slate-100">
@@ -100,8 +102,11 @@ export default function CallOverlay({
           <div className="w-24 h-24 mx-auto rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-2xl font-semibold text-slate-700">
             {userId ?? "?"}
           </div>
+          <p className="text-sm font-semibold text-slate-800">
+            {displayName || `User #${userId ?? "?"}`}
+          </p>
           <p className="text-xs text-slate-500">
-            {state === CallState.Connected ? `Duration ${durationLabel}` : "User ID"}
+            {state === CallState.Connected ? `Duration ${durationLabel}` : "User"}
           </p>
         </div>
 
