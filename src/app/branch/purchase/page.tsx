@@ -232,7 +232,7 @@ const PurchasePage = () => {
 
       const purchaseIdToUse = editingPurchase
         ? editingPurchase.id
-        : purchaseRecord.data.id || purchaseRecord.id;
+        : purchaseRecord.id;
 
       const requestResponse = await requestApi.createRequest({
         requestingUserId,

@@ -113,7 +113,7 @@ export default function ChatMessageList({
                   </p>
                 )}
                 {hasText(message.content) && (
-                  <p className="text-sm leading-relaxed break-words">
+                  <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
                     {message.content}
                   </p>
                 )}

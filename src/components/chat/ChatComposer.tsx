@@ -31,7 +31,9 @@ export default function ChatComposer({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [fileWarning, setFileWarning] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const messageInputRef = useRef<HTMLTextAreaElement | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isComposingRef = useRef(false);
 
   useEffect(() => {
     setMessageInput("");
@@ -56,6 +58,13 @@ export default function ChatComposer({
     },
     [onTyping]
   );
+
+  useEffect(() => {
+    const el = messageInputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }, [messageInput]);
 
   const handleSend = useCallback(() => {
     const trimmed = messageInput.trim();
@@ -164,17 +173,25 @@ export default function ChatComposer({
         >
           <PaperClipIcon className="w-4 h-4" />
         </button>
-        <input
+        <textarea
+          ref={messageInputRef}
           value={messageInput}
           onChange={(e) => handleTypingChange(e.target.value)}
+          onCompositionStart={() => {
+            isComposingRef.current = true;
+          }}
+          onCompositionEnd={() => {
+            isComposingRef.current = false;
+          }}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
+            if (e.key === "Enter" && !e.shiftKey && !isComposingRef.current) {
               e.preventDefault();
               handleSend();
             }
           }}
           placeholder="Type a message..."
-          className="flex-1 border border-slate-200 rounded-full px-4 py-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+          rows={1}
+          className="flex-1 border border-slate-200 rounded-2xl px-4 py-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black resize-none overflow-y-auto max-h-[120px]"
         />
         <button
           onClick={handleSend}
