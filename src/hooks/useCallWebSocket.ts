@@ -16,6 +16,7 @@ type StoredCallSession = {
     targetUserId?: number;
     callerId?: number;
     callerName?: string | null;
+    peerName?: string | null;
     callType?: CallType | null;
 };
 
@@ -26,6 +27,8 @@ export const useCallWebSocket = () => {
 
     const [callState, setCallState] = useState<CallState>(CallState.Idle);
     const [callerId, setCallerId] = useState<number | null>(null);
+    const [peerUserId, setPeerUserId] = useState<number | null>(null);
+    const [peerName, setPeerName] = useState<string | null>(null);
     const [connectedAt, setConnectedAt] = useState<number | null>(null);
     const [callerName, setCallerName] = useState<string | null>(null);
     const [incomingCallType, setIncomingCallType] = useState<CallType | null>(null);
@@ -199,6 +202,8 @@ export const useCallWebSocket = () => {
         callerIdRef.current = null;
         targetUserIdRef.current = null;
         setCallerId(null);
+        setPeerUserId(null);
+        setPeerName(null);
         setCallerName(null);
         setIncomingCallType(null);
         setCallDirection(null);
@@ -276,6 +281,8 @@ export const useCallWebSocket = () => {
         socket.on("incomingCall", async ({ callerId, callerName, callType }) => {
             callerIdRef.current = callerId;
             setCallerId(callerId);
+            setPeerUserId(callerId);
+            setPeerName(callerName ?? null);
             setCallerName(callerName ?? null);
             const normalizedType = normalizeCallType(callType);
             if (normalizedType) setIncomingCallType(normalizedType);
@@ -287,6 +294,7 @@ export const useCallWebSocket = () => {
                 createdAt: Date.now(),
                 callerId,
                 callerName: callerName ?? null,
+                peerName: callerName ?? null,
                 callType: normalizedType,
             });
 
@@ -297,6 +305,7 @@ export const useCallWebSocket = () => {
         // ---------- CALL ACCEPTED ----------
         socket.on("callAccepted", async ({ receiverId }) => {
             targetUserIdRef.current = receiverId;
+            setPeerUserId(receiverId);
             setCallOutcome(CallOutcome.Accepted);
             clearOutgoingTimeout();
             clearPersistedSession();
@@ -385,6 +394,8 @@ export const useCallWebSocket = () => {
             }
             if (parsed.direction === CallDirection.Outgoing && parsed.targetUserId) {
                 targetUserIdRef.current = parsed.targetUserId;
+                setPeerUserId(parsed.targetUserId);
+                setPeerName(parsed.peerName ?? null);
                 setIncomingCallType(parsed.callType ?? null);
                 setCallDirection(CallDirection.Outgoing);
                 setCallState(CallState.Calling);
@@ -394,6 +405,8 @@ export const useCallWebSocket = () => {
             if (parsed.direction === CallDirection.Incoming && parsed.callerId) {
                 callerIdRef.current = parsed.callerId;
                 setCallerId(parsed.callerId);
+                setPeerUserId(parsed.callerId);
+                setPeerName(parsed.peerName ?? parsed.callerName ?? null);
                 setCallerName(parsed.callerName ?? null);
                 setIncomingCallType(parsed.callType ?? null);
                 setCallDirection(CallDirection.Incoming);
@@ -406,8 +419,15 @@ export const useCallWebSocket = () => {
 
     // ================= ACTIONS =================
 
-    const callUser = (userId: number, roomId: number, callType?: CallType) => {
+    const callUser = (
+        userId: number,
+        roomId: number,
+        callType?: CallType,
+        targetName?: string | null
+    ) => {
         targetUserIdRef.current = userId;
+        setPeerUserId(userId);
+        setPeerName(targetName ?? null);
         setCallDirection(CallDirection.Outgoing);
         setCallOutcome(null);
         setCallState(CallState.Calling);
@@ -418,6 +438,7 @@ export const useCallWebSocket = () => {
             direction: CallDirection.Outgoing,
             createdAt: startedAt,
             targetUserId: userId,
+            peerName: targetName ?? null,
             callType: normalizedType,
         });
         scheduleOutgoingAutoReset(startedAt);
@@ -434,6 +455,8 @@ export const useCallWebSocket = () => {
         if (!caller) return;
 
         targetUserIdRef.current = caller;
+        setPeerUserId(caller);
+        setPeerName(callerName ?? null);
         setCallOutcome(CallOutcome.Accepted);
         setCallState(CallState.Connecting);
         clearOutgoingTimeout();
@@ -471,6 +494,8 @@ export const useCallWebSocket = () => {
     return {
         callState,
         callerId,
+        peerUserId,
+        peerName,
         callerName,
         incomingCallType,
         callDirection,

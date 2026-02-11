@@ -15,11 +15,10 @@ import MembersModal from "./MembersModal";
 import AddMembersModal from "./AddMembersModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import RemoveParticipantModal from "./RemoveParticipantModal";
-import { useCallWebSocket } from "@/hooks/useCallWebSocket";
-import CallOverlay from "./CallOverlay";
 import { CallState } from "@/types/enums";
 import { CallType } from "@/types/enums";
 import CallLogsModal from "./CallLogsModal";
+import { useCall } from "@/contexts/CallContext";
 
 export default function ChatPage() {
   const { user } = useAuth();
@@ -56,10 +55,6 @@ export default function ChatPage() {
   } | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   // ===== CALL STATE =====
-  const [incomingCall, setIncomingCall] = useState<number | null>(null);
-  const [callingUserId, setCallingUserId] = useState<number | null>(null);
-  const [callKind, setCallKind] = useState<CallType | null>(null);
-  const [incomingCallerName, setIncomingCallerName] = useState<string | null>(null);
   const [showCallLogs, setShowCallLogs] = useState(false);
   const [callLogsTab, setCallLogsTab] = useState<"history" | "missed" | "room">("history");
   const [callLogsType, setCallLogsType] = useState<"all" | CallType>("all");
@@ -232,39 +227,11 @@ export default function ChatPage() {
   const {
     callState,
     callerId,
-    callerName,
-    incomingCallType,
-    callDirection,
-    connectedAt,
     callUser,
     acceptCall,
     rejectCall,
     endCall,
-  } = useCallWebSocket();
-
-  // ================= CALL STATE LISTENER =================
-  useEffect(() => {
-    // someone is calling me
-    if (callState === CallState.Ringing && callerId) {
-      setIncomingCall(callerId);
-      setIncomingCallerName(callerName ?? null);
-      if (incomingCallType) setCallKind(incomingCallType);
-    }
-
-    // call connected
-    if (callState === CallState.Connected) {
-      setIncomingCall(null);
-      setCallingUserId(null);
-    }
-
-    // call ended / rejected / cancelled
-    if (callState === CallState.Idle) {
-      setIncomingCall(null);
-      setCallingUserId(null);
-      setCallKind(null);
-      setIncomingCallerName(null);
-    }
-  }, [callState, callerId, callerName, incomingCallType]);
+  } = useCall();
 
 
 
@@ -336,19 +303,19 @@ export default function ChatPage() {
   );
   const handleStartCall = useCallback((userId: number, kind: CallType) => {
     if (!activeRoomId) return;
-    setCallKind(kind);
-    setCallingUserId(userId);
-    callUser(userId, activeRoomId, kind);
-  }, [activeRoomId, callUser]);
+    const room = rooms.find((r) => r.id === activeRoomId);
+    const targetName =
+      room?.participants?.find((p) => p.userId === userId)?.user?.username ??
+      null;
+    callUser(userId, activeRoomId, kind, targetName);
+  }, [activeRoomId, callUser, rooms]);
 
   const handleAcceptCall = useCallback(() => {
     acceptCall();
-    setIncomingCall(null);
   }, [acceptCall]);
 
   const handleRejectCall = useCallback(() => {
     rejectCall();
-    setIncomingCall(null);
   }, [rejectCall]);
 
   const handleEndCall = useCallback(() => {
@@ -767,18 +734,6 @@ export default function ChatPage() {
     [rooms, activeRoomId]
   );
 
-  const outgoingReceiverName = useMemo(() => {
-    if (!activeRoom || activeRoom.isGroupChat || !user?.id) return null;
-    const other = activeRoom.participants?.find((p) => p.userId !== user.id);
-    return other?.user?.username || null;
-  }, [activeRoom, user?.id]);
-
-  const overlayDisplayName = useMemo(() => {
-    if (callDirection === "incoming") return incomingCallerName ?? null;
-    if (callDirection === "outgoing") return outgoingReceiverName;
-    return incomingCallerName ?? outgoingReceiverName;
-  }, [callDirection, incomingCallerName, outgoingReceiverName]);
-
   const typingUsers = useMemo(
     () => users.filter((u) => typingUserIds.includes(u.id)),
     [users, typingUserIds]
@@ -852,7 +807,7 @@ export default function ChatPage() {
                 onEndCall={handleEndCall}
                 onAcceptCall={handleAcceptCall}
                 onRejectCall={handleRejectCall}
-                incomingCall={incomingCall}
+                incomingCall={callState === CallState.Ringing ? callerId : null}
                 onOpenCallLogs={handleOpenCallLogs}
               />
             </div>
@@ -924,7 +879,7 @@ export default function ChatPage() {
               onEndCall={handleEndCall}
               onAcceptCall={handleAcceptCall}
               onRejectCall={handleRejectCall}
-              incomingCall={incomingCall}
+              incomingCall={callState === CallState.Ringing ? callerId : null}
               onOpenCallLogs={handleOpenCallLogs}
             />
           </div>
@@ -1012,19 +967,6 @@ export default function ChatPage() {
         onChangeNewAdminId={setNewAdminId}
         onConfirm={handleRemoveParticipant}
         onClose={handleCloseRemove}
-      />
-
-      <CallOverlay
-        visible={callState !== CallState.Idle}
-        state={callState}
-        userId={incomingCall ?? callingUserId}
-        displayName={overlayDisplayName ?? undefined}
-        incoming={callState === CallState.Ringing}
-        callKind={callKind}
-        connectedAt={connectedAt}
-        onAccept={handleAcceptCall}
-        onReject={handleRejectCall}
-        onEnd={handleEndCall}
       />
 
       <CallLogsModal

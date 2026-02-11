@@ -30,6 +30,15 @@ export default function CallOverlay({
   onReject,
   onEnd,
 }: Props) {
+  const avatarStyles = [
+    "bg-rose-100 text-rose-700 border-rose-200",
+    "bg-sky-100 text-sky-700 border-sky-200",
+    "bg-emerald-100 text-emerald-700 border-emerald-200",
+    "bg-amber-100 text-amber-700 border-amber-200",
+    "bg-violet-100 text-violet-700 border-violet-200",
+    "bg-cyan-100 text-cyan-700 border-cyan-200",
+  ];
+
   const callKindLabel = callKind
     ? callKind === CallType.Audio
       ? CallType.Audio
@@ -82,6 +91,31 @@ export default function CallOverlay({
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   }, [elapsed]);
 
+  const avatarLabel = useMemo(() => {
+    const base = (displayName || "").trim();
+    if (!base) return "U";
+
+    const source = base.includes("@") ? base.split("@")[0] : base;
+    const tokens = source
+      .split(/[\s._-]+/)
+      .map((t) => t.replace(/[^a-zA-Z0-9]/g, ""))
+      .filter(Boolean);
+
+    if (tokens.length === 0) return "U";
+    if (tokens.length === 1) return tokens[0].slice(0, 2).toUpperCase();
+    return `${tokens[0][0] || ""}${tokens[1][0] || ""}`.toUpperCase();
+  }, [displayName]);
+
+  const avatarClass = useMemo(() => {
+    const seed =
+      typeof userId === "number"
+        ? userId
+        : (displayName || "")
+          .split("")
+          .reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    return avatarStyles[Math.abs(seed) % avatarStyles.length];
+  }, [displayName, userId]);
+
   if (!visible) return null;
 
   return (
@@ -99,8 +133,10 @@ export default function CallOverlay({
         </div>
 
         <div className="space-y-2">
-          <div className="w-24 h-24 mx-auto rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-2xl font-semibold text-slate-700">
-            {userId ?? "?"}
+          <div
+            className={`w-24 h-24 mx-auto rounded-full border flex items-center justify-center text-2xl font-semibold ${avatarClass}`}
+          >
+            {avatarLabel}
           </div>
           <p className="text-sm font-semibold text-slate-800">
             {displayName || `User #${userId ?? "?"}`}
@@ -135,16 +171,16 @@ export default function CallOverlay({
         {(state === CallState.Calling ||
           state === CallState.Connecting ||
           state === CallState.Connected) && (
-          <div className="flex justify-center">
-            <button
-              onClick={onEnd}
-              className="flex items-center gap-2 px-6 py-3 rounded-full bg-red-600 text-white text-sm font-semibold shadow-sm hover:bg-red-700"
-            >
-              <PhoneXMarkIcon className="w-5 h-5" />
-              End Call
-            </button>
-          </div>
-        )}
+            <div className="flex justify-center">
+              <button
+                onClick={onEnd}
+                className="flex items-center gap-2 px-6 py-3 rounded-full bg-red-600 text-white text-sm font-semibold shadow-sm hover:bg-red-700"
+              >
+                <PhoneXMarkIcon className="w-5 h-5" />
+                End Call
+              </button>
+            </div>
+          )}
       </div>
     </div>
   );
