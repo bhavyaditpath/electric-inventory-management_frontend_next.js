@@ -3,10 +3,21 @@
 import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { useWebRTC } from "./useWebRTC";
-import { CallState, CallType } from "@/types/enums";
+import { CallDirection, CallOutcome, CallState, CallType } from "@/types/enums";
 
 const SOCKET_BASE_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const OUTGOING_CALL_TTL_MS = 35000;
+const CALL_SESSION_KEY = "chat_call_session";
+
+type StoredCallSession = {
+    direction: CallDirection;
+    createdAt: number;
+    targetUserId?: number;
+    callerId?: number;
+    callerName?: string | null;
+    callType?: CallType | null;
+};
 
 export const useCallWebSocket = () => {
     const socketRef = useRef<Socket | null>(null);
@@ -18,76 +29,179 @@ export const useCallWebSocket = () => {
     const [connectedAt, setConnectedAt] = useState<number | null>(null);
     const [callerName, setCallerName] = useState<string | null>(null);
     const [incomingCallType, setIncomingCallType] = useState<CallType | null>(null);
+    const [callDirection, setCallDirection] = useState<CallDirection | null>(null);
+    const [callOutcome, setCallOutcome] = useState<CallOutcome | null>(null);
 
     const audioCtxRef = useRef<AudioContext | null>(null);
-    const toneRef = useRef<{
+    const outgoingTimeoutRef = useRef<number | null>(null);
+    const loopToneRef = useRef<{
         osc: OscillatorNode;
         gain: GainNode;
-        timeoutId: number;
+        timeoutId: number | null;
     } | null>(null);
 
-    const stopTone = () => {
-        if (toneRef.current) {
-            clearTimeout(toneRef.current.timeoutId);
-            try {
-                toneRef.current.osc.stop();
-            } catch { }
-            toneRef.current.osc.disconnect();
-            toneRef.current.gain.disconnect();
-            toneRef.current = null;
-        }
-    };
-
-    const startTone = (type: "ringtone" | "ringback") => {
-        stopTone();
-        if (typeof window === "undefined") return;
-
+    const ensureAudioContext = () => {
+        if (typeof window === "undefined") return null;
         if (!audioCtxRef.current) {
             audioCtxRef.current = new AudioContext();
         }
-
         const ctx = audioCtxRef.current;
         if (ctx.state === "suspended") {
             ctx.resume().catch(() => {
                 return;
             });
         }
+        return ctx;
+    };
+
+    const stopLoopTone = () => {
+        if (loopToneRef.current) {
+            if (loopToneRef.current.timeoutId != null) {
+                clearTimeout(loopToneRef.current.timeoutId);
+            }
+            try {
+                loopToneRef.current.osc.stop();
+            } catch { }
+            loopToneRef.current.osc.disconnect();
+            loopToneRef.current.gain.disconnect();
+            loopToneRef.current = null;
+        }
+    };
+
+    const clearOutgoingTimeout = () => {
+        if (outgoingTimeoutRef.current != null) {
+            clearTimeout(outgoingTimeoutRef.current);
+            outgoingTimeoutRef.current = null;
+        }
+    };
+
+    const persistSession = (payload: StoredCallSession) => {
+        if (typeof window === "undefined") return;
+        try {
+            sessionStorage.setItem(CALL_SESSION_KEY, JSON.stringify(payload));
+        } catch {
+            return;
+        }
+    };
+
+    const clearPersistedSession = () => {
+        if (typeof window === "undefined") return;
+        try {
+            sessionStorage.removeItem(CALL_SESSION_KEY);
+        } catch {
+            return;
+        }
+    };
+
+    const scheduleOutgoingAutoReset = (startedAt: number) => {
+        clearOutgoingTimeout();
+        const elapsed = Date.now() - startedAt;
+        const remaining = OUTGOING_CALL_TTL_MS - elapsed;
+        if (remaining <= 0) {
+            setCallOutcome(CallOutcome.Missed);
+            resetCallState();
+            return;
+        }
+        outgoingTimeoutRef.current = window.setTimeout(() => {
+            setCallOutcome(CallOutcome.Missed);
+            resetCallState();
+        }, remaining);
+    };
+
+    const startLoopTone = (type: CallDirection) => {
+        stopLoopTone();
+        const ctx = ensureAudioContext();
+        if (!ctx) return;
 
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.value = type === "ringtone" ? 480 : 400;
+        osc.type = "triangle";
+        osc.frequency.value = type === CallDirection.Incoming ? 720 : 420;
         gain.gain.value = 0;
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start();
 
         const pattern =
-            type === "ringtone"
-                ? { onMs: 800, offMs: 400 }
-                : { onMs: 400, offMs: 400 };
+            type === CallDirection.Incoming
+                ? { onMs: 900, offMs: 300, volume: 0.08 }
+                : { onMs: 450, offMs: 450, volume: 0.06 };
 
-        let on = false;
         const tick = () => {
-            on = !on;
-            gain.gain.setValueAtTime(on ? 0.08 : 0, ctx.currentTime);
-            const delay = on ? pattern.onMs : pattern.offMs;
-            const timeoutId = window.setTimeout(tick, delay);
-            if (toneRef.current) {
-                toneRef.current.timeoutId = timeoutId;
+            gain.gain.setValueAtTime(pattern.volume, ctx.currentTime);
+            const timeoutIdOn = window.setTimeout(() => {
+                gain.gain.setValueAtTime(0, ctx.currentTime);
+                const timeoutIdOff = window.setTimeout(tick, pattern.offMs);
+                if (loopToneRef.current) {
+                    loopToneRef.current.timeoutId = timeoutIdOff;
+                }
+            }, pattern.onMs);
+            if (loopToneRef.current) {
+                loopToneRef.current.timeoutId = timeoutIdOn;
             }
         };
 
+        loopToneRef.current = { osc, gain, timeoutId: null };
         tick();
-        toneRef.current = { osc, gain, timeoutId: window.setTimeout(() => { }, 0) };
+    };
+
+    const playOneShotTone = (type: CallOutcome) => {
+        const ctx = ensureAudioContext();
+        if (!ctx) return;
+
+        const playBeep = (frequency: number, durationMs: number, delayMs: number, volume = 0.07) => {
+            const startAt = ctx.currentTime + delayMs / 1000;
+            const stopAt = startAt + durationMs / 1000;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(frequency, startAt);
+            gain.gain.setValueAtTime(0, startAt);
+            gain.gain.linearRampToValueAtTime(volume, startAt + 0.01);
+            gain.gain.linearRampToValueAtTime(0, stopAt);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(startAt);
+            osc.stop(stopAt + 0.01);
+        };
+
+        if (type === CallOutcome.Accepted) {
+            playBeep(880, 120, 0);
+            playBeep(1320, 120, 160);
+            return;
+        }
+        if (type === CallOutcome.Rejected) {
+            playBeep(280, 260, 0, 0.08);
+            return;
+        }
+        if (type === CallOutcome.Cancelled) {
+            playBeep(520, 120, 0);
+            playBeep(360, 180, 160);
+            return;
+        }
+        if (type === CallOutcome.Busy) {
+            playBeep(480, 140, 0);
+            playBeep(480, 140, 220);
+            playBeep(480, 140, 440);
+            return;
+        }
+        if (type === CallOutcome.Missed) {
+            playBeep(620, 120, 0);
+            playBeep(620, 120, 200);
+            return;
+        }
+        playBeep(240, 140, 0);
     };
 
     const resetCallState = () => {
+        clearOutgoingTimeout();
+        clearPersistedSession();
         callerIdRef.current = null;
         targetUserIdRef.current = null;
         setCallerId(null);
         setCallerName(null);
         setIncomingCallType(null);
+        setCallDirection(null);
         setCallState(CallState.Idle);
         setConnectedAt(null);
     };
@@ -105,6 +219,8 @@ export const useCallWebSocket = () => {
         socketRef,
         targetUserIdRef,
         () => {
+            clearOutgoingTimeout();
+            clearPersistedSession();
             setCallState(CallState.Connected);
             setConnectedAt(Date.now());
         },
@@ -113,19 +229,27 @@ export const useCallWebSocket = () => {
 
     useEffect(() => {
         if (callState === CallState.Ringing) {
-            startTone("ringtone");
+            startLoopTone(CallDirection.Incoming);
             return;
         }
         if (callState === CallState.Calling) {
-            startTone("ringback");
+            startLoopTone(CallDirection.Outgoing);
             return;
         }
-        stopTone();
+        stopLoopTone();
     }, [callState]);
 
     useEffect(() => {
+        if (!callOutcome) return;
+        playOneShotTone(callOutcome);
+        const timer = window.setTimeout(() => setCallOutcome(null), 1200);
+        return () => window.clearTimeout(timer);
+    }, [callOutcome]);
+
+    useEffect(() => {
         return () => {
-            stopTone();
+            clearOutgoingTimeout();
+            stopLoopTone();
             if (audioCtxRef.current) {
                 audioCtxRef.current.close().catch(() => {
                     return;
@@ -138,7 +262,7 @@ export const useCallWebSocket = () => {
     // ================= CONNECT SOCKET =================
     useEffect(() => {
         const token =
-            localStorage.getItem("access_token") || localStorage.getItem("token");
+            localStorage.getItem("access_token");
         if (!token) return;
 
         const socket = io(`${SOCKET_BASE_URL}/chat`, {
@@ -153,8 +277,18 @@ export const useCallWebSocket = () => {
             callerIdRef.current = callerId;
             setCallerId(callerId);
             setCallerName(callerName ?? null);
-            if (callType) setIncomingCallType(normalizeCallType(callType));
+            const normalizedType = normalizeCallType(callType);
+            if (normalizedType) setIncomingCallType(normalizedType);
+            setCallDirection(CallDirection.Incoming);
+            setCallOutcome(null);
             setCallState(CallState.Ringing);
+            persistSession({
+                direction: CallDirection.Incoming,
+                createdAt: Date.now(),
+                callerId,
+                callerName: callerName ?? null,
+                callType: normalizedType,
+            });
 
             // prepare peer BEFORE offer arrives (critical)
             await webrtc.prepareReceiver(callerId);
@@ -163,6 +297,9 @@ export const useCallWebSocket = () => {
         // ---------- CALL ACCEPTED ----------
         socket.on("callAccepted", async ({ receiverId }) => {
             targetUserIdRef.current = receiverId;
+            setCallOutcome(CallOutcome.Accepted);
+            clearOutgoingTimeout();
+            clearPersistedSession();
             setCallState(CallState.Connecting);
 
             // caller starts WebRTC
@@ -171,29 +308,40 @@ export const useCallWebSocket = () => {
 
         // ---------- CALL REJECTED ----------
         socket.on("callRejected", () => {
+            setCallOutcome(CallOutcome.Rejected);
             webrtc.endCall();
             resetCallState();
         });
 
         // ---------- CALL ENDED ----------
         socket.on("callEnded", () => {
+            setCallOutcome(CallOutcome.Ended);
+            webrtc.endCall();
+            resetCallState();
+        });
+
+        socket.on("callCancelled", () => {
+            setCallOutcome(CallOutcome.Cancelled);
             webrtc.endCall();
             resetCallState();
         });
 
         // ---------- NO ANSWER / MISSED ----------
         socket.on("callNoAnswer", () => {
+            setCallOutcome(CallOutcome.Missed);
             webrtc.endCall();
             resetCallState();
         });
 
         socket.on("missedCall", () => {
+            setCallOutcome(CallOutcome.Missed);
             webrtc.endCall();
             resetCallState();
         });
 
         // ---------- USER BUSY ----------
         socket.on("userBusy", () => {
+            setCallOutcome(CallOutcome.Busy);
             webrtc.endCall();
             resetCallState();
         });
@@ -220,11 +368,59 @@ export const useCallWebSocket = () => {
         };
     }, []);
 
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        try {
+            const raw = sessionStorage.getItem(CALL_SESSION_KEY);
+            if (!raw) return;
+            const parsed = JSON.parse(raw) as StoredCallSession;
+            if (!parsed?.createdAt || !parsed?.direction) {
+                clearPersistedSession();
+                return;
+            }
+            const age = Date.now() - parsed.createdAt;
+            if (age > OUTGOING_CALL_TTL_MS) {
+                clearPersistedSession();
+                return;
+            }
+            if (parsed.direction === CallDirection.Outgoing && parsed.targetUserId) {
+                targetUserIdRef.current = parsed.targetUserId;
+                setIncomingCallType(parsed.callType ?? null);
+                setCallDirection(CallDirection.Outgoing);
+                setCallState(CallState.Calling);
+                scheduleOutgoingAutoReset(parsed.createdAt);
+                return;
+            }
+            if (parsed.direction === CallDirection.Incoming && parsed.callerId) {
+                callerIdRef.current = parsed.callerId;
+                setCallerId(parsed.callerId);
+                setCallerName(parsed.callerName ?? null);
+                setIncomingCallType(parsed.callType ?? null);
+                setCallDirection(CallDirection.Incoming);
+                setCallState(CallState.Ringing);
+            }
+        } catch {
+            clearPersistedSession();
+        }
+    }, []);
+
     // ================= ACTIONS =================
 
     const callUser = (userId: number, roomId: number, callType?: CallType) => {
         targetUserIdRef.current = userId;
+        setCallDirection(CallDirection.Outgoing);
+        setCallOutcome(null);
         setCallState(CallState.Calling);
+        const normalizedType = callType ?? CallType.Audio;
+        setIncomingCallType(normalizedType);
+        const startedAt = Date.now();
+        persistSession({
+            direction: CallDirection.Outgoing,
+            createdAt: startedAt,
+            targetUserId: userId,
+            callType: normalizedType,
+        });
+        scheduleOutgoingAutoReset(startedAt);
 
         socketRef.current?.emit("callUser", {
             targetUserId: userId,
@@ -238,7 +434,9 @@ export const useCallWebSocket = () => {
         if (!caller) return;
 
         targetUserIdRef.current = caller;
+        setCallOutcome(CallOutcome.Accepted);
         setCallState(CallState.Connecting);
+        clearOutgoingTimeout();
 
         socketRef.current?.emit("acceptCall", {
             callerId: caller,
@@ -253,12 +451,19 @@ export const useCallWebSocket = () => {
             callerId: caller,
         });
 
+        setCallOutcome(CallOutcome.Rejected);
         webrtc.endCall();
         resetCallState();
     };
 
     const endCall = () => {
-        socketRef.current?.emit("endCall");
+        const targetUserId = targetUserIdRef.current;
+        if (callState === CallState.Calling && targetUserId) {
+            socketRef.current?.emit("cancelCall", { targetUserId });
+        } else {
+            socketRef.current?.emit("endCall");
+        }
+        setCallOutcome(CallOutcome.Cancelled);
         webrtc.endCall();
         resetCallState();
     };
@@ -268,6 +473,8 @@ export const useCallWebSocket = () => {
         callerId,
         callerName,
         incomingCallType,
+        callDirection,
+        callOutcome,
         connectedAt,
         callUser,
         acceptCall,

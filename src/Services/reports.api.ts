@@ -61,7 +61,7 @@ export const reportsApi = {
 
   downloadReport: (filePath: string) => {
     // For downloading files, we'll use fetch directly to handle blob responses
-    const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+    const token = localStorage.getItem('access_token') ;
     return fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/reports/download?filePath=${encodeURIComponent(filePath)}`, {
       method: 'GET',
       headers: token ? { Authorization: `Bearer ${token}` } : {},

@@ -42,3 +42,17 @@ export enum CallType {
   Audio = "audio",
   Video = "video",
 }
+
+export enum CallDirection {
+  Incoming = "incoming",
+  Outgoing = "outgoing",
+}
+
+export enum CallOutcome {
+  Accepted = "accepted",
+  Rejected = "rejected",
+  Cancelled = "cancelled",
+  Missed = "missed",
+  Busy = "busy",
+  Ended = "ended",
+}

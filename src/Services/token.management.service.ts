@@ -14,7 +14,7 @@ export const tokenManager = {
   },
 
   getToken: () => {
-    return localStorage.getItem('access_token') || localStorage.getItem('token');
+    return localStorage.getItem('access_token') ;
   },
 
   removeToken: () => {
@@ -29,7 +29,7 @@ export const tokenManager = {
   },
 
   getAccessToken: () => {
-    return localStorage.getItem('access_token') || localStorage.getItem('token');
+    return localStorage.getItem('access_token') ;
   },
 
   setRefreshToken: (token: string) => {

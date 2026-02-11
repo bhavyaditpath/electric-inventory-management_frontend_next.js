@@ -234,6 +234,7 @@ export default function ChatPage() {
     callerId,
     callerName,
     incomingCallType,
+    callDirection,
     connectedAt,
     callUser,
     acceptCall,
@@ -766,6 +767,18 @@ export default function ChatPage() {
     [rooms, activeRoomId]
   );
 
+  const outgoingReceiverName = useMemo(() => {
+    if (!activeRoom || activeRoom.isGroupChat || !user?.id) return null;
+    const other = activeRoom.participants?.find((p) => p.userId !== user.id);
+    return other?.user?.username || null;
+  }, [activeRoom, user?.id]);
+
+  const overlayDisplayName = useMemo(() => {
+    if (callDirection === "incoming") return incomingCallerName ?? null;
+    if (callDirection === "outgoing") return outgoingReceiverName;
+    return incomingCallerName ?? outgoingReceiverName;
+  }, [callDirection, incomingCallerName, outgoingReceiverName]);
+
   const typingUsers = useMemo(
     () => users.filter((u) => typingUserIds.includes(u.id)),
     [users, typingUserIds]
@@ -1005,7 +1018,7 @@ export default function ChatPage() {
         visible={callState !== CallState.Idle}
         state={callState}
         userId={incomingCall ?? callingUserId}
-        displayName={incomingCallerName ?? undefined}
+        displayName={overlayDisplayName ?? undefined}
         incoming={callState === CallState.Ringing}
         callKind={callKind}
         connectedAt={connectedAt}
