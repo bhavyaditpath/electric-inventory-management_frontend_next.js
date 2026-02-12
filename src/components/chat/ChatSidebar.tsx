@@ -63,7 +63,7 @@ const ChatSidebar = ({
   }, [openMenuRoomId, closeMenu]);
 
   return (
-    <aside className="w-full lg:w-80 border-r border-slate-200 bg-white/95 flex flex-col">
+    <aside className="w-full lg:w-80 border-r border-slate-200 bg-white/95 flex flex-col min-h-0">
       <div className="px-4 py-4 border-b border-slate-200/80 bg-white">
         <h2 className="text-lg font-semibold text-slate-900">Chat</h2>
         <p className="text-sm text-slate-500">Message Admin and Branches</p>
@@ -92,9 +92,9 @@ const ChatSidebar = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2 scrollbar-hide">
+      <div className="flex-1 min-h-0 px-3 py-3">
         {activeTab === "rooms" ? (
-          <>
+          <div className="h-full min-h-0 overflow-y-auto space-y-2 pr-1 scrollbar-hide">
             {loadingRooms ? (
               <div className="text-sm text-slate-500 px-3 py-6 text-center">
                 Loading chats...
@@ -213,9 +213,9 @@ const ChatSidebar = ({
                 );
               })
             )}
-          </>
+          </div>
         ) : (
-          <>
+          <div className="h-full min-h-0 flex flex-col">
             <div className="px-2 space-y-2">
               <input
                 value={userSearch || ""}
@@ -232,48 +232,50 @@ const ChatSidebar = ({
                 </button>
               )}
             </div>
-            {loadingUsers ? (
-              <div className="text-sm text-slate-500 px-3 py-6 text-center">
-                Loading users...
-              </div>
-            ) : users.length === 0 ? (
-              <div className="text-sm text-slate-500 px-3 py-6 text-center">
-                No users available.
-              </div>
-            ) : (
-              users.map((user) => (
-                <button
-                  key={user.id}
-                  onClick={() => onSelectUser(user)}
-                  className="w-full text-left p-3 rounded-xl border border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/40 transition-all shadow-sm hover:shadow-md cursor-pointer"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
-                        <UsersIcon className="w-4 h-4" />
+            <div className="flex-1 min-h-0 overflow-y-auto space-y-2 mt-3 pr-1 scrollbar-hide">
+              {loadingUsers ? (
+                <div className="text-sm text-slate-500 px-3 py-6 text-center">
+                  Loading users...
+                </div>
+              ) : users.length === 0 ? (
+                <div className="text-sm text-slate-500 px-3 py-6 text-center">
+                  No users available.
+                </div>
+              ) : (
+                users.map((user) => (
+                  <button
+                    key={user.id}
+                    onClick={() => onSelectUser(user)}
+                    className="w-full text-left p-3 rounded-xl border border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/40 transition-all shadow-sm hover:shadow-md cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+                          <UsersIcon className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-900 truncate">
+                            {user.username}
+                          </p>
+                          <p className="text-xs text-slate-500 truncate">
+                            {user.branch || user.role}
+                          </p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-900 truncate">
-                          {user.username}
-                        </p>
-                        <p className="text-xs text-slate-500 truncate">
-                          {user.branch || user.role}
-                        </p>
-                      </div>
+                      <span
+                        className={`text-xs font-medium px-2 py-1 rounded-full ${user.isOnline
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-slate-100 text-slate-500"
+                          }`}
+                      >
+                        {user.isOnline ? "Online" : "Offline"}
+                      </span>
                     </div>
-                    <span
-                      className={`text-xs font-medium px-2 py-1 rounded-full ${user.isOnline
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-slate-100 text-slate-500"
-                        }`}
-                    >
-                      {user.isOnline ? "Online" : "Offline"}
-                    </span>
-                  </div>
-                </button>
-              ))
-            )}
-          </>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
         )}
       </div>
     </aside>
