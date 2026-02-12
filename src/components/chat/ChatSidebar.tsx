@@ -63,7 +63,7 @@ const ChatSidebar = ({
   }, [openMenuRoomId, closeMenu]);
 
   return (
-    <aside className="w-full lg:w-80 border-r border-slate-200 bg-white/95 flex flex-col min-h-0">
+    <aside className="w-full lg:w-80 flex-1 lg:flex-none border-r border-slate-200 bg-white/95 flex flex-col min-h-0">
       <div className="px-4 py-4 border-b border-slate-200/80 bg-white">
         <h2 className="text-lg font-semibold text-slate-900">Chat</h2>
         <p className="text-sm text-slate-500">Message Admin and Branches</p>
