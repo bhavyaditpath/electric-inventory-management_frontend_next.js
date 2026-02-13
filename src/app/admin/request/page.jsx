@@ -89,21 +89,21 @@ const RequestPage = () => {
 
 
   return (
-    <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-6 bg-[var(--theme-bg)] text-[var(--theme-text)] min-h-screen">
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-col space-y-3 sm:space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Requested Purchases</h1>
-            <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage and process branch requests</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-[var(--theme-text)]">Requested Purchases</h1>
+            <p className="text-[var(--theme-text-muted)] mt-1 text-sm sm:text-base">Manage and process branch requests</p>
           </div>
           <div className="flex justify-center lg:justify-end">
             <button
               onClick={() => window.location.reload()}
-              className="inline-flex items-center px-3 py-2 sm:px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer text-sm sm:text-base"
+              className="inline-flex items-center px-3 py-2 sm:px-4 bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-lg hover:bg-[var(--theme-surface-muted)] transition-colors cursor-pointer text-sm sm:text-base"
             >
-              <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2 text-gray-600" />
-              <span className=" text-gray-700">Refresh</span>
+              <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2 text-[var(--theme-text-muted)]" />
+              <span className=" text-[var(--theme-text)]">Refresh</span>
             </button>
           </div>
         </div>
@@ -113,27 +113,27 @@ const RequestPage = () => {
       <div className="mb-6 sm:mb-8">
         <div className="relative max-w-md mx-auto sm:mx-0">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+            <MagnifyingGlassIcon className="h-5 w-5 text-[var(--theme-text-muted)]" />
           </div>
           <input
             type="text"
             placeholder="Search requests..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white text-gray-900 text-sm sm:text-base"
+            className="w-full pl-12 pr-4 py-3 border border-[var(--theme-border)] rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-[var(--theme-surface)] text-[var(--theme-text)] text-sm sm:text-base"
             aria-label="Search requests"
           />
         </div>
       </div>
 
 
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-        <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+      <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] shadow-sm">
+        <div className="px-4 sm:px-6 py-4 border-b border-[var(--theme-border)]">
           <div className="flex items-center">
             <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
               <CubeIcon className="w-5 h-5 text-purple-600" />
             </div>
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900">All Requests</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-[var(--theme-text)]">All Requests</h2>
           </div>
         </div>
 
@@ -145,21 +145,21 @@ const RequestPage = () => {
               </div>
             ) : !requests.length ? (
               <div className="text-center py-12 col-span-full">
-                <CubeIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 font-medium text-lg">
+                <CubeIcon className="w-16 h-16 text-[var(--theme-text-muted)] mx-auto mb-4" />
+                <p className="text-[var(--theme-text-muted)] font-medium text-lg">
                   {searchTerm ? 'No requests match your search.' : 'No requests found.'}
                 </p>
-                <p className="text-gray-500 text-sm mt-1">
+                <p className="text-[var(--theme-text-muted)] text-sm mt-1">
                   {searchTerm ? 'Try adjusting your search terms.' : 'Requests will appear here when branches submit them.'}
                 </p>
               </div>
             ) : (
               requests.map(request => (
-                <div key={request.id} className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-md transition-shadow">
+                <div key={request.id} className="bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-lg p-4 sm:p-6 hover:shadow-md transition-shadow">
                   <div className="flex flex-col space-y-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-col space-y-2 sm:flex-row sm:items-start sm:justify-between sm:space-y-0 sm:space-x-3">
-                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+                        <h3 className="text-base sm:text-lg font-semibold text-[var(--theme-text)] truncate">
                           {request.purchase?.productName}
                         </h3>
                         <span
@@ -171,20 +171,20 @@ const RequestPage = () => {
                                 ? 'bg-red-100 text-red-800'
                                 : request.status === RequestStatus.IN_TRANSIT
                                   ? 'bg-sky-100 text-sky-800'
-                                  : 'bg-gray-100 text-gray-800'
+                                  : 'bg-[var(--theme-surface-muted)] text-[var(--theme-text)]'
                             }`}
                         >
                           {request.status.replace('_', ' ')}
                         </span>
                       </div>
                       <div className="mt-3 space-y-1">
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-[var(--theme-text-muted)]">
                           <span className="font-medium">{request.quantityRequested} {request.purchase?.unit}</span> requested
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-[var(--theme-text-muted)]">
                           From <span className="font-medium">{request.requestingUser?.username}</span> to <span className="font-medium">{request.adminUser?.username}</span>
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-[var(--theme-text-muted)]">
                           Requested on {new Date(request.createdAt).toLocaleDateString()}
                         </p>
                       </div>
@@ -243,25 +243,25 @@ const RequestPage = () => {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 px-4 sm:px-6 py-4">
-              <div className="text-sm text-gray-700 text-center sm:text-left">
+              <div className="text-sm text-[var(--theme-text)] text-center sm:text-left">
                 Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, total)} of {total} results
               </div>
               <div className="flex items-center justify-center space-x-2">
                 <button
                   onClick={() => handlePageChange(page - 1)}
                   disabled={page <= 1}
-                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-[var(--theme-text-muted)] bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-md hover:bg-[var(--theme-surface-muted)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronLeftIcon className="h-4 w-4 mr-1" />
                   <span className="hidden sm:inline">Previous</span>
                 </button>
-                <span className="text-sm text-gray-700 px-3 py-2">
+                <span className="text-sm text-[var(--theme-text)] px-3 py-2">
                   Page {page} of {totalPages}
                 </span>
                 <button
                   onClick={() => handlePageChange(page + 1)}
                   disabled={page >= totalPages}
-                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-[var(--theme-text-muted)] bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-md hover:bg-[var(--theme-surface-muted)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <span className="hidden sm:inline">Next</span>
                   <ChevronRightIcon className="h-4 w-4 ml-1" />

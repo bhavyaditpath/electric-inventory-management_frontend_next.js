@@ -14,7 +14,7 @@ const ReportDataRenderer = ({ data, title }: ReportDataRendererProps) => {
 
   const renderValue = (value: any): React.ReactNode => {
     if (value === null || value === undefined) {
-      return <span className="text-gray-400 italic">0</span>;
+      return <span className="text-[var(--theme-text-muted)] italic">0</span>;
     }
 
     if (typeof value === "number") {
@@ -29,22 +29,22 @@ const ReportDataRenderer = ({ data, title }: ReportDataRendererProps) => {
           </span>
         );
       }
-      return <span className="text-gray-800 break-words">{value}</span>;
+      return <span className="text-[var(--theme-text)] break-words">{value}</span>;
     }
 
     if (typeof value === "object") {
       return (
-        <div className="border border-gray-200 bg-gray-50 rounded-lg p-4 space-y-3 shadow-sm w-full">
+        <div className="border border-[var(--theme-border)] bg-[var(--theme-surface-muted)] rounded-lg p-4 space-y-3 shadow-sm w-full">
           {Object.entries(value).map(([k, v]) => (
             <div
               key={k}
               className="flex flex-col sm:flex-row sm:items-start gap-2 w-full"
             >
-              <div className="font-medium text-gray-700 w-full sm:w-1/3 break-words">
+              <div className="font-medium text-[var(--theme-text)] w-full sm:w-1/3 break-words">
                 {formatKey(k)}
               </div>
 
-              <div className="sm:w-2/3 pl-2 border-l border-gray-300 break-words">
+              <div className="sm:w-2/3 pl-2 border-l border-[var(--theme-border)] break-words">
                 {renderValue(v)}
               </div>
             </div>
@@ -59,13 +59,13 @@ const ReportDataRenderer = ({ data, title }: ReportDataRendererProps) => {
   return (
     <div className="space-y-5 w-full">
       {title && (
-        <h3 className="text-xl font-semibold text-gray-900 border-b pb-2 flex items-center gap-2">
+        <h3 className="text-xl font-semibold text-[var(--theme-text)] border-b border-[var(--theme-border)] pb-2 flex items-center gap-2">
           <span className="w-1.5 h-6 bg-blue-600 rounded-full" />
           {title}
         </h3>
       )}
 
-      <div className="bg-white rounded-xl shadow p-0 w-full overflow-hidden">
+      <div className="bg-[var(--theme-surface)] rounded-xl shadow p-0 w-full overflow-hidden border border-[var(--theme-border)]">
         {renderValue(data)}
       </div>
     </div>
@@ -73,3 +73,4 @@ const ReportDataRenderer = ({ data, title }: ReportDataRendererProps) => {
 };
 
 export default ReportDataRenderer;
+

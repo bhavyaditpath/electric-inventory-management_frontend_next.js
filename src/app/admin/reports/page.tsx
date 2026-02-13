@@ -299,21 +299,21 @@ export default function ReportsPage() {
   );
 
   return (
-    <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-6 bg-[var(--theme-bg)] text-[var(--theme-text)] min-h-screen">
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-col space-y-3 sm:space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Reports Management</h1>
-            <p className="text-gray-600 mt-1 text-sm sm:text-base">View, generate and manage system reports and preferences</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-[var(--theme-text)]">Reports Management</h1>
+            <p className="text-[var(--theme-text-muted)] mt-1 text-sm sm:text-base">View, generate and manage system reports and preferences</p>
           </div>
           <div className="flex justify-center lg:justify-end">
             <button
               onClick={() => window.location.reload()}
-              className="inline-flex items-center px-3 py-2 sm:px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
+              className="inline-flex items-center px-3 py-2 sm:px-4 bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-lg hover:bg-[var(--theme-surface-muted)] transition-colors text-sm sm:text-base"
             >
-              <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2 text-gray-600" />
-              <span className=" text-gray-700">Refresh</span>
+              <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2 text-[var(--theme-text-muted)]" />
+              <span className=" text-[var(--theme-text)]">Refresh</span>
             </button>
           </div>
         </div>
@@ -321,7 +321,7 @@ export default function ReportsPage() {
 
       {/* Main Tabs */}
       <div className="mb-6 sm:mb-8">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] shadow-sm">
           <nav className="flex flex-col sm:flex-row">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -331,7 +331,7 @@ export default function ReportsPage() {
                   onClick={() => setActiveTab(tab.key)}
                   className={`flex items-center px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium border-b-2 sm:border-b-2 transition-colors flex-1 justify-center sm:justify-center ${activeTab === tab.key
                       ? 'border-blue-500 text-blue-600 bg-blue-50/50'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                      : 'border-transparent text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]'
                     }`}
                 >
                   <Icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
@@ -347,13 +347,13 @@ export default function ReportsPage() {
       {activeTab === 'view' && (
         <div className="space-y-8">
           {/* Report Type Selection */}
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] shadow-sm">
+            <div className="px-6 py-4 border-b border-[var(--theme-border)]">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
                   <DocumentTextIcon className="w-5 h-5 text-blue-600" />
                 </div>
-                <h2 className="text-lg font-semibold text-gray-900">Select Report Type</h2>
+                <h2 className="text-lg font-semibold text-[var(--theme-text)]">Select Report Type</h2>
               </div>
             </div>
 
@@ -368,11 +368,11 @@ export default function ReportsPage() {
                     }}
                     className={`p-3 sm:p-4 rounded-xl border-2 transition-all hover:shadow-md ${reportType === type
                         ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                        : 'border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text)] hover:border-[var(--theme-border-strong)] hover:bg-[var(--theme-surface-muted)]'
                       }`}
                   >
                     <div className="text-center">
-                      <DocumentTextIcon className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 sm:mb-3 text-gray-600" />
+                      <DocumentTextIcon className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 sm:mb-3 text-[var(--theme-text-muted)]" />
                       <span className="font-semibold capitalize text-xs sm:text-sm">
                         {type.replace('-', ' ')}
                       </span>
@@ -384,11 +384,11 @@ export default function ReportsPage() {
           </div>
 
           {/* Report Display */}
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] shadow-sm">
             {loading ? (
               <div className="p-8 sm:p-12 text-center">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-600 font-medium text-sm sm:text-base">Loading report...</p>
+                <p className="text-[var(--theme-text-muted)] font-medium text-sm sm:text-base">Loading report...</p>
               </div>
             ) : reportData ? (
               <div className="p-4 sm:p-6">
@@ -398,10 +398,10 @@ export default function ReportsPage() {
                       <ChartBarIcon className="w-4 h-4 sm:w-6 sm:h-6 text-green-600" />
                     </div>
                     <div>
-                      <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                      <h2 className="text-lg sm:text-xl font-semibold text-[var(--theme-text)]">
                         {reportType.charAt(0).toUpperCase() + reportType.slice(1).replace('-', ' ')} Report
                       </h2>
-                      <p className="text-xs sm:text-sm text-gray-600">Generated on {new Date().toLocaleDateString()}</p>
+                      <p className="text-xs sm:text-sm text-[var(--theme-text-muted)]">Generated on {new Date().toLocaleDateString()}</p>
                     </div>
                   </div>
                   <div className="flex justify-start sm:justify-end">
@@ -418,9 +418,9 @@ export default function ReportsPage() {
               </div>
             ) : (
               <div className="p-8 sm:p-12 text-center">
-                <DocumentTextIcon className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 font-medium text-base sm:text-lg">Select a report type to view data</p>
-                <p className="text-gray-500 text-xs sm:text-sm mt-1">Choose from the available report types above</p>
+                <DocumentTextIcon className="w-12 h-12 sm:w-16 sm:h-16 text-[var(--theme-text-muted)] mx-auto mb-4" />
+                <p className="text-[var(--theme-text-muted)] font-medium text-base sm:text-lg">Select a report type to view data</p>
+                <p className="text-[var(--theme-text-muted)] text-xs sm:text-sm mt-1">Choose from the available report types above</p>
               </div>
             )}
           </div>
@@ -430,26 +430,26 @@ export default function ReportsPage() {
       {activeTab === 'generate' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           {/* Generate Specific Report */}
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+          <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] shadow-sm">
+            <div className="px-4 sm:px-6 py-4 border-b border-[var(--theme-border)]">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
                   <ChartBarIcon className="w-5 h-5 text-blue-600" />
                 </div>
-                <h2 className="text-base sm:text-lg font-semibold text-gray-900">Generate Specific Report</h2>
+                <h2 className="text-base sm:text-lg font-semibold text-[var(--theme-text)]">Generate Specific Report</h2>
               </div>
             </div>
 
             <div className="p-4 sm:p-6">
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  <label className="block text-sm font-semibold text-[var(--theme-text)] mb-3">
                     Report Type
                   </label>
                   <select
                     value={reportType}
                     onChange={(e) => setReportType(e.target.value as ReportType)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white text-gray-900"
+                    className="w-full px-4 py-3 border border-[var(--theme-border)] rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-[var(--theme-surface)] text-[var(--theme-text)]"
                   >
                     {Object.values(ReportType).map((type) => (
                       <option key={type} value={type}>
@@ -483,18 +483,18 @@ export default function ReportsPage() {
           </div>
 
           {/* Generate Scheduled Reports */}
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+          <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] shadow-sm">
+            <div className="px-4 sm:px-6 py-4 border-b border-[var(--theme-border)]">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
                   <CogIcon className="w-5 h-5 text-green-600" />
                 </div>
-                <h2 className="text-base sm:text-lg font-semibold text-gray-900">Generate Scheduled Reports</h2>
+                <h2 className="text-base sm:text-lg font-semibold text-[var(--theme-text)]">Generate Scheduled Reports</h2>
               </div>
             </div>
 
             <div className="p-4 sm:p-6">
-              <p className="text-gray-600 mb-6 leading-relaxed">
+              <p className="text-[var(--theme-text-muted)] mb-6 leading-relaxed">
                 Generate all reports that are scheduled based on user preferences. This will process all active report preferences and deliver them according to their configured settings.
               </p>
               <button
@@ -526,40 +526,40 @@ export default function ReportsPage() {
         <div className="space-y-8">
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+            <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-600">Total Preferences</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-gray-900">{preferences.length}</p>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-1">Configured reports</p>
+                  <p className="text-sm font-medium text-[var(--theme-text-muted)]">Total Preferences</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-[var(--theme-text)]">{preferences.length}</p>
+                  <p className="text-xs sm:text-sm text-[var(--theme-text-muted)] mt-1">Configured reports</p>
                 </div>
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center ml-3">
                   <DocumentTextIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+            <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-600">Active Preferences</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  <p className="text-sm font-medium text-[var(--theme-text-muted)]">Active Preferences</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-[var(--theme-text)]">
                     {preferences.filter((p: any) => p.isActive).length}
                   </p>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-1">Currently active</p>
+                  <p className="text-xs sm:text-sm text-[var(--theme-text-muted)] mt-1">Currently active</p>
                 </div>
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center ml-3">
                   <ChartBarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+            <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-600">Email Delivery</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  <p className="text-sm font-medium text-[var(--theme-text-muted)]">Email Delivery</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-[var(--theme-text)]">
                     {preferences.filter((p: any) => p.deliveryMethod === DeliveryMethod.EMAIL).length}
                   </p>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-1">Email preferences</p>
+                  <p className="text-xs sm:text-sm text-[var(--theme-text-muted)] mt-1">Email preferences</p>
                 </div>
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center ml-3">
                   <CogIcon className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
@@ -575,17 +575,17 @@ export default function ReportsPage() {
                 <CogIcon className="w-4 h-4 sm:w-6 sm:h-6 text-indigo-600" />
               </div>
               <div className="flex-1">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Report Preferences</h2>
-                <p className="text-xs sm:text-sm text-gray-600">Manage automated report delivery preferences</p>
+                <h2 className="text-lg sm:text-xl font-semibold text-[var(--theme-text)]">Report Preferences</h2>
+                <p className="text-xs sm:text-sm text-[var(--theme-text-muted)]">Manage automated report delivery preferences</p>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-              <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+            <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] shadow-sm">
+              <div className="px-4 sm:px-6 py-4 border-b border-[var(--theme-border)]">
                 <div className="flex flex-col space-y-3 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
                   <div className="flex items-center space-x-3">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">All Preferences</h3>
-                    <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">
+                    <h3 className="text-base sm:text-lg font-semibold text-[var(--theme-text)]">All Preferences</h3>
+                    <span className="px-2 py-1 text-xs font-medium bg-[var(--theme-surface-muted)] text-[var(--theme-text)] rounded-full">
                       {preferences.length} total
                     </span>
                   </div>
@@ -637,14 +637,14 @@ export default function ReportsPage() {
       >
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           <div>
-            <label htmlFor="reportType" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="reportType" className="block text-sm font-semibold text-[var(--theme-text)] mb-2">
               Report Type <span className="text-red-500">*</span>
             </label>
             <select
               id="reportType"
               value={formData.reportType}
               onChange={(e) => setFormData({ ...formData, reportType: e.target.value as ReportType })}
-              className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white text-gray-900 text-sm sm:text-base"
+              className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-[var(--theme-border)] rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-[var(--theme-surface)] text-[var(--theme-text)] text-sm sm:text-base"
             >
               {Object.values(ReportType).map((type) => (
                 <option key={type} value={type}>
@@ -655,14 +655,14 @@ export default function ReportsPage() {
           </div>
 
           <div>
-            <label htmlFor="deliveryMethod" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="deliveryMethod" className="block text-sm font-semibold text-[var(--theme-text)] mb-2">
               Delivery Method <span className="text-red-500">*</span>
             </label>
             <select
               id="deliveryMethod"
               value={formData.deliveryMethod}
               onChange={(e) => setFormData({ ...formData, deliveryMethod: e.target.value as DeliveryMethod })}
-              className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white text-gray-900 text-sm sm:text-base"
+              className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-[var(--theme-border)] rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-[var(--theme-surface)] text-[var(--theme-text)] text-sm sm:text-base"
             >
               <option value={DeliveryMethod.EMAIL}>Email</option>
               <option value={DeliveryMethod.LOCAL_FILE}>Local File</option>
@@ -675,14 +675,14 @@ export default function ReportsPage() {
               type="checkbox"
               checked={formData.isActive}
               onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-[var(--theme-border)] rounded"
             />
-            <label htmlFor="isActive" className="ml-3 block text-sm text-gray-900 font-medium">
+            <label htmlFor="isActive" className="ml-3 block text-sm text-[var(--theme-text)] font-medium">
               Active
             </label>
           </div>
 
-          <div className="flex flex-col space-y-3 sm:flex-row sm:justify-end sm:space-y-0 sm:space-x-4 pt-4 sm:pt-6 border-t border-gray-200 bg-gray-50 -mx-4 sm:-mx-6 -mb-4 sm:-mb-6 px-4 sm:px-6 py-4 rounded-b-xl">
+          <div className="flex flex-col space-y-3 sm:flex-row sm:justify-end sm:space-y-0 sm:space-x-4 pt-4 sm:pt-6 border-t border-[var(--theme-border)] bg-[var(--theme-surface-muted)] -mx-4 sm:-mx-6 -mb-4 sm:-mb-6 px-4 sm:px-6 py-4 rounded-b-xl">
             <button
               type="button"
               onClick={() => {
@@ -691,7 +691,7 @@ export default function ReportsPage() {
                 resetForm();
               }}
               disabled={isSubmitting}
-              className="px-4 py-2 sm:px-6 sm:py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer order-2 sm:order-1"
+              className="px-4 py-2 sm:px-6 sm:py-2.5 text-sm font-medium text-[var(--theme-text)] bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-lg hover:bg-[var(--theme-surface-muted)] focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer order-2 sm:order-1"
             >
               Cancel
             </button>
@@ -730,3 +730,4 @@ export default function ReportsPage() {
     </div>
   );
 }
+
