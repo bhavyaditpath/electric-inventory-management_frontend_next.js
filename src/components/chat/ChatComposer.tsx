@@ -196,13 +196,13 @@ export default function ChatComposer({
   }, [previewFiles]);
 
   return (
-    <div className="sticky bottom-0 z-10 px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-200 bg-white/95">
+    <div className="sticky bottom-0 z-10 px-4 sm:px-6 py-3 sm:py-4 border-t border-[var(--theme-border)] bg-[var(--theme-surface)]">
       {previewFiles.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-2">
           {previewFiles.map((file, index) => (
             <div
               key={file.id}
-              className="relative border border-slate-200 rounded-lg overflow-hidden bg-slate-50 shadow-sm"
+              className="relative border border-[var(--theme-border)] rounded-lg overflow-hidden bg-[var(--theme-surface-muted)] shadow-sm"
             >
               {file.type.startsWith("image/") ? (
                 <img
@@ -212,13 +212,13 @@ export default function ChatComposer({
                   onClick={() => onOpenLightbox(file.url, file.name)}
                 />
               ) : (
-                <div className="h-20 w-20 flex items-center justify-center text-xs text-slate-600">
+                <div className="h-20 w-20 flex items-center justify-center text-xs text-[var(--theme-text-muted)]">
                   PDF
                 </div>
               )}
               <button
                 onClick={() => handleRemoveFile(index)}
-                className="absolute top-1 right-1 h-5 w-5 rounded-full bg-white/90 text-slate-600 text-xs hover:bg-white cursor-pointer"
+                className="absolute top-1 right-1 h-5 w-5 rounded-full bg-[var(--theme-surface)] text-[var(--theme-text-muted)] text-xs hover:bg-[var(--theme-surface-muted)] cursor-pointer"
                 aria-label="Remove file"
               >
                 x
@@ -238,7 +238,7 @@ export default function ChatComposer({
         />
         <button
           onClick={handlePickFiles}
-          className="p-2.5 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 cursor-pointer"
+          className="p-2.5 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-muted)] cursor-pointer"
           aria-label="Attach files"
         >
           <PaperClipIcon className="w-4 h-4" />
@@ -247,7 +247,7 @@ export default function ChatComposer({
           <button
             ref={emojiButtonRef}
             onClick={() => setShowEmojiPicker((prev) => !prev)}
-            className="p-2.5 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 cursor-pointer"
+            className="p-2.5 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-muted)] cursor-pointer"
             aria-label="Open emoji picker"
           >
             <FaceSmileIcon className="w-4 h-4" />
@@ -284,7 +284,7 @@ export default function ChatComposer({
           }}
           placeholder="Type a message..."
           rows={1}
-          className="flex-1 border border-slate-200 rounded-2xl px-4 py-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black resize-none overflow-y-auto max-h-[120px]"
+          className="flex-1 border border-[var(--theme-border)] rounded-2xl px-4 py-2 text-sm bg-[var(--theme-surface-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--theme-text)] resize-none overflow-y-auto max-h-[120px]"
         />
         <button
           onClick={handleSend}
@@ -294,7 +294,7 @@ export default function ChatComposer({
           <PaperAirplaneIcon className="w-4 h-4" />
         </button>
       </div>
-      <div className="mt-2 text-[11px] text-slate-500 flex flex-wrap items-center gap-2">
+      <div className="mt-2 text-[11px] text-[var(--theme-text-muted)] flex flex-wrap items-center gap-2">
         <span>Max 10 files per message.</span>
         <span>Total attachment size up to {totalLimitMb} MB.</span>
         <span>Images and PDFs only.</span>
@@ -303,3 +303,4 @@ export default function ChatComposer({
     </div>
   );
 }
+

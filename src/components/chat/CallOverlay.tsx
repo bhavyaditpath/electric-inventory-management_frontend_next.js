@@ -125,13 +125,13 @@ export default function CallOverlay({
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-slate-800/80 flex items-center justify-center z-[999]">
-      <div className="bg-white rounded-3xl shadow-2xl w-[360px] p-6 text-center space-y-6 border border-slate-100">
+      <div className="bg-[var(--theme-surface)] rounded-3xl shadow-2xl w-[360px] p-6 text-center space-y-6 border border-[var(--theme-border)]">
         <div className="flex items-center justify-between">
-          <span className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 bg-slate-100 px-3 py-1 rounded-full">
+          <span className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--theme-text-muted)] bg-[var(--theme-surface-muted)] px-3 py-1 rounded-full">
             <SignalIcon className="w-4 h-4" />
             {getLabel()}
           </span>
-          <span className="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 bg-slate-100 px-3 py-1 rounded-full">
+          <span className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--theme-text)] bg-[var(--theme-surface-muted)] px-3 py-1 rounded-full">
             {callIcon}
             {callKindLabel || "Call"}
           </span>
@@ -143,10 +143,10 @@ export default function CallOverlay({
           >
             {avatarLabel}
           </div>
-          <p className="text-sm font-semibold text-slate-800">
+          <p className="text-sm font-semibold text-[var(--theme-text)]">
             {displayName || `User #${userId ?? "?"}`}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--theme-text-muted)]">
             {state === CallState.Connected ? `Duration ${durationLabel}` : "User"}
           </p>
         </div>
@@ -190,3 +190,4 @@ export default function CallOverlay({
     </div>
   );
 }
+

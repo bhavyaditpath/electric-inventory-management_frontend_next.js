@@ -19,7 +19,7 @@ type TabKey = "history" | "missed" | "room";
 const statusStyles: Record<string, string> = {
   MISSED: "bg-red-50 text-red-700 border-red-100",
   REJECTED: "bg-amber-50 text-amber-700 border-amber-100",
-  CANCELLED: "bg-slate-50 text-slate-700 border-slate-100",
+  CANCELLED: "bg-[var(--theme-surface-muted)] text-[var(--theme-text)] border-[var(--theme-border)]",
   ANSWERED: "bg-emerald-50 text-emerald-700 border-emerald-100",
 };
 
@@ -180,22 +180,22 @@ export default function CallLogsModal({
   const renderLogs = () => {
     if (loading) {
       return (
-        <div className="text-sm text-gray-500">Loading call logs...</div>
+        <div className="text-sm text-[var(--theme-text-muted)]">Loading call logs...</div>
       );
     }
 
     if (!filteredLogs.length) {
       return (
-        <div className="text-sm text-gray-500">No call logs available.</div>
+        <div className="text-sm text-[var(--theme-text-muted)]">No call logs available.</div>
       );
     }
 
     return (
-      <div className="divide-y divide-gray-100">
+      <div className="divide-y divide-[var(--theme-border)]">
         {filteredLogs.map((log) => {
           const statusKey = String(log.status || "").toUpperCase();
           const badgeClass =
-            statusStyles[statusKey] || "bg-gray-50 text-gray-700 border-gray-100";
+            statusStyles[statusKey] || "bg-[var(--theme-surface-muted)] text-[var(--theme-text)] border-[var(--theme-border)]";
           const typeLabel = normalizeCallType(log.callType)
             ? normalizeCallType(log.callType) === CallType.Audio
               ? "Audio"
@@ -204,13 +204,13 @@ export default function CallLogsModal({
           return (
             <div key={log.id} className="py-3 flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">
+                <p className="text-sm font-semibold text-[var(--theme-text)] truncate">
                   {getNamesLabel(log)}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[var(--theme-text-muted)]">
                   Started: {formatDate(log.startedAt || log.createdAt)}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[var(--theme-text-muted)]">
                   Ended: {formatDate(log.endedAt)}
                 </p>
               </div>
@@ -218,8 +218,8 @@ export default function CallLogsModal({
                 <span className={`text-xs font-medium px-2 py-1 rounded-full border ${badgeClass}`}>
                   {statusLabel(log.status)}
                 </span>
-                <span className="text-xs text-gray-500">{typeLabel}</span>
-                <span className="text-xs text-gray-500">{formatDuration(log.duration)}</span>
+                <span className="text-xs text-[var(--theme-text-muted)]">{typeLabel}</span>
+                <span className="text-xs text-[var(--theme-text-muted)]">{formatDuration(log.duration)}</span>
               </div>
             </div>
           );
@@ -236,7 +236,7 @@ export default function CallLogsModal({
           className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
             activeTab === "history"
               ? "bg-blue-100 text-blue-700 border-blue-200"
-              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+              : "bg-[var(--theme-surface)] text-[var(--theme-text-muted)] border-[var(--theme-border)] hover:bg-[var(--theme-surface-muted)]"
           }`}
         >
           History ({history.length})
@@ -246,7 +246,7 @@ export default function CallLogsModal({
           className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
             activeTab === "missed"
               ? "bg-blue-100 text-blue-700 border-blue-200"
-              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+              : "bg-[var(--theme-surface)] text-[var(--theme-text-muted)] border-[var(--theme-border)] hover:bg-[var(--theme-surface-muted)]"
           }`}
         >
           Missed ({missed.length})
@@ -257,7 +257,7 @@ export default function CallLogsModal({
           className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
             activeTab === "room"
               ? "bg-blue-100 text-blue-700 border-blue-200"
-              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+              : "bg-[var(--theme-surface)] text-[var(--theme-text-muted)] border-[var(--theme-border)] hover:bg-[var(--theme-surface-muted)]"
           } ${!roomId ? "opacity-50 cursor-not-allowed" : ""}`}
         >
           Room ({roomLogs.length})
@@ -269,8 +269,8 @@ export default function CallLogsModal({
           onClick={() => setTypeFilter("all")}
           className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
             typeFilter === "all"
-              ? "bg-slate-900 text-white border-slate-900"
-              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+              ? "bg-[var(--theme-text)] text-[var(--theme-bg)] border-[var(--theme-text)]"
+              : "bg-[var(--theme-surface)] text-[var(--theme-text-muted)] border-[var(--theme-border)] hover:bg-[var(--theme-surface-muted)]"
           }`}
         >
           All Types
@@ -279,8 +279,8 @@ export default function CallLogsModal({
           onClick={() => setTypeFilter(CallType.Audio)}
           className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
             typeFilter === CallType.Audio
-              ? "bg-slate-900 text-white border-slate-900"
-              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+              ? "bg-[var(--theme-text)] text-[var(--theme-bg)] border-[var(--theme-text)]"
+              : "bg-[var(--theme-surface)] text-[var(--theme-text-muted)] border-[var(--theme-border)] hover:bg-[var(--theme-surface-muted)]"
           }`}
         >
           Audio
@@ -289,8 +289,8 @@ export default function CallLogsModal({
           onClick={() => setTypeFilter(CallType.Video)}
           className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
             typeFilter === CallType.Video
-              ? "bg-slate-900 text-white border-slate-900"
-              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+              ? "bg-[var(--theme-text)] text-[var(--theme-bg)] border-[var(--theme-text)]"
+              : "bg-[var(--theme-surface)] text-[var(--theme-text-muted)] border-[var(--theme-border)] hover:bg-[var(--theme-surface-muted)]"
           }`}
         >
           Video
@@ -301,3 +301,4 @@ export default function CallLogsModal({
     </Modal>
   );
 }
+

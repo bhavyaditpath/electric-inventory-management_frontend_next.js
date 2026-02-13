@@ -33,19 +33,19 @@ export default function CreateGroupModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
-        <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+      <div className="w-full max-w-lg bg-[var(--theme-surface)] rounded-2xl shadow-2xl border border-[var(--theme-border)] overflow-hidden">
+        <div className="px-5 py-3 border-b border-[var(--theme-border)] flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">
+            <h3 className="text-lg font-semibold text-[var(--theme-text)]">
               Create Group
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--theme-text-muted)]">
               Select users to add to the group.
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-slate-100 text-slate-600 cursor-pointer"
+            className="p-2 rounded-full hover:bg-[var(--theme-surface-muted)] text-[var(--theme-text-muted)] cursor-pointer"
             aria-label="Close"
           >
             x
@@ -57,25 +57,25 @@ export default function CreateGroupModal({
             value={groupName}
             onChange={(e) => onChangeGroupName(e.target.value)}
             placeholder="Group name"
-            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+            className="w-full border border-[var(--theme-border)] rounded-lg px-3 py-2 text-sm bg-[var(--theme-surface-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--theme-text)]"
           />
           <input
             value={groupSearch}
             onChange={(e) => onChangeSearch(e.target.value)}
             placeholder="Search users..."
-            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+            className="w-full border border-[var(--theme-border)] rounded-lg px-3 py-2 text-sm bg-[var(--theme-surface-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--theme-text)]"
           />
-          <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-lg bg-white">
+          <div className="max-h-60 overflow-y-auto border border-[var(--theme-border)] rounded-lg bg-[var(--theme-surface)]">
             {filteredUsers.length === 0 ? (
-              <div className="text-sm text-slate-500 p-4 text-center">
+              <div className="text-sm text-[var(--theme-text-muted)] p-4 text-center">
                 No users found.
               </div>
             ) : (
-              <div className="divide-y divide-slate-200">
+              <div className="divide-y divide-[var(--theme-border)]">
                 {filteredUsers.map((target) => (
                   <label
                     key={target.id}
-                    className="flex items-center gap-3 px-4 py-3 text-sm cursor-pointer hover:bg-slate-50"
+                    className="flex items-center gap-3 px-4 py-3 text-sm cursor-pointer hover:bg-[var(--theme-surface-muted)]"
                   >
                     <input
                       type="checkbox"
@@ -84,10 +84,10 @@ export default function CreateGroupModal({
                       className="h-4 w-4"
                     />
                     <span className="flex-1">
-                      <span className="font-medium text-slate-900">
+                      <span className="font-medium text-[var(--theme-text)]">
                         {target.username}
                       </span>
-                      <span className="block text-xs text-slate-500">
+                      <span className="block text-xs text-[var(--theme-text-muted)]">
                         {getBranchLabel(target.branch, target.role)}
                       </span>
                     </span>
@@ -95,7 +95,7 @@ export default function CreateGroupModal({
                       className={`text-xs font-medium px-2 py-1 rounded-full ${
                         target.isOnline
                           ? "bg-emerald-100 text-emerald-700"
-                          : "bg-slate-100 text-slate-500"
+                          : "bg-[var(--theme-surface-muted)] text-[var(--theme-text-muted)]"
                       }`}
                     >
                       {target.isOnline ? "Online" : "Offline"}
@@ -107,10 +107,10 @@ export default function CreateGroupModal({
           </div>
         </div>
 
-        <div className="px-5 py-4 border-t border-slate-200 flex items-center justify-end gap-2">
+        <div className="px-5 py-4 border-t border-[var(--theme-border)] flex items-center justify-end gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 cursor-pointer"
+            className="px-4 py-2 rounded-lg border border-[var(--theme-border)] text-sm text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-muted)] cursor-pointer"
           >
             Cancel
           </button>
@@ -126,3 +126,4 @@ export default function CreateGroupModal({
     </div>
   );
 }
+

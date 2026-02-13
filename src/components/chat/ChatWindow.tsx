@@ -129,12 +129,12 @@ export default function ChatWindow({
 
   if (!room) {
     return (
-      <section className="flex-1 flex items-center justify-center bg-slate-50">
+      <section className="flex-1 flex items-center justify-center bg-[var(--theme-bg)]">
         <div className="text-center max-w-md px-6">
-          <h3 className="text-xl font-semibold text-slate-800">
+          <h3 className="text-xl font-semibold text-[var(--theme-text)]">
             Select a conversation
           </h3>
-          <p className="text-sm text-slate-500 mt-2">
+          <p className="text-sm text-[var(--theme-text-muted)] mt-2">
             Choose a chat or start a new one from the Users tab.
           </p>
         </div>
@@ -143,14 +143,14 @@ export default function ChatWindow({
   }
 
   return (
-    <section className="flex-1 flex flex-col min-h-0 bg-slate-50">
-      <div className="sticky top-0 z-10 px-4 sm:px-6 py-2 sm:py-3 border-b border-slate-200 bg-white/95">
+    <section className="flex-1 flex flex-col min-h-0 bg-[var(--theme-bg)]">
+      <div className="sticky top-0 z-10 px-4 sm:px-6 py-2 sm:py-3 border-b border-[var(--theme-border)] bg-[var(--theme-surface)]">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             {isMobile && onBack && (
               <button
                 onClick={onBack}
-                className="p-2 rounded-full hover:bg-blue-50 text-slate-600 cursor-pointer"
+                className="p-2 rounded-full hover:bg-blue-50/30 text-[var(--theme-text-muted)] cursor-pointer"
                 aria-label="Back to chats"
               >
                 <span className="sr-only">Back</span>
@@ -158,10 +158,10 @@ export default function ChatWindow({
               </button>
             )}
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-slate-900">
+              <h3 className="text-base sm:text-lg font-semibold text-[var(--theme-text)]">
                 {room.name}
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[var(--theme-text-muted)]">
                 {room.isGroupChat ? "Group chat" : "Direct chat"}
               </p>
             </div>
@@ -170,7 +170,7 @@ export default function ChatWindow({
             {room.isGroupChat && (
               <button
                 onClick={onOpenMembers}
-                className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs font-medium text-slate-600 hover:bg-slate-50 cursor-pointer"
+                className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] text-xs font-medium text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-muted)] cursor-pointer"
               >
                 Members
               </button>
@@ -178,15 +178,15 @@ export default function ChatWindow({
             <div className="relative" ref={callMenuRef}>
               <button
                 onClick={() => setShowCallMenu((v) => !v)}
-                className="p-2 rounded-full hover:bg-slate-100 text-slate-500 cursor-pointer"
+                className="p-2 rounded-full hover:bg-[var(--theme-surface-muted)] text-[var(--theme-text-muted)] cursor-pointer"
               >
                 <EllipsisHorizontalIcon className="w-5 h-5" />
               </button>
 
               {showCallMenu && (
-                <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+                <div className="absolute right-0 mt-2 w-64 bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-2xl shadow-xl z-50 overflow-hidden">
                   <div className="px-4 pt-3 pb-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--theme-text-muted)]">
                       Call Actions
                     </p>
                   </div>
@@ -200,8 +200,8 @@ export default function ChatWindow({
                       disabled={!canDirectCall}
                       className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
                         canDirectCall
-                          ? "text-gray-700 hover:bg-gray-100"
-                          : "text-gray-300 cursor-not-allowed"
+                          ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                          : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
                       }`}
                       title={!canDirectCall ? "Available in direct chats only" : "Start audio call"}
                     >
@@ -218,8 +218,8 @@ export default function ChatWindow({
                       disabled={!canDirectCall}
                       className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
                         canDirectCall
-                          ? "text-gray-700 hover:bg-gray-100"
-                          : "text-gray-300 cursor-not-allowed"
+                          ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                          : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
                       }`}
                       title={!canDirectCall ? "Available in direct chats only" : "Start video call"}
                     >
@@ -236,8 +236,8 @@ export default function ChatWindow({
                       disabled={!canGroupCall}
                       className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
                         canGroupCall
-                          ? "text-gray-700 hover:bg-gray-100"
-                          : "text-gray-300 cursor-not-allowed"
+                          ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                          : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
                       }`}
                       title={!canGroupCall ? "Available in group chats only" : "Start group audio call"}
                     >
@@ -254,8 +254,8 @@ export default function ChatWindow({
                       disabled={!canGroupCall}
                       className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
                         canGroupCall
-                          ? "text-gray-700 hover:bg-gray-100"
-                          : "text-gray-300 cursor-not-allowed"
+                          ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                          : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
                       }`}
                       title={!canGroupCall ? "Available in group chats only" : "Start group video call"}
                     >
@@ -264,10 +264,10 @@ export default function ChatWindow({
                     </button>
                   </div>
 
-                  <div className="border-t border-gray-100" />
+                  <div className="border-t border-[var(--theme-border)]" />
 
                   <div className="px-4 pt-3 pb-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--theme-text-muted)]">
                       Call History
                     </p>
                   </div>
@@ -281,8 +281,8 @@ export default function ChatWindow({
                       disabled={!canOpenLogs}
                       className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
                         canOpenLogs
-                          ? "text-gray-700 hover:bg-gray-100"
-                          : "text-gray-300 cursor-not-allowed"
+                          ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                          : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
                       }`}
                     >
                       <ClockIcon className="w-4 h-4" />
@@ -297,8 +297,8 @@ export default function ChatWindow({
                       disabled={!canOpenLogs}
                       className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
                         canOpenLogs
-                          ? "text-gray-700 hover:bg-gray-100"
-                          : "text-gray-300 cursor-not-allowed"
+                          ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                          : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
                       }`}
                     >
                       <PhoneIcon className="w-4 h-4" />
@@ -313,8 +313,8 @@ export default function ChatWindow({
                       disabled={!canOpenLogs}
                       className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
                         canOpenLogs
-                          ? "text-gray-700 hover:bg-gray-100"
-                          : "text-gray-300 cursor-not-allowed"
+                          ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                          : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
                       }`}
                     >
                       <VideoCameraIcon className="w-4 h-4" />
@@ -329,8 +329,8 @@ export default function ChatWindow({
                       disabled={!canOpenLogs}
                       className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
                         canOpenLogs
-                          ? "text-gray-700 hover:bg-gray-100"
-                          : "text-gray-300 cursor-not-allowed"
+                          ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                          : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
                       }`}
                     >
                       <ClockIcon className="w-4 h-4" />
@@ -378,3 +378,4 @@ export default function ChatWindow({
     </section>
   );
 }
+

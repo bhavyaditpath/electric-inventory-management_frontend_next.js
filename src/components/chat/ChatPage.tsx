@@ -746,26 +746,26 @@ export default function ChatPage() {
     removingSelf && membersRoom?.createdBy === user?.id;
 
   return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-slate-100/60">
+    <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-[var(--theme-bg)] text-[var(--theme-text)]">
       {isMobile ? (
         <div className="flex-1 flex flex-col min-h-0">
           {!showChat && (
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="px-4 py-3 border-b border-slate-200 bg-white/95 flex items-center justify-between">
+              <div className="px-4 py-3 border-b border-[var(--theme-border)] bg-[var(--theme-surface)] flex items-center justify-between">
                 <div>
-                  <h1 className="text-lg font-semibold text-slate-900">
+                  <h1 className="text-lg font-semibold text-[var(--theme-text)]">
                     Messages
                   </h1>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-[var(--theme-text-muted)]">
                     {user?.role} user - {isConnected ? "Connected" : "Offline"}
                   </p>
                 </div>
                 <button
                   onClick={refreshData}
-                  className="p-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer"
+                  className="p-2.5 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] hover:bg-[var(--theme-surface-muted)] cursor-pointer"
                   aria-label="Refresh"
                 >
-                  <ArrowPathIcon className="w-4 h-4 text-slate-600" />
+                  <ArrowPathIcon className="w-4 h-4 text-[var(--theme-text-muted)]" />
                 </button>
               </div>
               <ChatSidebar
@@ -835,12 +835,12 @@ export default function ChatPage() {
           />
 
           <div className="flex-1 flex flex-col min-h-0">
-            <div className="px-5 py-3 border-b border-slate-200 bg-white/95 flex items-center justify-between">
+            <div className="px-5 py-3 border-b border-[var(--theme-border)] bg-[var(--theme-surface)] flex items-center justify-between">
               <div>
-                <h1 className="text-xl font-semibold text-slate-900">
+                <h1 className="text-xl font-semibold text-[var(--theme-text)]">
                   Messages
                 </h1>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-[var(--theme-text-muted)]">
                   {user?.role} user - {isConnected ? "Connected" : "Offline"}
                 </p>
               </div>
@@ -848,7 +848,7 @@ export default function ChatPage() {
                 <span
                   className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${isConnected
                     ? "bg-emerald-100 text-emerald-700"
-                    : "bg-slate-100 text-slate-500"
+                    : "bg-[var(--theme-surface-muted)] text-[var(--theme-text-muted)]"
                     }`}
                 >
                   <SignalIcon className="w-4 h-4" />
@@ -856,10 +856,10 @@ export default function ChatPage() {
                 </span>
                 <button
                   onClick={refreshData}
-                  className="p-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer"
+                  className="p-2.5 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] hover:bg-[var(--theme-surface-muted)] cursor-pointer"
                   aria-label="Refresh"
                 >
-                  <ArrowPathIcon className="w-4 h-4 text-slate-600" />
+                  <ArrowPathIcon className="w-4 h-4 text-[var(--theme-text-muted)]" />
                 </button>
               </div>
             </div>

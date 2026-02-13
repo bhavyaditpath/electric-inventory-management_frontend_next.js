@@ -50,7 +50,7 @@ export default function ChatMessageList({
     if (ext === "CSV") return "bg-lime-100 text-lime-700 border-lime-200";
     if (ext === "ZIP" || ext === "RAR")
       return "bg-amber-100 text-amber-700 border-amber-200";
-    return "bg-slate-100 text-slate-600 border-slate-200";
+    return "bg-[var(--theme-surface-muted)] text-[var(--theme-text-muted)] border-[var(--theme-border)]";
   };
 
   const visibleTypingUsers = useMemo(
@@ -79,13 +79,13 @@ export default function ChatMessageList({
   };
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 space-y-4 scrollbar-default bg-slate-50">
+    <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 space-y-4 scrollbar-default bg-[var(--theme-bg)]">
       {isLoading ? (
-        <div className="text-sm text-slate-500 px-3 py-6 text-center">
+        <div className="text-sm text-[var(--theme-text-muted)] px-3 py-6 text-center">
           Loading messages...
         </div>
       ) : messages.length === 0 ? (
-        <div className="text-sm text-slate-500 px-3 py-6 text-center">
+        <div className="text-sm text-[var(--theme-text-muted)] px-3 py-6 text-center">
           No messages yet. Say hello.
         </div>
       ) : (
@@ -101,12 +101,12 @@ export default function ChatMessageList({
               <div
                 className={`max-w-[75%] md:max-w-[60%] w-fit rounded-2xl px-4 py-2 text-sm shadow-sm ${isMe
                   ? "bg-blue-600 text-white border border-blue-600 rounded-br-md"
-                  : "bg-white text-slate-800 border border-slate-200 rounded-bl-md"
+                  : "bg-[var(--theme-surface)] text-[var(--theme-text)] border border-[var(--theme-border)] rounded-bl-md"
                   }`}
               >
                 {isGroupChat && (
                   <p
-                    className={`text-[11px] font-semibold mb-1 ${isMe ? "text-blue-100" : "text-slate-500"
+                    className={`text-[11px] font-semibold mb-1 ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"
                       }`}
                   >
                     {senderName}
@@ -133,7 +133,7 @@ export default function ChatMessageList({
                             }
                             className={`w-full overflow-hidden rounded-lg border cursor-pointer ${isMe
                               ? "border-white/20"
-                              : "border-slate-200"
+                              : "border-[var(--theme-border)]"
                               }`}
                             aria-label={`Open ${attachment.fileName}`}
                           >
@@ -154,7 +154,7 @@ export default function ChatMessageList({
                             key={attachment.id}
                             className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${isMe
                               ? "bg-white/10 border-white/20 text-white"
-                              : "bg-slate-50 border-slate-200 text-slate-700"
+                              : "bg-[var(--theme-surface-muted)] border-[var(--theme-border)] text-[var(--theme-text)]"
                               }`}
                           >
                             <a
@@ -183,20 +183,20 @@ export default function ChatMessageList({
                                 }
                                 className={`p-1 rounded-full cursor-pointer ${isMe
                                   ? "text-blue-100 hover:text-white"
-                                  : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                                  : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
                                   }`}
                                 aria-label="Attachment actions"
                               >
                                 <EllipsisHorizontalIcon className="w-4 h-4" />
                               </button>
                               {openAttachmentMenuId === attachment.id && (
-                                <div className="absolute right-0 top-6 w-32 rounded-lg border border-slate-200 bg-white shadow-lg z-20">
+                                <div className="absolute right-0 top-6 w-32 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20">
                                   <button
                                     onClick={() => {
                                       handleDownloadAttachment(attachment);
                                       setOpenAttachmentMenuId(null);
                                     }}
-                                    className="w-full px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 cursor-pointer"
+                                    className="w-full px-3 py-2 text-left text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] cursor-pointer"
                                   >
                                     Download
                                   </button>
@@ -215,7 +215,7 @@ export default function ChatMessageList({
                           rel="noreferrer"
                           className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-xs cursor-pointer ${isMe
                             ? "bg-white/10 border-white/20 text-white"
-                            : "bg-slate-50 border-slate-200 text-slate-700"
+                            : "bg-[var(--theme-surface-muted)] border-[var(--theme-border)] text-[var(--theme-text)]"
                             }`}
                         >
                           <span
@@ -235,7 +235,7 @@ export default function ChatMessageList({
                 )}
                 <div className="flex items-center justify-between gap-2">
                   <p
-                    className={`text-[10px] mt-0 ${isMe ? "text-blue-100" : "text-slate-400"
+                    className={`text-[10px] mt-0 ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"
                       }`}
                   >
                     {new Date(message.createdAt).toLocaleTimeString([], {
@@ -253,14 +253,14 @@ export default function ChatMessageList({
                       }
                       className={`p-1 rounded-full cursor-pointer ${isMe
                         ? "text-blue-100 hover:text-white"
-                        : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                        : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
                         }`}
                       aria-label="Message actions"
                     >
                       <EllipsisHorizontalIcon className="w-4 h-4" />
                     </button>
                       {openMenuMessageId === message.id && (
-                        <div className="absolute right-0 top-6 w-32 rounded-lg border border-slate-200 bg-white shadow-lg z-20">
+                        <div className="absolute right-0 top-6 w-32 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20">
                           <button
                             onClick={() => {
                               onDeleteMessage?.(message.id);
@@ -282,7 +282,7 @@ export default function ChatMessageList({
         })
       )}
       {visibleTypingUsers.length > 0 && (
-        <div className="text-xs text-slate-500 px-2">
+        <div className="text-xs text-[var(--theme-text-muted)] px-2">
           {visibleTypingUsers.map((u) => u.username).join(", ")} typing...
         </div>
       )}
@@ -290,3 +290,4 @@ export default function ChatMessageList({
     </div>
   );
 }
+

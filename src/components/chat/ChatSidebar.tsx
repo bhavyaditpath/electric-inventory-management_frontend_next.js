@@ -63,19 +63,19 @@ const ChatSidebar = ({
   }, [openMenuRoomId, closeMenu]);
 
   return (
-    <aside className="w-full lg:w-80 flex-1 lg:flex-none border-r border-slate-200 bg-white/95 flex flex-col min-h-0">
-      <div className="px-4 py-4 border-b border-slate-200/80 bg-white">
-        <h2 className="text-lg font-semibold text-slate-900">Chat</h2>
-        <p className="text-sm text-slate-500">Message Admin and Branches</p>
+    <aside className="w-full lg:w-80 flex-1 lg:flex-none border-r border-[var(--theme-border)] bg-[var(--theme-surface)] flex flex-col min-h-0">
+      <div className="px-4 py-4 border-b border-[var(--theme-border)] bg-[var(--theme-surface)]">
+        <h2 className="text-lg font-semibold text-[var(--theme-text)]">Chat</h2>
+        <p className="text-sm text-[var(--theme-text-muted)]">Message Admin and Branches</p>
       </div>
 
       <div className="px-3 pt-3">
-        <div className="flex gap-2 bg-slate-100 rounded-xl p-1.5 border border-slate-200/70">
+        <div className="flex gap-2 bg-[var(--theme-surface-muted)] rounded-xl p-1.5 border border-[var(--theme-border)]">
           <button
             onClick={() => onTabChange("rooms")}
             className={`flex-1 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${activeTab === "rooms"
-              ? "bg-white text-blue-700 shadow-sm ring-1 ring-slate-200/70"
-              : "text-slate-600 hover:text-slate-900"
+              ? "bg-[var(--theme-surface)] text-blue-700 shadow-sm ring-1 ring-[var(--theme-border)]"
+              : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
               } cursor-pointer`}
           >
             Chats
@@ -83,8 +83,8 @@ const ChatSidebar = ({
           <button
             onClick={() => onTabChange("users")}
             className={`flex-1 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${activeTab === "users"
-              ? "bg-white text-blue-700 shadow-sm ring-1 ring-slate-200/70"
-              : "text-slate-600 hover:text-slate-900"
+              ? "bg-[var(--theme-surface)] text-blue-700 shadow-sm ring-1 ring-[var(--theme-border)]"
+              : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
               } cursor-pointer`}
           >
             Users
@@ -96,11 +96,11 @@ const ChatSidebar = ({
         {activeTab === "rooms" ? (
           <div className="h-full min-h-0 overflow-y-auto space-y-2 pr-1 scrollbar-hide">
             {loadingRooms ? (
-              <div className="text-sm text-slate-500 px-3 py-6 text-center">
+              <div className="text-sm text-[var(--theme-text-muted)] px-3 py-6 text-center">
                 Loading chats...
               </div>
             ) : rooms.length === 0 ? (
-              <div className="text-sm text-slate-500 px-3 py-6 text-center">
+              <div className="text-sm text-[var(--theme-text-muted)] px-3 py-6 text-center">
                 No chats yet. Start a new conversation.
               </div>
             ) : (
@@ -130,24 +130,24 @@ const ChatSidebar = ({
                     }}
                     className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer shadow-sm ${isActive
                       ? "border-blue-200 bg-blue-50/70"
-                      : "border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/40 hover:shadow-md"
+                      : "border-[var(--theme-border)] bg-[var(--theme-surface)] hover:border-blue-200 hover:bg-blue-50/20 hover:shadow-md"
                       }`}
                   >
-                    <div className="flex items-center justify-between gap-2 min-w-0 text-black">
+                    <div className="flex items-center justify-between gap-2 min-w-0 text-[var(--theme-text)]">
                       <div className="flex flex-1 items-center gap-2 min-w-0 overflow-hidden">
                         <div
                           className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center ${isActive
                             ? "bg-blue-600 text-white"
-                            : "bg-slate-100 text-slate-600"
+                            : "bg-[var(--theme-surface-muted)] text-[var(--theme-text-muted)]"
                             }`}
                         >
                           <ChatBubbleLeftRightIcon className="w-4 h-4" />
                         </div>
                         <div className="w-0 min-w-0 flex-1 overflow-hidden">
-                          <p className="block w-full text-sm font-semibold text-slate-900 truncate">
+                          <p className="block w-full text-sm font-semibold text-[var(--theme-text)] truncate">
                             {room.name}
                           </p>
-                          <p className="block w-full text-xs text-slate-500 truncate">
+                          <p className="block w-full text-xs text-[var(--theme-text-muted)] truncate">
                             {lastMessageLabel}
                           </p>
                         </div>
@@ -165,13 +165,13 @@ const ChatSidebar = ({
                                   prev === room.id ? null : room.id
                                 );
                               }}
-                              className="p-1 rounded-full border border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 cursor-pointer"
+                              className="p-1 rounded-full border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] cursor-pointer"
                               aria-label="Room actions"
                             >
                               <EllipsisVerticalIcon className="w-4 h-4" />
                             </button>
                             {openMenuRoomId === room.id && (
-                              <div className="absolute right-0 mt-2 w-36 rounded-lg border border-slate-200 bg-white shadow-lg z-20">
+                              <div className="absolute right-0 mt-2 w-36 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20">
                                 {onPinRoom && (
                                   <button
                                     onClick={(event) => {
@@ -179,7 +179,7 @@ const ChatSidebar = ({
                                       onPinRoom(room.id, !room.pinned);
                                       closeMenu();
                                     }}
-                                    className="w-full px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
+                                    className="w-full px-3 py-2 text-left text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] flex items-center gap-2 cursor-pointer"
                                   >
                                     <BookmarkIcon className="w-4 h-4" />
                                     {room.pinned ? "Unpin" : "Pin"}
@@ -221,7 +221,7 @@ const ChatSidebar = ({
                 value={userSearch || ""}
                 onChange={(e) => onUserSearchChange?.(e.target.value)}
                 placeholder="Search users..."
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                className="w-full border border-[var(--theme-border)] rounded-lg px-3 py-2 text-sm bg-[var(--theme-surface-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--theme-text)]"
               />
               {canCreateGroup && (
                 <button
@@ -234,11 +234,11 @@ const ChatSidebar = ({
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto space-y-2 mt-3 pr-1 scrollbar-hide">
               {loadingUsers ? (
-                <div className="text-sm text-slate-500 px-3 py-6 text-center">
+                <div className="text-sm text-[var(--theme-text-muted)] px-3 py-6 text-center">
                   Loading users...
                 </div>
               ) : users.length === 0 ? (
-                <div className="text-sm text-slate-500 px-3 py-6 text-center">
+                <div className="text-sm text-[var(--theme-text-muted)] px-3 py-6 text-center">
                   No users available.
                 </div>
               ) : (
@@ -246,18 +246,18 @@ const ChatSidebar = ({
                   <button
                     key={user.id}
                     onClick={() => onSelectUser(user)}
-                    className="w-full text-left p-3 rounded-xl border border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/40 transition-all shadow-sm hover:shadow-md cursor-pointer"
+                    className="w-full text-left p-3 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] hover:border-blue-200 hover:bg-blue-50/20 transition-all shadow-sm hover:shadow-md cursor-pointer"
                   >
                     <div className="flex items-center justify-between gap-2 min-w-0">
                       <div className="flex flex-1 items-center gap-2 min-w-0 overflow-hidden">
-                        <div className="w-9 h-9 shrink-0 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+                        <div className="w-9 h-9 shrink-0 rounded-full bg-[var(--theme-surface-muted)] text-[var(--theme-text-muted)] flex items-center justify-center">
                           <UsersIcon className="w-4 h-4" />
                         </div>
                         <div className="w-0 min-w-0 flex-1 overflow-hidden">
-                          <p className="block w-full text-sm font-semibold text-slate-900 truncate">
+                          <p className="block w-full text-sm font-semibold text-[var(--theme-text)] truncate">
                             {user.username}
                           </p>
-                          <p className="block w-full text-xs text-slate-500 truncate">
+                          <p className="block w-full text-xs text-[var(--theme-text-muted)] truncate">
                             {user.branch || user.role}
                           </p>
                         </div>
@@ -265,7 +265,7 @@ const ChatSidebar = ({
                       <span
                         className={`shrink-0 text-xs font-medium px-2 py-1 rounded-full ${user.isOnline
                           ? "bg-emerald-100 text-emerald-700"
-                          : "bg-slate-100 text-slate-500"
+                          : "bg-[var(--theme-surface-muted)] text-[var(--theme-text-muted)]"
                           }`}
                       >
                         {user.isOnline ? "Online" : "Offline"}
@@ -283,3 +283,4 @@ const ChatSidebar = ({
 };
 
 export default memo(ChatSidebar);
+

@@ -44,15 +44,15 @@ export default function RemoveParticipantModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md max-h-[85vh] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-200 overflow-y-auto">
+      <div className="w-full max-w-md max-h-[85vh] bg-[var(--theme-surface)] rounded-t-2xl sm:rounded-2xl shadow-2xl border border-[var(--theme-border)] overflow-y-auto">
         <div className="px-5 py-3 flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
-            <p className="text-xs text-slate-500">{description}</p>
+            <h3 className="text-lg font-semibold text-[var(--theme-text)]">{title}</h3>
+            <p className="text-xs text-[var(--theme-text-muted)]">{description}</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-slate-100 text-slate-600 cursor-pointer"
+            className="p-2 rounded-full hover:bg-[var(--theme-surface-muted)] text-[var(--theme-text-muted)] cursor-pointer"
             aria-label="Close"
             disabled={isLoading}
           >
@@ -61,7 +61,7 @@ export default function RemoveParticipantModal({
         </div>
         {showAdminTransfer && (
           <div className="px-5 py-3">
-            <label className="block text-xs font-medium text-slate-600 mb-2">
+            <label className="block text-xs font-medium text-[var(--theme-text-muted)] mb-2">
               Select new admin
             </label>
             <select
@@ -69,7 +69,7 @@ export default function RemoveParticipantModal({
               onChange={(e) =>
                 onChangeNewAdminId(e.target.value ? Number(e.target.value) : null)
               }
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+              className="w-full border border-[var(--theme-border)] rounded-lg px-3 py-2 text-sm bg-[var(--theme-surface-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--theme-text)]"
               disabled={isLoading}
             >
               <option value="">Choose a member</option>
@@ -89,7 +89,7 @@ export default function RemoveParticipantModal({
         <div className="px-5 py-2 flex items-center justify-end gap-2">
           <button
             onClick={onClose}
-            className="px-3 py-1 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 cursor-pointer"
+            className="px-3 py-1 rounded-lg border border-[var(--theme-border)] text-sm text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-muted)] cursor-pointer"
             disabled={isLoading}
           >
             {cancelLabel}
@@ -106,3 +106,4 @@ export default function RemoveParticipantModal({
     </div>
   );
 }
+
