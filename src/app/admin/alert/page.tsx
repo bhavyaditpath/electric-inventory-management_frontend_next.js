@@ -19,7 +19,7 @@ const priorityColors = {
 const statusColors = {
   active: "bg-red-100 text-red-800",
   resolved: "bg-green-100 text-green-800",
-  dismissed: "bg-gray-100 text-gray-800",
+  dismissed: "bg-[var(--theme-surface-muted)] text-[var(--theme-text)]",
 };
 
 export default function AdminAlertsPage() {
@@ -72,7 +72,7 @@ export default function AdminAlertsPage() {
       render: (value: string) => {
         const numValue = parseFloat(value);
         return (
-          <span className={`font-medium ${numValue === 0 ? "text-red-600" : numValue <= 5 ? "text-orange-600" : "text-gray-900"}`}>
+          <span className={`font-medium ${numValue === 0 ? "text-red-600" : numValue <= 5 ? "text-orange-600" : "text-[var(--theme-text)]"}`}>
             {numValue}
           </span>
         );
@@ -101,7 +101,7 @@ export default function AdminAlertsPage() {
       header: "Priority",
       sortable: true,
       render: (value: string) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${priorityColors[value as keyof typeof priorityColors] || "bg-gray-100 text-gray-800"}`}>
+        <span className={`px-2 py-1 text-xs font-medium rounded-full ${priorityColors[value as keyof typeof priorityColors] || "bg-[var(--theme-surface-muted)] text-[var(--theme-text)]"}`}>
           {value.charAt(0).toUpperCase() + value.slice(1)}
         </span>
       ),
@@ -121,7 +121,7 @@ export default function AdminAlertsPage() {
       header: "Status",
       sortable: true,
       render: (value: string) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[value as keyof typeof statusColors] || "bg-gray-100 text-gray-800"}`}>
+        <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[value as keyof typeof statusColors] || "bg-[var(--theme-surface-muted)] text-[var(--theme-text)]"}`}>
           {value.charAt(0).toUpperCase() + value.slice(1)}
         </span>
       ),
@@ -213,7 +213,7 @@ export default function AdminAlertsPage() {
           </button>
           <button
             onClick={() => handleDismiss(row)}
-            className="text-gray-600 hover:text-gray-900 p-1 transition-colors"
+            className="text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] p-1 transition-colors"
             title="Dismiss Alert"
           >
             <XCircleIcon className="w-4 h-4" />
@@ -225,18 +225,18 @@ export default function AdminAlertsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="p-6 bg-[var(--theme-bg)] text-[var(--theme-text)] min-h-screen">
         <div className="mb-6">
-          <div className="h-8 bg-gray-200 rounded w-48 mb-2 animate-pulse"></div>
-          <div className="h-4 bg-gray-200 rounded w-80 animate-pulse"></div>
+          <div className="h-8 bg-[var(--theme-surface-muted)] rounded w-48 mb-2 animate-pulse"></div>
+          <div className="h-4 bg-[var(--theme-surface-muted)] rounded w-80 animate-pulse"></div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
-              <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+            <div key={i} className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] p-6 animate-pulse">
+              <div className="h-4 bg-[var(--theme-surface-muted)] rounded w-3/4 mb-3"></div>
+              <div className="h-8 bg-[var(--theme-surface-muted)] rounded w-1/2 mb-2"></div>
+              <div className="h-3 bg-[var(--theme-surface-muted)] rounded w-2/3"></div>
             </div>
           ))}
         </div>
@@ -246,9 +246,9 @@ export default function AdminAlertsPage() {
 
   if (error) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="p-6 bg-[var(--theme-bg)] text-[var(--theme-text)] min-h-screen">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Alerts</h1>
+          <h1 className="text-3xl font-bold text-[var(--theme-text)]">Admin Alerts</h1>
         </div>
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
           <div className="flex items-center mb-3">
@@ -269,20 +269,20 @@ export default function AdminAlertsPage() {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-[var(--theme-bg)] text-[var(--theme-text)] min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Admin Alerts</h1>
-            <p className="text-gray-600 mt-1">Monitor stock alerts across all branches</p>
+            <h1 className="text-3xl font-bold text-[var(--theme-text)]">Admin Alerts</h1>
+            <p className="text-[var(--theme-text-muted)] mt-1">Monitor stock alerts across all branches</p>
           </div>
           <button
             onClick={fetchAlerts}
-            className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-lg hover:bg-[var(--theme-surface-muted)] transition-colors"
           >
-            <ArrowPathIcon className="w-4 h-4 mr-2 text-gray-600" />
-            <span className="text-gray-700">Refresh</span>
+            <ArrowPathIcon className="w-4 h-4 mr-2 text-[var(--theme-text-muted)]" />
+            <span className="text-[var(--theme-text)]">Refresh</span>
           </button>
         </div>
       </div>
@@ -290,12 +290,12 @@ export default function AdminAlertsPage() {
       {/* Alert Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* Critical Alerts Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Critical Alerts</p>
+              <p className="text-sm font-medium text-[var(--theme-text-muted)]">Critical Alerts</p>
               <p className="text-3xl font-bold text-red-600">{alerts.filter(a => a.priority === AlertPriority.CRITICAL).length}</p>
-              <p className="text-sm text-gray-500 mt-1">Immediate attention</p>
+              <p className="text-sm text-[var(--theme-text-muted)] mt-1">Immediate attention</p>
             </div>
             <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
               <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
@@ -304,12 +304,12 @@ export default function AdminAlertsPage() {
         </div>
 
         {/* High Priority Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">High Priority</p>
+              <p className="text-sm font-medium text-[var(--theme-text-muted)]">High Priority</p>
               <p className="text-3xl font-bold text-orange-600">{alerts.filter(a => a.priority === AlertPriority.HIGH).length}</p>
-              <p className="text-sm text-gray-500 mt-1">Urgent action needed</p>
+              <p className="text-sm text-[var(--theme-text-muted)] mt-1">Urgent action needed</p>
             </div>
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
               <ExclamationTriangleIcon className="w-6 h-6 text-orange-600" />
@@ -318,12 +318,12 @@ export default function AdminAlertsPage() {
         </div>
 
         {/* Active Alerts Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Active Alerts</p>
+              <p className="text-sm font-medium text-[var(--theme-text-muted)]">Active Alerts</p>
               <p className="text-3xl font-bold text-yellow-600">{activeAlerts.length}</p>
-              <p className="text-sm text-gray-500 mt-1">Currently active</p>
+              <p className="text-sm text-[var(--theme-text-muted)] mt-1">Currently active</p>
             </div>
             <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
               <ExclamationTriangleIcon className="w-6 h-6 text-yellow-600" />
@@ -332,12 +332,12 @@ export default function AdminAlertsPage() {
         </div>
 
         {/* Resolved Alerts Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Resolved</p>
+              <p className="text-sm font-medium text-[var(--theme-text-muted)]">Resolved</p>
               <p className="text-3xl font-bold text-green-600">{resolvedAlerts.length}</p>
-              <p className="text-sm text-gray-500 mt-1">Issues addressed</p>
+              <p className="text-sm text-[var(--theme-text-muted)] mt-1">Issues addressed</p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
               <CheckCircleIcon className="w-6 h-6 text-green-600" />
@@ -355,8 +355,8 @@ export default function AdminAlertsPage() {
               <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Active Alerts</h2>
-              <p className="text-sm text-gray-600">Alerts requiring immediate attention</p>
+              <h2 className="text-xl font-semibold text-[var(--theme-text)]">Active Alerts</h2>
+              <p className="text-sm text-[var(--theme-text-muted)]">Alerts requiring immediate attention</p>
             </div>
           </div>
 
@@ -383,8 +383,8 @@ export default function AdminAlertsPage() {
               <CheckCircleIcon className="w-6 h-6 text-green-600" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Resolved Alerts</h2>
-              <p className="text-sm text-gray-600">Alerts that have been addressed</p>
+              <h2 className="text-xl font-semibold text-[var(--theme-text)]">Resolved Alerts</h2>
+              <p className="text-sm text-[var(--theme-text-muted)]">Alerts that have been addressed</p>
             </div>
           </div>
 
@@ -406,12 +406,12 @@ export default function AdminAlertsPage() {
         {/* Dismissed Alerts */}
         <div>
           <div className="flex items-center mb-6">
-            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
-              <XCircleIcon className="w-6 h-6 text-gray-600" />
+            <div className="w-10 h-10 bg-[var(--theme-surface-muted)] rounded-lg flex items-center justify-center mr-4">
+              <XCircleIcon className="w-6 h-6 text-[var(--theme-text-muted)]" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Dismissed Alerts</h2>
-              <p className="text-sm text-gray-600">Alerts that have been dismissed</p>
+              <h2 className="text-xl font-semibold text-[var(--theme-text)]">Dismissed Alerts</h2>
+              <p className="text-sm text-[var(--theme-text-muted)]">Alerts that have been dismissed</p>
             </div>
           </div>
 

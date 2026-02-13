@@ -19,7 +19,7 @@ const priorityColors = {
 const statusColors = {
   active: "bg-red-100 text-red-800",
   resolved: "bg-green-100 text-green-800",
-  dismissed: "bg-gray-100 text-gray-800",
+  dismissed: "bg-[var(--theme-surface-muted)] text-[var(--theme-text)]",
 };
 
 export default function BranchAlertsPage() {
@@ -69,7 +69,7 @@ export default function BranchAlertsPage() {
       render: (value: string) => {
         const numValue = parseFloat(value);
         return (
-          <span className={`font-medium ${numValue === 0 ? "text-red-600" : numValue <= 5 ? "text-orange-600" : "text-gray-900"}`}>
+          <span className={`font-medium ${numValue === 0 ? "text-red-600" : numValue <= 5 ? "text-orange-600" : "text-[var(--theme-text)]"}`}>
             {numValue}
           </span>
         );
@@ -98,7 +98,7 @@ export default function BranchAlertsPage() {
       header: "Priority",
       sortable: true,
       render: (value: string) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${priorityColors[value as keyof typeof priorityColors] || "bg-gray-100 text-gray-800"}`}>
+        <span className={`px-2 py-1 text-xs font-medium rounded-full ${priorityColors[value as keyof typeof priorityColors] || "bg-[var(--theme-surface-muted)] text-[var(--theme-text)]"}`}>
           {value.charAt(0).toUpperCase() + value.slice(1)}
         </span>
       ),
@@ -118,7 +118,7 @@ export default function BranchAlertsPage() {
       header: "Status",
       sortable: true,
       render: (value: string) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[value as keyof typeof statusColors] || "bg-gray-100 text-gray-800"}`}>
+        <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[value as keyof typeof statusColors] || "bg-[var(--theme-surface-muted)] text-[var(--theme-text)]"}`}>
           {value.charAt(0).toUpperCase() + value.slice(1)}
         </span>
       ),
@@ -210,7 +210,7 @@ export default function BranchAlertsPage() {
           </button>
           <button
             onClick={() => handleDismiss(row)}
-            className="text-gray-600 hover:text-gray-900 p-1"
+            className="text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] p-1"
             title="Dismiss Alert"
           >
             <XCircleIcon className="w-4 h-4" />
@@ -221,10 +221,10 @@ export default function BranchAlertsPage() {
   );
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-[var(--theme-bg)] text-[var(--theme-text)] min-h-screen">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Stock Alerts</h1>
-        <p className="text-gray-600 mt-2">Monitor low stock and out-of-stock alerts</p>
+        <h1 className="text-3xl font-bold text-[var(--theme-text)]">Stock Alerts</h1>
+        <p className="text-[var(--theme-text-muted)] mt-2">Monitor low stock and out-of-stock alerts</p>
       </div>
 
       {/* Alert Summary Cards */}
@@ -277,14 +277,14 @@ export default function BranchAlertsPage() {
           </div>
         </div>
 
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <div className="bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-lg p-4">
           <div className="flex items-center">
-            <XCircleIcon className="w-8 h-8 text-gray-600 mr-3" />
+            <XCircleIcon className="w-8 h-8 text-[var(--theme-text-muted)] mr-3" />
             <div>
-              <div className="text-2xl font-bold text-gray-600">
+              <div className="text-2xl font-bold text-[var(--theme-text)]">
                 {dismissedAlerts.length}
               </div>
-              <div className="text-sm text-gray-700">Dismissed</div>
+              <div className="text-sm text-[var(--theme-text-muted)]">Dismissed</div>
             </div>
           </div>
         </div>
@@ -299,8 +299,8 @@ export default function BranchAlertsPage() {
               <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Active Alerts</h2>
-              <p className="text-sm text-gray-600">Alerts requiring immediate attention</p>
+              <h2 className="text-xl font-semibold text-[var(--theme-text)]">Active Alerts</h2>
+              <p className="text-sm text-[var(--theme-text-muted)]">Alerts requiring immediate attention</p>
             </div>
           </div>
 
@@ -327,8 +327,8 @@ export default function BranchAlertsPage() {
               <CheckCircleIcon className="w-6 h-6 text-green-600" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Resolved Alerts</h2>
-              <p className="text-sm text-gray-600">Alerts that have been addressed</p>
+              <h2 className="text-xl font-semibold text-[var(--theme-text)]">Resolved Alerts</h2>
+              <p className="text-sm text-[var(--theme-text-muted)]">Alerts that have been addressed</p>
             </div>
           </div>
 
@@ -350,12 +350,12 @@ export default function BranchAlertsPage() {
         {/* Dismissed Alerts */}
         <div>
           <div className="flex items-center mb-6">
-            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
-              <XCircleIcon className="w-6 h-6 text-gray-600" />
+            <div className="w-10 h-10 bg-[var(--theme-surface-muted)] rounded-lg flex items-center justify-center mr-4">
+              <XCircleIcon className="w-6 h-6 text-[var(--theme-text-muted)]" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Dismissed Alerts</h2>
-              <p className="text-sm text-gray-600">Alerts that have been dismissed</p>
+              <h2 className="text-xl font-semibold text-[var(--theme-text)]">Dismissed Alerts</h2>
+              <p className="text-sm text-[var(--theme-text-muted)]">Alerts that have been dismissed</p>
             </div>
           </div>
 
