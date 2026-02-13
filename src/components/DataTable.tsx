@@ -146,21 +146,21 @@ export default function DataTable<T extends Record<string, any>>({
 
   if (loading) {
     return (
-      <div className={`bg-white rounded-lg border border-gray-200 shadow-sm ${className}`}>
+      <div className={`bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] shadow-sm ${className}`}>
         <div className="p-6">
           <div className="animate-pulse space-y-4">
             <div className="flex items-center space-x-4">
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+              <div className="h-4 bg-[var(--theme-border)] rounded w-1/4"></div>
+              <div className="h-4 bg-[var(--theme-border)] rounded w-1/4"></div>
+              <div className="h-4 bg-[var(--theme-border)] rounded w-1/4"></div>
+              <div className="h-4 bg-[var(--theme-border)] rounded w-1/4"></div>
             </div>
             <div className="space-y-3">
-              <div className="h-4 bg-gray-200 rounded w-full"></div>
-              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-              <div className="h-4 bg-gray-200 rounded w-4/6"></div>
-              <div className="h-4 bg-gray-200 rounded w-3/6"></div>
-              <div className="h-4 bg-gray-200 rounded w-2/6"></div>
+              <div className="h-4 bg-[var(--theme-border)] rounded w-full"></div>
+              <div className="h-4 bg-[var(--theme-border)] rounded w-5/6"></div>
+              <div className="h-4 bg-[var(--theme-border)] rounded w-4/6"></div>
+              <div className="h-4 bg-[var(--theme-border)] rounded w-3/6"></div>
+              <div className="h-4 bg-[var(--theme-border)] rounded w-2/6"></div>
             </div>
           </div>
         </div>
@@ -170,7 +170,7 @@ export default function DataTable<T extends Record<string, any>>({
 
   // Mobile Card Component
   const MobileCard = ({ row, index }: { row: T; index: number }) => (
-    <div className="bg-white border border-gray-200 rounded-xl p-5 mb-4 shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-xl p-5 mb-4 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           {columns.slice(0, 2).map((column, colIndex) => {
@@ -181,10 +181,10 @@ export default function DataTable<T extends Record<string, any>>({
 
             return (
               <div key={colIndex} className="mb-3">
-                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                <div className="text-xs font-semibold text-[var(--theme-text-muted)] uppercase tracking-wider mb-1">
                   {column.header}
                 </div>
-                <div className="text-sm text-gray-900 font-medium">
+                <div className="text-sm text-[var(--theme-text)] font-medium">
                   {renderedValue}
                 </div>
               </div>
@@ -200,7 +200,7 @@ export default function DataTable<T extends Record<string, any>>({
 
       {/* Additional columns in a grid */}
       {columns.length > 2 && (
-        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[var(--theme-border)]">
           {columns.slice(2).map((column, colIndex) => {
             const value = row[column.key as keyof T];
             const renderedValue = column.render
@@ -209,10 +209,10 @@ export default function DataTable<T extends Record<string, any>>({
 
             return (
               <div key={colIndex + 2}>
-                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                <div className="text-xs font-semibold text-[var(--theme-text-muted)] uppercase tracking-wider mb-1">
                   {column.header}
                 </div>
-                <div className="text-sm text-gray-900 font-medium">
+                <div className="text-sm text-[var(--theme-text)] font-medium">
                   {renderedValue}
                 </div>
               </div>
@@ -254,19 +254,19 @@ export default function DataTable<T extends Record<string, any>>({
     };
 
     return (
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-gray-50 border-t border-gray-200 sm:px-6 rounded-b-lg">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-[var(--theme-surface-muted)] border-t border-[var(--theme-border)] sm:px-6 rounded-b-lg">
         {/* Page size selector and info */}
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
           {showPageSizeSelector && (
             <div className="flex items-center space-x-2">
-              <label htmlFor="pageSize" className="text-sm font-medium text-gray-700">
+              <label htmlFor="pageSize" className="text-sm font-medium text-[var(--theme-text)]">
                 Show:
               </label>
               <select
                 id="pageSize"
                 value={pageSize}
                 onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white min-w-[80px] cursor-pointer hover:border-gray-400 transition-colors appearance-none text-black"
+                className="border border-[var(--theme-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-[var(--theme-surface)] min-w-[80px] cursor-pointer hover:border-[var(--theme-text-muted)] transition-colors appearance-none text-[var(--theme-text)]"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 0.5rem center',
@@ -283,7 +283,7 @@ export default function DataTable<T extends Record<string, any>>({
           )}
 
           {/* Pagination info */}
-          <div className="text-sm text-gray-700 font-medium">
+          <div className="text-sm text-[var(--theme-text)] font-medium">
             Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
           </div>
         </div>
@@ -293,7 +293,7 @@ export default function DataTable<T extends Record<string, any>>({
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 transition-colors"
+            className="px-4 py-2 text-sm border border-[var(--theme-border)] text-[var(--theme-text)] rounded-lg hover:bg-[var(--theme-surface-muted)] hover:border-[var(--theme-text-muted)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[var(--theme-surface)] disabled:hover:border-[var(--theme-border)] transition-colors"
           >
             Previous
           </button>
@@ -309,8 +309,8 @@ export default function DataTable<T extends Record<string, any>>({
                   page === currentPage
                     ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
                     : page === '...'
-                      ? 'border-gray-300 cursor-default text-gray-400'
-                      : 'border-gray-300 hover:bg-gray-50 hover:border-gray-400 text-gray-700'
+                      ? 'border-[var(--theme-border)] cursor-default text-[var(--theme-text-muted)]'
+                      : 'border-[var(--theme-border)] hover:bg-[var(--theme-surface-muted)] hover:border-[var(--theme-text-muted)] text-[var(--theme-text)]'
                 }`}
               >
                 {page}
@@ -320,7 +320,7 @@ export default function DataTable<T extends Record<string, any>>({
 
           {/* Mobile: Simple current page indicator */}
           <div className="sm:hidden flex items-center space-x-2">
-            <span className="text-sm text-gray-700 font-medium">
+            <span className="text-sm text-[var(--theme-text)] font-medium">
               Page {currentPage} of {totalPages}
             </span>
           </div>
@@ -328,7 +328,7 @@ export default function DataTable<T extends Record<string, any>>({
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300 transition-colors"
+            className="px-4 py-2 text-sm border border-[var(--theme-border)] text-[var(--theme-text)] rounded-lg hover:bg-[var(--theme-surface-muted)] hover:border-[var(--theme-text-muted)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[var(--theme-surface)] disabled:hover:border-[var(--theme-border)] transition-colors"
           >
             Next
           </button>
@@ -338,34 +338,34 @@ export default function DataTable<T extends Record<string, any>>({
   };
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden ${className}`}>
+    <div className={`bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] shadow-sm overflow-hidden ${className}`}>
       {/* Desktop Table View */}
       <div className="hidden md:block overflow-x-auto">
-        <table className={`min-w-full divide-y divide-gray-200 ${getSizeClasses()}`}>
+        <table className={`min-w-full divide-y divide-[var(--theme-border)] ${getSizeClasses()}`}>
           {/* Table Header */}
-          <thead className="bg-gray-50">
+          <thead className="bg-[var(--theme-surface-muted)]">
             <tr>
               {columns.map((column, index) => (
                 <th
                   key={index}
-                  className={`text-left text-xs font-semibold text-gray-600 uppercase tracking-wider ${getCellPadding()} ${column.className || ""}`}
+                  className={`text-left text-xs font-semibold text-[var(--theme-text-muted)] uppercase tracking-wider ${getCellPadding()} ${column.className || ""}`}
                 >
                   {column.sortable ? (
                     <button
                       onClick={() => handleSort(column.key as string)}
-                      className="flex items-center space-x-2 hover:text-gray-800 focus:outline-none group"
+                      className="flex items-center space-x-2 hover:text-[var(--theme-text)] focus:outline-none group"
                     >
                       <span className="font-semibold">{column.header}</span>
                       <div className="flex flex-col">
                         <ChevronUpIcon className={`w-3 h-3 transition-colors ${
                           sortColumn === column.key && sortDirection === "asc"
                             ? "text-blue-600"
-                            : "text-gray-400 group-hover:text-gray-600"
+                            : "text-[var(--theme-text-muted)] group-hover:text-[var(--theme-text)]"
                         }`} />
                         <ChevronDownIcon className={`w-3 h-3 -mt-1 transition-colors ${
                           sortColumn === column.key && sortDirection === "desc"
                             ? "text-blue-600"
-                            : "text-gray-400 group-hover:text-gray-600"
+                            : "text-[var(--theme-text-muted)] group-hover:text-[var(--theme-text)]"
                         }`} />
                       </div>
                     </button>
@@ -375,7 +375,7 @@ export default function DataTable<T extends Record<string, any>>({
                 </th>
               ))}
               {actions && (
-                <th className={`text-left text-xs font-semibold text-gray-600 uppercase tracking-wider ${getCellPadding()}`}>
+                <th className={`text-left text-xs font-semibold text-[var(--theme-text-muted)] uppercase tracking-wider ${getCellPadding()}`}>
                   Actions
                 </th>
               )}
@@ -383,18 +383,18 @@ export default function DataTable<T extends Record<string, any>>({
           </thead>
 
           {/* Table Body */}
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-[var(--theme-surface)] divide-y divide-[var(--theme-border)]">
             {paginatedData.length === 0 ? (
               <tr>
                 <td
                   colSpan={columns.length + (actions ? 1 : 0)}
-                  className={`text-center text-gray-500 ${getCellPadding()} py-12`}
+                  className={`text-center text-[var(--theme-text-muted)] ${getCellPadding()} py-12`}
                 >
                   <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                      <ArrowPathIcon className="w-6 h-6 text-gray-400" />
+                    <div className="w-12 h-12 bg-[var(--theme-surface-muted)] rounded-full flex items-center justify-center mb-3">
+                      <ArrowPathIcon className="w-6 h-6 text-[var(--theme-text-muted)]" />
                     </div>
-                    <p className="text-gray-500 font-medium">{emptyMessage}</p>
+                    <p className="text-[var(--theme-text-muted)] font-medium">{emptyMessage}</p>
                   </div>
                 </td>
               </tr>
@@ -405,8 +405,8 @@ export default function DataTable<T extends Record<string, any>>({
                   <tr
                     key={actualIndex}
                     className={`
-                      ${striped && rowIndex % 2 === 1 ? "bg-gray-50/50" : ""}
-                      ${hover ? "hover:bg-gray-50 transition-colors" : ""}
+                      ${striped && rowIndex % 2 === 1 ? "bg-[var(--theme-surface-muted)]" : ""}
+                      ${hover ? "hover:bg-[var(--theme-surface-muted)] transition-colors" : ""}
                       ${onRowClick ? "cursor-pointer" : ""}
                     `}
                     onClick={() => onRowClick?.(row, actualIndex)}
@@ -420,7 +420,7 @@ export default function DataTable<T extends Record<string, any>>({
                       return (
                         <td
                           key={colIndex}
-                          className={`${getCellPadding()} whitespace-nowrap text-gray-900 font-medium ${column.className || ""}`}
+                          className={`${getCellPadding()} whitespace-nowrap text-[var(--theme-text)] font-medium ${column.className || ""}`}
                         >
                           {renderedValue}
                         </td>
@@ -442,12 +442,12 @@ export default function DataTable<T extends Record<string, any>>({
       {/* Mobile Card View */}
       <div className="md:hidden">
         {paginatedData.length === 0 ? (
-          <div className="text-center text-gray-500 py-12">
+          <div className="text-center text-[var(--theme-text-muted)] py-12">
             <div className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                <ArrowPathIcon className="w-6 h-6 text-gray-400" />
+              <div className="w-12 h-12 bg-[var(--theme-surface-muted)] rounded-full flex items-center justify-center mb-3">
+                <ArrowPathIcon className="w-6 h-6 text-[var(--theme-text-muted)]" />
               </div>
-              <p className="text-gray-500 font-medium">{emptyMessage}</p>
+              <p className="text-[var(--theme-text-muted)] font-medium">{emptyMessage}</p>
             </div>
           </div>
         ) : (

@@ -169,7 +169,7 @@ export default function BranchesPage() {
       key: "name",
       header: "Branch Name",
       sortable: true,
-      className: "font-medium text-gray-900"
+      className: "font-medium text-[var(--theme-text)]"
     },
     {
       key: "address",
@@ -304,23 +304,23 @@ export default function BranchesPage() {
   ), []);
 
   return (
-    <div className="p-6 bg-gray-50">
+    <div className="p-6 bg-[var(--theme-bg)] text-[var(--theme-text)] min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
           <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Branches Management</h1>
-            <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage all branches in the system</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--theme-text)]">Branches Management</h1>
+            <p className="text-[var(--theme-text-muted)] mt-1 text-sm sm:text-base">Manage all branches in the system</p>
           </div>
           <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
             <button
               onClick={() =>
                 loadBranches(currentPage, pageSize, searchTerm, sortBy, sortOrder)
               }
-              className="inline-flex items-center justify-center px-3 py-2 sm:px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
+              className="inline-flex items-center justify-center px-3 py-2 sm:px-4 bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-lg hover:bg-[var(--theme-surface-muted)] transition-colors text-sm sm:text-base"
             >
-              <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2 text-gray-600" />
-              <span className="text-gray-700">Refresh</span>
+              <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2 text-[var(--theme-text-muted)]" />
+              <span className="text-[var(--theme-text)]">Refresh</span>
             </button>
             <button
               onClick={handleCreateBranch}
@@ -338,14 +338,14 @@ export default function BranchesPage() {
       <div className="mb-8">
         <div className="relative max-w-md">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <BuildingStorefrontIcon className="h-5 w-5 text-gray-400" />
+            <BuildingStorefrontIcon className="h-5 w-5 text-[var(--theme-text-muted)]" />
           </div>
           <input
             type="text"
             placeholder="Search by branch name..."
             value={searchTerm}
             onChange={handleSearchChange}
-            className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white text-gray-900"
+            className="w-full pl-12 pr-4 py-3 border border-[var(--theme-border)] rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-[var(--theme-surface)] text-[var(--theme-text)]"
           />
         </div>
       </div>
@@ -384,7 +384,7 @@ export default function BranchesPage() {
       >
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-1">
-            <label htmlFor="name" className="block text-sm font-semibold text-gray-800">
+            <label htmlFor="name" className="block text-sm font-semibold text-[var(--theme-text)]">
               Branch Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -392,14 +392,14 @@ export default function BranchesPage() {
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 placeholder-gray-500"
+              className="w-full px-4 py-3 border border-[var(--theme-border)] rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-[var(--theme-surface)] text-[var(--theme-text)] placeholder-[var(--theme-text-muted)]"
               placeholder="Enter branch name"
             />
             {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
           </div>
 
           <div className="space-y-1">
-            <label htmlFor="address" className="block text-sm font-semibold text-gray-800">
+            <label htmlFor="address" className="block text-sm font-semibold text-[var(--theme-text)]">
               Address
             </label>
             <textarea
@@ -407,13 +407,13 @@ export default function BranchesPage() {
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               rows={4}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 placeholder-gray-500 resize-none"
+              className="w-full px-4 py-3 border border-[var(--theme-border)] rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-[var(--theme-surface)] text-[var(--theme-text)] placeholder-[var(--theme-text-muted)] resize-none"
               placeholder="Enter branch address"
             />
           </div>
 
           <div className="space-y-1">
-            <label htmlFor="phone" className="block text-sm font-semibold text-gray-800">
+            <label htmlFor="phone" className="block text-sm font-semibold text-[var(--theme-text)]">
               Phone Number <span className="text-red-500">*</span>
             </label>
             <input
@@ -421,18 +421,18 @@ export default function BranchesPage() {
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 placeholder-gray-500"
+              className="w-full px-4 py-3 border border-[var(--theme-border)] rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-[var(--theme-surface)] text-[var(--theme-text)] placeholder-[var(--theme-text-muted)]"
               placeholder="Enter phone number"
             />
             {errors.phone && <p className="text-sm text-red-600 mt-1">{errors.phone}</p>}
           </div>
 
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-xl">
+          <div className="flex justify-end space-x-4 pt-6 border-t border-[var(--theme-border)] bg-[var(--theme-surface-muted)] -mx-6 -mb-6 px-6 py-4 rounded-b-xl">
             <button
               type="button"
               onClick={() => setShowModal(false)}
               disabled={isSubmitting}
-              className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer"
+              className="px-6 py-2.5 text-sm font-medium text-[var(--theme-text)] bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-lg hover:bg-[var(--theme-surface-muted)] focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer"
             >
               Cancel
             </button>
@@ -459,3 +459,4 @@ export default function BranchesPage() {
     </div>
   );
 }
+

@@ -69,7 +69,7 @@ export default function Modal({
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/25 backdrop-blur-sm transition-all duration-300 ease-out z-40"
+        className="fixed inset-0 bg-[var(--theme-overlay)] transition-all duration-300 ease-out z-40"
         onClick={handleBackdropClick}
         aria-hidden="true"
       />
@@ -79,19 +79,19 @@ export default function Modal({
         <div
           ref={modalRef}
           tabIndex={-1}
-          className={`relative z-50 w-full ${sizeClasses[size]} transform overflow-hidden rounded-xl bg-white shadow-2xl transition-all duration-300 ease-out ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'} ${className}`}
+          className={`relative z-50 w-full ${sizeClasses[size]} transform overflow-hidden rounded-xl bg-[var(--theme-surface)] border border-[var(--theme-border)] shadow-2xl transition-all duration-300 ease-out ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'} ${className}`}
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-6 py-4">
+          <div className="flex items-center justify-between border-b border-[var(--theme-border)] bg-[var(--theme-surface-muted)] px-6 py-4">
             <h3
               id="modal-title"
-              className="text-xl font-semibold text-gray-900 leading-6"
+              className="text-xl font-semibold text-[var(--theme-text)] leading-6"
             >
               {title}
             </h3>
             <button
               onClick={onClose}
-              className="group rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+              className="group rounded-full p-2 text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-muted)] hover:text-[var(--theme-text)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
               aria-label="Close modal"
             >
               <XMarkIcon className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />

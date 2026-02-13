@@ -77,7 +77,7 @@ export default function UserPage() {
             key: "username",
             header: "User Name",
             sortable: true,
-            className: "font-medium text-gray-900"
+            className: "font-medium text-[var(--theme-text)]"
         },
         {
             key: "role",
@@ -296,23 +296,23 @@ export default function UserPage() {
     );
 
     return (
-        <div className="p-6 bg-gray-50">
+        <div className="p-6 bg-[var(--theme-bg)] text-[var(--theme-text)] min-h-screen">
             {/* Header */}
             <div className="mb-8">
                 <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
                     <div className="flex-1">
-                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">User Management</h1>
-                        <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage all users in the system</p>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--theme-text)]">User Management</h1>
+                        <p className="text-[var(--theme-text-muted)] mt-1 text-sm sm:text-base">Manage all users in the system</p>
                     </div>
                     <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
                         <button
                             onClick={() =>
                                 loadUsers(currentPage, pageSize, searchTerm, sortBy, sortOrder)
                             }
-                            className="inline-flex items-center justify-center px-3 py-2 sm:px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
+                            className="inline-flex items-center justify-center px-3 py-2 sm:px-4 bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-lg hover:bg-[var(--theme-surface-muted)] transition-colors text-sm sm:text-base"
                         >
-                            <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2 text-gray-600" />
-                            <span className="text-gray-700">Refresh</span>
+                            <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2 text-[var(--theme-text-muted)]" />
+                            <span className="text-[var(--theme-text)]">Refresh</span>
                         </button>
                         <button
                             onClick={handleCreateUser}
@@ -330,14 +330,14 @@ export default function UserPage() {
             <div className="mb-8">
                 <div className="relative max-w-md">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <UsersIcon className="h-5 w-5 text-gray-400" />
+                        <UsersIcon className="h-5 w-5 text-[var(--theme-text-muted)]" />
                     </div>
                     <input
                         type="text"
                         placeholder="Search by username..."
                         value={searchTerm}
                         onChange={handleSearchChange}
-                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white text-gray-900"
+                        className="w-full pl-12 pr-4 py-3 border border-[var(--theme-border)] rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-[var(--theme-surface)] text-[var(--theme-text)]"
                     />
                 </div>
             </div>
@@ -394,14 +394,14 @@ export default function UserPage() {
                     )}
 
                     <div>
-                        <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="role" className="block text-sm font-medium text-[var(--theme-text)] mb-1">
                             Role <span className="text-red-500">*</span>
                         </label>
                         <select
                             id="role"
                             value={formData.role}
                             onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-700 [color-scheme:light]"
+                            className="w-full px-3 py-2 border border-[var(--theme-border)] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-[var(--theme-surface)] text-[var(--theme-text)]"
                         >
                             <option value={UserRole.ADMIN}>Admin</option>
                             <option value={UserRole.BRANCH}>Branch</option>
@@ -409,14 +409,14 @@ export default function UserPage() {
                     </div>
 
                     <div>
-                        <label htmlFor="branchName" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="branchName" className="block text-sm font-medium text-[var(--theme-text)] mb-1">
                             Branch <span className="text-red-500">*</span>
                         </label>
                         <select
                             id="branchName"
                             value={formData.branchName}
                             onChange={(e) => setFormData({ ...formData, branchName: e.target.value })}
-                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-700 [color-scheme:light] ${errors.branchName ? 'border-red-500' : 'border-gray-300'}`}
+                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-[var(--theme-surface)] text-[var(--theme-text)] ${errors.branchName ? 'border-red-500' : 'border-[var(--theme-border)]'}`}
                         >
                             <option value="" disabled hidden>
                                 Select Branch
@@ -428,12 +428,12 @@ export default function UserPage() {
                         {errors.branchName && <p className="text-red-500 text-xs mt-1">{errors.branchName}</p>}
                     </div>
 
-                    <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-xl">
+                    <div className="flex justify-end space-x-4 pt-6 border-t border-[var(--theme-border)] bg-[var(--theme-surface-muted)] -mx-6 -mb-6 px-6 py-4 rounded-b-xl">
                         <button
                             type="button"
                             onClick={() => setShowModal(false)}
                             disabled={isSubmitting}
-                            className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer"
+                            className="px-6 py-2.5 text-sm font-medium text-[var(--theme-text)] bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-lg hover:bg-[var(--theme-surface-muted)] focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer"
                         >
                             Cancel
                         </button>
@@ -472,3 +472,5 @@ export default function UserPage() {
         </div>
     )
 }
+
+

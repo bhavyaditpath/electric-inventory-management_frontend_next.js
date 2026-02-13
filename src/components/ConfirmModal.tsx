@@ -71,11 +71,11 @@ export default function ConfirmModal({
           </div>
         </div>
         <div className="flex-1 pt-0.5">
-          <p className="text-sm text-gray-700 leading-relaxed">{message}</p>
+          <p className="text-sm text-[var(--theme-text)] leading-relaxed">{message}</p>
         </div>
       </div>
 
-      <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 mt-6 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-xl">
+      <div className="flex justify-end space-x-4 pt-6 border-t border-[var(--theme-border)] mt-6 bg-[var(--theme-surface-muted)] -mx-6 -mb-6 px-6 py-4 rounded-b-xl">
         <button
           type="button"
           onClick={onClose}

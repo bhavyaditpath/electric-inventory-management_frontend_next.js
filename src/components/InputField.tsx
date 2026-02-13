@@ -21,7 +21,7 @@ const InputField = ({
 }: InputFieldProps) => {
   return (
     <div className="mb-2">
-      <label className="block text-sm font-semibold text-gray-700 mb-2">
+      <label className="block text-sm font-semibold text-[var(--theme-text)] mb-2">
         {label}
       </label>
 
@@ -31,8 +31,8 @@ const InputField = ({
         onChange={onChange}
         step={step}
         name={name}
-        className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white text-gray-900
-          ${error ? 'border-red-500' : 'border-gray-300'}
+        className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-[var(--theme-surface)] text-[var(--theme-text)]
+          ${error ? 'border-red-500' : 'border-[var(--theme-border)]'}
         `}
       />
 
