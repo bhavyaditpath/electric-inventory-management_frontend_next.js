@@ -8,6 +8,7 @@ import { CallDirection, CallState, CallType } from "@/types/enums";
 interface CallContextType {
   callState: CallState;
   callType: CallType | null;
+  isGroupCall: boolean;
   callerId: number | null;
   peerUserId: number | null;
   peerName: string | null;
@@ -15,10 +16,11 @@ interface CallContextType {
   callDirection: CallDirection | null;
   connectedAt: number | null;
   callUser: (
-    userId: number,
+    userId: number | null,
     roomId: number,
     callType?: CallType,
-    targetName?: string | null
+    targetName?: string | null,
+    isGroupCall?: boolean
   ) => void;
   acceptCall: () => void;
   rejectCall: () => void;
@@ -43,6 +45,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     peerName,
     callerName,
     incomingCallType,
+    isGroupCall,
     callDirection,
     connectedAt,
     callUser,
@@ -56,6 +59,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const value: CallContextType = {
     callState,
     callType: incomingCallType,
+    isGroupCall,
     callerId,
     peerUserId,
     peerName,
@@ -76,6 +80,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         state={callState}
         userId={peerUserId ?? undefined}
         displayName={isIncoming ? callerName ?? undefined : peerName ?? undefined}
+        isGroupCall={isGroupCall}
         incoming={callState === CallState.Ringing}
         callKind={incomingCallType}
         connectedAt={connectedAt}

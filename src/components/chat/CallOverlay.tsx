@@ -10,6 +10,7 @@ interface Props {
   state: CallState;
   userId?: number | null;
   displayName?: string;
+  isGroupCall?: boolean;
   incoming?: boolean;
   callKind?: CallType | null;
   connectedAt?: number | null;
@@ -23,6 +24,7 @@ export default function CallOverlay({
   state,
   userId,
   displayName,
+  isGroupCall,
   incoming,
   callKind,
   connectedAt,
@@ -55,12 +57,15 @@ export default function CallOverlay({
   const getLabel = () => {
     switch (state) {
       case CallState.Calling:
+        if (isGroupCall) return callKindLabel ? `Calling group ${callKindLabel}...` : "Calling group...";
         return callKindLabel ? `Calling ${callKindLabel}...` : "Calling...";
       case CallState.Ringing:
-        return "Incoming call";
+        return isGroupCall ? "Incoming group call" : "Incoming call";
       case CallState.Connecting:
+        if (isGroupCall) return callKindLabel ? `Connecting group ${callKindLabel}...` : "Connecting group...";
         return callKindLabel ? `Connecting ${callKindLabel}...` : "Connecting...";
       case CallState.Connected:
+        if (isGroupCall) return callKindLabel ? `On group ${callKindLabel} call` : "On group call";
         return callKindLabel ? `On ${callKindLabel} call` : "On call";
       default:
         return "";

@@ -301,13 +301,14 @@ export default function ChatPage() {
     },
     [isMobile]
   );
-  const handleStartCall = useCallback((userId: number, kind: CallType) => {
+  const handleStartCall = useCallback((kind: CallType, userId?: number) => {
     if (!activeRoomId) return;
     const room = rooms.find((r) => r.id === activeRoomId);
-    const targetName =
-      room?.participants?.find((p) => p.userId === userId)?.user?.username ??
-      null;
-    callUser(userId, activeRoomId, kind, targetName);
+    const isGroupCall = !!room?.isGroupChat && !userId;
+    const targetName = isGroupCall
+      ? room?.name ?? null
+      : room?.participants?.find((p) => p.userId === userId)?.user?.username ?? null;
+    callUser(userId ?? null, activeRoomId, kind, targetName, isGroupCall);
   }, [activeRoomId, callUser, rooms]);
 
   const handleAcceptCall = useCallback(() => {

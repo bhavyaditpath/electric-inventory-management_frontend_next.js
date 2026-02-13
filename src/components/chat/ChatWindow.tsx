@@ -27,7 +27,7 @@ interface ChatWindowProps {
   onTyping: (isTyping: boolean) => void;
   onDeleteMessage?: (messageId: number) => void;
 
-  onStartCall?: (userId: number, kind: CallType) => void;
+  onStartCall?: (kind: CallType, userId?: number) => void;
   onEndCall?: () => void;
   onAcceptCall?: () => void;
   onRejectCall?: () => void;
@@ -95,6 +95,9 @@ export default function ChatWindow({
   }, [room, currentUserId]);
 
   const canDirectCall = !!otherUserId && !room?.isGroupChat;
+  const canGroupCall =
+    !!room?.isGroupChat &&
+    (room.participants || []).filter((p) => p.userId !== currentUserId).length > 0;
   const canOpenLogs = !!onOpenCallLogs;
 
 
@@ -166,7 +169,7 @@ export default function ChatWindow({
                       onClick={() => {
                         if (!canDirectCall) return;
                         setShowCallMenu(false);
-                        onStartCall?.(otherUserId!, CallType.Audio);
+                        onStartCall?.(CallType.Audio, otherUserId!);
                       }}
                       disabled={!canDirectCall}
                       className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
@@ -184,7 +187,7 @@ export default function ChatWindow({
                       onClick={() => {
                         if (!canDirectCall) return;
                         setShowCallMenu(false);
-                        onStartCall?.(otherUserId!, CallType.Video);
+                        onStartCall?.(CallType.Video, otherUserId!);
                       }}
                       disabled={!canDirectCall}
                       className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
@@ -196,6 +199,42 @@ export default function ChatWindow({
                     >
                       <VideoCameraIcon className="w-4 h-4" />
                       Video Call
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (!canGroupCall) return;
+                        setShowCallMenu(false);
+                        onStartCall?.(CallType.Audio);
+                      }}
+                      disabled={!canGroupCall}
+                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
+                        canGroupCall
+                          ? "text-gray-700 hover:bg-gray-100"
+                          : "text-gray-300 cursor-not-allowed"
+                      }`}
+                      title={!canGroupCall ? "Available in group chats only" : "Start group audio call"}
+                    >
+                      <PhoneIcon className="w-4 h-4" />
+                      Audio Group Call
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (!canGroupCall) return;
+                        setShowCallMenu(false);
+                        onStartCall?.(CallType.Video);
+                      }}
+                      disabled={!canGroupCall}
+                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
+                        canGroupCall
+                          ? "text-gray-700 hover:bg-gray-100"
+                          : "text-gray-300 cursor-not-allowed"
+                      }`}
+                      title={!canGroupCall ? "Available in group chats only" : "Start group video call"}
+                    >
+                      <VideoCameraIcon className="w-4 h-4" />
+                      Video Group Call
                     </button>
                   </div>
 
