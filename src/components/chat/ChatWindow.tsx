@@ -65,6 +65,7 @@ export default function ChatWindow({
   );
   const [showCallMenu, setShowCallMenu] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const callMenuRef = useRef<HTMLDivElement>(null);
 
   const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
@@ -72,6 +73,31 @@ export default function ChatWindow({
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length, room?.id]);
+
+  useEffect(() => {
+    if (!showCallMenu) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (callMenuRef.current?.contains(target)) return;
+      setShowCallMenu(false);
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setShowCallMenu(false);
+      }
+    };
+
+    window.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      window.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [showCallMenu]);
 
   const resolveAttachmentUrl = useCallback(
     (url: string) => {
@@ -149,7 +175,7 @@ export default function ChatWindow({
                 Members
               </button>
             )}
-            <div className="relative">
+            <div className="relative" ref={callMenuRef}>
               <button
                 onClick={() => setShowCallMenu((v) => !v)}
                 className="p-2 rounded-full hover:bg-slate-100 text-slate-500 cursor-pointer"
