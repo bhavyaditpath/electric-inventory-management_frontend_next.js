@@ -4,6 +4,18 @@
  */
 
 :root {
+  color-scheme: light;
+
+  /* Semantic Theme Tokens (Light) */
+  --theme-bg: #f8fafc;
+  --theme-surface: #ffffff;
+  --theme-surface-muted: #f1f5f9;
+  --theme-surface-hover: #e2e8f0;
+  --theme-text: #0f172a;
+  --theme-text-muted: #64748b;
+  --theme-border: #e2e8f0;
+  --theme-overlay: rgba(2, 6, 23, 0.5);
+
   /* Brand Colors */
   --color-primary: #3b82f6;       /* Blue 500 */
   --color-primary-dark: #2563eb;  /* Blue 600 */
@@ -71,12 +83,36 @@
   --transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --theme-bg: #0b1220;
+  --theme-surface: #111827;
+  --theme-surface-muted: #1f2937;
+  --theme-surface-hover: #243244;
+  --theme-text: #e5e7eb;
+  --theme-text-muted: #9ca3af;
+  --theme-border: #334155;
+  --theme-overlay: rgba(2, 6, 23, 0.75);
+
+  --color-gray-50: #0f172a;
+  --color-gray-100: #1e293b;
+  --color-gray-200: #334155;
+  --color-gray-300: #475569;
+  --color-gray-400: #64748b;
+  --color-gray-500: #94a3b8;
+  --color-gray-600: #cbd5e1;
+  --color-gray-700: #e2e8f0;
+  --color-gray-800: #e5e7eb;
+  --color-gray-900: #f8fafc;
+}
+
 /* Base Styles */
 body {
   font-family: var(--font-family-base);
   line-height: 1.5;
-  color: var(--color-gray-800);
-  background-color: var(--color-gray-50);
+  color: var(--theme-text);
+  background-color: var(--theme-bg);
 }
 
 /* Typography System */

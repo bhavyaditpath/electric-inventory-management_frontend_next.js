@@ -63,7 +63,7 @@ const ChatSidebar = ({
   }, [openMenuRoomId, closeMenu]);
 
   return (
-    <aside className="w-full lg:w-80 flex-1 lg:flex-none border-r border-slate-200 bg-white/95 flex flex-col min-h-0 overflow-hidden">
+    <aside className="w-full lg:w-80 flex-1 lg:flex-none border-r border-slate-200 bg-white/95 flex flex-col min-h-0">
       <div className="px-4 py-4 border-b border-slate-200/80 bg-white">
         <h2 className="text-lg font-semibold text-slate-900">Chat</h2>
         <p className="text-sm text-slate-500">Message Admin and Branches</p>
@@ -128,7 +128,7 @@ const ChatSidebar = ({
                         onSelectRoom(room.id);
                       }
                     }}
-                    className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer shadow-sm overflow-hidden ${isActive
+                    className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer shadow-sm ${isActive
                       ? "border-blue-200 bg-blue-50/70"
                       : "border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/40 hover:shadow-md"
                       }`}
@@ -246,7 +246,7 @@ const ChatSidebar = ({
                   <button
                     key={user.id}
                     onClick={() => onSelectUser(user)}
-                    className="w-full text-left p-3 rounded-xl border border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/40 transition-all shadow-sm hover:shadow-md cursor-pointer overflow-hidden"
+                    className="w-full text-left p-3 rounded-xl border border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/40 transition-all shadow-sm hover:shadow-md cursor-pointer"
                   >
                     <div className="flex items-center justify-between gap-2 min-w-0">
                       <div className="flex flex-1 items-center gap-2 min-w-0 overflow-hidden">

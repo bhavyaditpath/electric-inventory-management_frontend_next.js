@@ -56,3 +56,8 @@ export enum CallOutcome {
   Busy = "busy",
   Ended = "ended",
 }
+
+export enum ThemeMode {
+  Light = "light",
+  Dark = "dark",
+}

@@ -173,18 +173,18 @@ export default function DashboardPage() {
   // Loading skeleton
   if (loading) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="p-6 bg-[var(--theme-bg)] text-[var(--theme-text)] min-h-screen">
         <div className="mb-6">
-          <div className="h-8 bg-gray-200 rounded w-48 mb-2 animate-pulse"></div>
-          <div className="h-4 bg-gray-200 rounded w-80 animate-pulse"></div>
+          <div className="h-8 bg-[var(--theme-border)] rounded w-48 mb-2 animate-pulse"></div>
+          <div className="h-4 bg-[var(--theme-border)] rounded w-80 animate-pulse"></div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
-              <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+            <div key={i} className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] p-6 animate-pulse">
+              <div className="h-4 bg-[var(--theme-border)] rounded w-3/4 mb-3"></div>
+              <div className="h-8 bg-[var(--theme-border)] rounded w-1/2 mb-2"></div>
+              <div className="h-3 bg-[var(--theme-border)] rounded w-2/3"></div>
             </div>
           ))}
         </div>
@@ -195,9 +195,9 @@ export default function DashboardPage() {
   // Error state
   if (error) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="p-6 bg-[var(--theme-bg)] text-[var(--theme-text)] min-h-screen">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <h1 className="text-3xl font-bold text-[var(--theme-text)]">Dashboard</h1>
         </div>
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
           <div className="flex items-center mb-3">
@@ -218,20 +218,20 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-[var(--theme-bg)] text-[var(--theme-text)] min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-gray-600 mt-1">Electric Inventory Management System</p>
+            <h1 className="text-3xl font-bold text-[var(--theme-text)]">Admin Dashboard</h1>
+            <p className="text-[var(--theme-text-muted)] mt-1">Electric Inventory Management System</p>
           </div>
           <button
             onClick={fetchDashboardData}
-            className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-lg hover:bg-[var(--theme-surface-muted)] transition-colors"
           >
-            <ArrowPathIcon className="w-4 h-4 mr-2 text-gray-600" />
-            <span className="text-gray-700">Refresh</span>
+            <ArrowPathIcon className="w-4 h-4 mr-2 text-[var(--theme-text-muted)]" />
+            <span className="text-[var(--theme-text)]">Refresh</span>
           </button>
         </div>
       </div>
@@ -239,12 +239,12 @@ export default function DashboardPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* Current Stock Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Inventory</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalInventory.toLocaleString()}</p>
-              <p className="text-sm text-gray-500 mt-1">Items in stock</p>
+              <p className="text-sm font-medium text-[var(--theme-text-muted)]">Total Inventory</p>
+              <p className="text-3xl font-bold text-[var(--theme-text)]">{stats.totalInventory.toLocaleString()}</p>
+              <p className="text-sm text-[var(--theme-text-muted)] mt-1">Items in stock</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
               <CubeIcon className="w-6 h-6 text-blue-600" />
@@ -253,12 +253,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Active Branches Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Active Branches</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.activeBranches}</p>
-              <p className="text-sm text-gray-500 mt-1">Branches online</p>
+              <p className="text-sm font-medium text-[var(--theme-text-muted)]">Active Branches</p>
+              <p className="text-3xl font-bold text-[var(--theme-text)]">{stats.activeBranches}</p>
+              <p className="text-sm text-[var(--theme-text-muted)] mt-1">Branches online</p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
               <BuildingStorefrontIcon className="w-6 h-6 text-green-600" />
@@ -267,12 +267,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Monthly Sales Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Monthly Sales</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.monthlySales}</p>
-              <p className="text-sm text-gray-500 mt-1">This month</p>
+              <p className="text-sm font-medium text-[var(--theme-text-muted)]">Monthly Sales</p>
+              <p className="text-2xl font-bold text-[var(--theme-text)]">{stats.monthlySales}</p>
+              <p className="text-sm text-[var(--theme-text-muted)] mt-1">This month</p>
             </div>
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
               <CurrencyDollarIcon className="w-6 h-6 text-purple-600" />
@@ -281,12 +281,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Pending Orders Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Pending Requests</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalRequests}</p>
-              <p className="text-sm text-gray-500 mt-1">From branches</p>
+              <p className="text-sm font-medium text-[var(--theme-text-muted)]">Pending Requests</p>
+              <p className="text-3xl font-bold text-[var(--theme-text)]">{stats.totalRequests}</p>
+              <p className="text-sm text-[var(--theme-text-muted)] mt-1">From branches</p>
             </div>
             <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
               <DocumentTextIcon className="w-6 h-6 text-yellow-600" />
@@ -298,13 +298,13 @@ export default function DashboardPage() {
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Recent Buys */}
-        <div className="bg-white rounded-lg border border-gray-200 h-80 md:h-96 flex flex-col">
-          <div className="px-6 py-4 border-b border-gray-200">
+        <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] h-80 md:h-96 flex flex-col">
+          <div className="px-6 py-4 border-b border-[var(--theme-border)]">
             <div className="flex items-center">
               <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
                 <ShoppingCartIcon className="w-5 h-5 text-green-600" />
               </div>
-              <h2 className="text-lg font-semibold text-gray-900">Recent Purchases</h2>
+              <h2 className="text-lg font-semibold text-[var(--theme-text)]">Recent Purchases</h2>
             </div>
           </div>
 
@@ -312,15 +312,15 @@ export default function DashboardPage() {
             {stats.recentActivity.filter(a => a.type === 'purchase').length > 0 ? (
               <div className="space-y-4">
                 {stats.recentActivity.filter(a => a.type === 'purchase').slice(0, 3).map((activity) => (
-                  <div key={activity.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0 mb-0 -mx-6 px-6">
+                  <div key={activity.id} className="flex items-center justify-between py-3 border-b border-[var(--theme-border)] last:border-b-0 mb-0 -mx-6 px-6">
                     <div className="flex items-center">
                       <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
                         <CubeIcon className="w-4 h-4 text-blue-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{activity.title}</p>
-                        <p className="text-xs text-gray-600">{activity.description}</p>
-                        <p className="text-xs text-gray-500 mt-1">{activity.timestamp}</p>
+                        <p className="text-sm font-medium text-[var(--theme-text)]">{activity.title}</p>
+                        <p className="text-xs text-[var(--theme-text-muted)]">{activity.description}</p>
+                        <p className="text-xs text-[var(--theme-text-muted)] mt-1">{activity.timestamp}</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -331,22 +331,22 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <ShoppingCartIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-500 font-medium">No recent purchases</p>
-                <p className="text-gray-400 text-sm">Recent purchases will appear here</p>
+                <ShoppingCartIcon className="w-12 h-12 text-[var(--theme-text-muted)] mx-auto mb-3" />
+                <p className="text-[var(--theme-text-muted)] font-medium">No recent purchases</p>
+                <p className="text-[var(--theme-text-muted)] text-sm">Recent purchases will appear here</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Stock Alerts */}
-        <div className="bg-white rounded-lg border border-gray-200 h-80 md:h-96 flex flex-col">
-          <div className="px-6 py-4 border-b border-gray-200">
+        <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] h-80 md:h-96 flex flex-col">
+          <div className="px-6 py-4 border-b border-[var(--theme-border)]">
             <div className="flex items-center">
               <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3">
                 <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
               </div>
-              <h2 className="text-lg font-semibold text-gray-900">Active Alerts</h2>
+              <h2 className="text-lg font-semibold text-[var(--theme-text)]">Active Alerts</h2>
             </div>
           </div>
 
@@ -354,15 +354,15 @@ export default function DashboardPage() {
             {stats.activeAlerts.length > 0 ? (
               <div className="space-y-4">
                 {stats.activeAlerts.map((alert) => (
-                  <div key={alert.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0 mb-0 -mx-6 px-6">
+                  <div key={alert.id} className="flex items-center justify-between py-3 border-b border-[var(--theme-border)] last:border-b-0 mb-0 -mx-6 px-6">
                     <div className="flex items-center">
                       <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3">
                         <ExclamationTriangleIcon className="w-4 h-4 text-red-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{alert.itemName}</p>
-                        <p className="text-xs text-gray-600">Branch: {alert.branch?.name || 'Unknown'}</p>
-                        <p className="text-xs text-gray-500 mt-1">Shortage: {alert.shortage}</p>
+                        <p className="text-sm font-medium text-[var(--theme-text)]">{alert.itemName}</p>
+                        <p className="text-xs text-[var(--theme-text-muted)]">Branch: {alert.branch?.name || 'Unknown'}</p>
+                        <p className="text-xs text-[var(--theme-text-muted)] mt-1">Shortage: {alert.shortage}</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -376,8 +376,8 @@ export default function DashboardPage() {
             ) : (
               <div className="text-center py-8">
                 <CubeIcon className="w-12 h-12 text-green-400 mx-auto mb-3" />
-                <p className="text-gray-500 font-medium">No active alerts</p>
-                <p className="text-gray-400 text-sm">All stock levels are adequate</p>
+                <p className="text-[var(--theme-text-muted)] font-medium">No active alerts</p>
+                <p className="text-[var(--theme-text-muted)] text-sm">All stock levels are adequate</p>
               </div>
             )}
           </div>

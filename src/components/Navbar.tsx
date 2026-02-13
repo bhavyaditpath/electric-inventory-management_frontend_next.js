@@ -1,12 +1,14 @@
 'use client';
 
 import { MagnifyingGlassIcon, UserIcon, ArrowRightOnRectangleIcon, ChevronDownIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { MoonIcon, SunIcon } from "@heroicons/react/24/solid";
 import { useAuth } from '../contexts/AuthContext';
 import { useState, useEffect, useRef } from 'react';
 import { NAVIGATION } from '../app/Constants/navigation.constants';
 import { useRouter } from 'next/navigation';
 import NotificationDropdown from './NotificationDropdown';
 import { useGlobalSearch } from '@/hooks/useGlobalSearch';
+import { ThemeMode } from '@/types/enums';
 
 interface NavbarProps {
   sidebarOpen: boolean;
@@ -20,6 +22,16 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    if (typeof window === "undefined") return ThemeMode.Light;
+    const savedTheme = window.localStorage.getItem("theme");
+    if (savedTheme === ThemeMode.Dark || savedTheme === ThemeMode.Light) {
+      return savedTheme;
+    }
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? ThemeMode.Dark
+      : ThemeMode.Light;
+  });
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -67,15 +79,29 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [mobileSearchOpen]);
 
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    window.localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    const nextTheme: ThemeMode =
+      theme === ThemeMode.Dark ? ThemeMode.Light : ThemeMode.Dark;
+    setTheme(nextTheme);
+  };
+
   return (
-    <nav className="h-16 bg-white shadow-md z-30 sticky top-0">
+    <nav
+      data-sidebar-open={sidebarOpen ? "true" : "false"}
+      className="h-16 bg-[var(--theme-surface)] border-b border-[var(--theme-border)] z-30 sticky top-0"
+    >
       <div className="h-full px-4 lg:px-6 flex items-center justify-between">
         {/* Left section */}
         <div className="flex items-center gap-2 lg:gap-4">
           {/* Mobile menu button */}
           <button
             onClick={onMobileToggle}
-            className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer lg:hidden"
+            className="p-2 text-[var(--theme-text-muted)] hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer lg:hidden"
             aria-label="Open menu"
           >
             <Bars3Icon className="w-5 h-5" />
@@ -85,13 +111,13 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
           {!isMobile && (
             <div className="flex-1 max-w-xl">
               <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--theme-text-muted)] w-5 h-5" />
                 <input
                   type="text"
                   placeholder="Search items..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border  rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-black"
+                  className="w-full pl-10 pr-4 py-2 border border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 />
               </div>
             </div>
@@ -104,7 +130,7 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
           {isMobile && (
             <button
               onClick={handleMobileSearchToggle}
-              className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer"
+              className="p-2 text-[var(--theme-text-muted)] hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer"
               aria-label="Search"
             >
               {mobileSearchOpen ? (
@@ -115,6 +141,19 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
             </button>
           )}
 
+          <button
+            onClick={toggleTheme}
+            className="p-2 text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] rounded-lg transition-all duration-200 cursor-pointer"
+            aria-label={theme === ThemeMode.Dark ? "Switch to light theme" : "Switch to dark theme"}
+            title={theme === ThemeMode.Dark ? "Switch to light theme" : "Switch to dark theme"}
+          >
+            {theme === ThemeMode.Dark ? (
+              <SunIcon className="w-5 h-5" />
+            ) : (
+              <MoonIcon className="w-5 h-5" />
+            )}
+          </button>
+
           {/* Notifications */}
           <NotificationDropdown />
 
@@ -122,11 +161,11 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2 lg:gap-3 hover:bg-slate-50 rounded-lg p-2 transition-all duration-200 cursor-pointer"
+              className="flex items-center gap-2 lg:gap-3 hover:bg-[var(--theme-surface-muted)] rounded-lg p-2 transition-all duration-200 cursor-pointer"
             >
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-semibold text-slate-800">{user?.username || 'User'}</p>
-                <p className="text-xs text-slate-500">{user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Role'}</p>
+                <p className="text-sm font-semibold text-[var(--theme-text)]">{user?.username || 'User'}</p>
+                <p className="text-xs text-[var(--theme-text-muted)]">{user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Role'}</p>
               </div>
               <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full overflow-hidden flex items-center justify-center">
                 {user?.profilePicture ? (
@@ -150,18 +189,18 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
                   </div>
                 )}
               </div>
-              <ChevronDownIcon className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDownIcon className={`w-4 h-4 text-[var(--theme-text-muted)] transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border  py-1 z-50 cursor-pointer">
-                <div className="sm:hidden px-4 py-2 border-b ">
-                  <p className="text-sm font-semibold text-slate-800">{user?.username || 'User'}</p>
-                  <p className="text-xs text-slate-500">{user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Role'}</p>
+              <div className="absolute right-0 mt-2 w-48 bg-[var(--theme-surface)] rounded-lg shadow-lg border border-[var(--theme-border)] py-1 z-50 cursor-pointer">
+                <div className="sm:hidden px-4 py-2 border-b border-[var(--theme-border)]">
+                  <p className="text-sm font-semibold text-[var(--theme-text)]">{user?.username || 'User'}</p>
+                  <p className="text-xs text-[var(--theme-text-muted)]">{user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Role'}</p>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-all duration-200 cursor-pointer"
+                  className="w-full flex items-center gap-3 px-4 py-2 text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] transition-all duration-200 cursor-pointer"
                 >
                   <ArrowRightOnRectangleIcon className="w-4 h-4" />
                   <span>Logout</span>
@@ -174,16 +213,16 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
 
       {/* Mobile search overlay */}
       {isMobile && mobileSearchOpen && (
-        <div className="mobile-search-container absolute top-full left-0 right-0 bg-white border-b  shadow-lg z-40 p-4">
+        <div className="mobile-search-container absolute top-full left-0 right-0 bg-[var(--theme-surface)] border-b border-[var(--theme-border)] shadow-lg z-40 p-4">
           <div className="relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--theme-text-muted)] w-5 h-5" />
             <input
               ref={searchInputRef}
               type="text"
               placeholder="Search items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border  rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-black"
+              className="w-full pl-10 pr-4 py-2 border border-[var(--theme-border)] rounded-lg bg-[var(--theme-surface)] text-[var(--theme-text)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             />
           </div>
         </div>
