@@ -28,9 +28,7 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
     if (savedTheme === ThemeMode.Dark || savedTheme === ThemeMode.Light) {
       return savedTheme;
     }
-    return window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? ThemeMode.Dark
-      : ThemeMode.Light;
+    return ThemeMode.Light;
   });
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);

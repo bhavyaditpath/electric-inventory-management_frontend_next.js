@@ -57,6 +57,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const handleSessionExpiry = () => {
     clearExpiryTimeout();
     tokenManager.removeToken();
+    localStorage.removeItem('theme');
+    localStorage.removeItem('adminInventoryColumnConfig');
     setUser(null);
     router.push('/auth/login');
   };
@@ -140,6 +142,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = () => {
     clearExpiryTimeout();
     tokenManager.removeToken();
+    localStorage.removeItem('theme');
+    localStorage.removeItem('adminInventoryColumnConfig');
     setUser(null);
     router.push('/auth/login');
   };

@@ -54,6 +54,8 @@ export default function Sidebar({
 
   const handleLogout = () => {
     tokenManager.removeToken();
+    localStorage.removeItem("theme");
+    localStorage.removeItem("adminInventoryColumnConfig");
     window.location.href = "/auth/login";
   };
 

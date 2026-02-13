@@ -46,6 +46,8 @@ export default function BranchSidebar({ isCollapsed, onToggle, isMobile = false,
 
   const handleLogout = () => {
     tokenManager.removeToken();
+    localStorage.removeItem("theme");
+    localStorage.removeItem("adminInventoryColumnConfig");
     router.push("/auth/login");
   };
 
