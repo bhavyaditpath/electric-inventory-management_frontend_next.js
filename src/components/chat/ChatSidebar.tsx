@@ -63,7 +63,7 @@ const ChatSidebar = ({
   }, [openMenuRoomId, closeMenu]);
 
   return (
-    <aside className="w-full lg:w-80 flex-1 lg:flex-none border-r border-slate-200 bg-white/95 flex flex-col min-h-0">
+    <aside className="w-full lg:w-80 flex-1 lg:flex-none border-r border-slate-200 bg-white/95 flex flex-col min-h-0 overflow-hidden">
       <div className="px-4 py-4 border-b border-slate-200/80 bg-white">
         <h2 className="text-lg font-semibold text-slate-900">Chat</h2>
         <p className="text-sm text-slate-500">Message Admin and Branches</p>
@@ -128,31 +128,31 @@ const ChatSidebar = ({
                         onSelectRoom(room.id);
                       }
                     }}
-                    className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer shadow-sm ${isActive
+                    className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer shadow-sm overflow-hidden ${isActive
                       ? "border-blue-200 bg-blue-50/70"
                       : "border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/40 hover:shadow-md"
                       }`}
                   >
-                    <div className="flex items-center justify-between gap-3 text-black">
-                      <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex items-center justify-between gap-2 min-w-0 text-black">
+                      <div className="flex flex-1 items-center gap-2 min-w-0 overflow-hidden">
                         <div
-                          className={`w-9 h-9 rounded-full flex items-center justify-center ${isActive
+                          className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center ${isActive
                             ? "bg-blue-600 text-white"
                             : "bg-slate-100 text-slate-600"
                             }`}
                         >
                           <ChatBubbleLeftRightIcon className="w-4 h-4" />
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-slate-900 truncate">
+                        <div className="w-0 min-w-0 flex-1 overflow-hidden">
+                          <p className="block w-full text-sm font-semibold text-slate-900 truncate">
                             {room.name}
                           </p>
-                          <p className="text-xs text-slate-500 truncate">
+                          <p className="block w-full text-xs text-slate-500 truncate">
                             {lastMessageLabel}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-2">
                         {(onPinRoom || onDeleteRoom) && (
                           <div
                             className="relative"
@@ -204,7 +204,7 @@ const ChatSidebar = ({
                         )}
                         {room.unreadCount && room.unreadCount > 0 && (
                           <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center">
-                            {room.unreadCount}
+                            {room.unreadCount > 99 ? "99+" : room.unreadCount}
                           </span>
                         )}
                       </div>
@@ -246,24 +246,24 @@ const ChatSidebar = ({
                   <button
                     key={user.id}
                     onClick={() => onSelectUser(user)}
-                    className="w-full text-left p-3 rounded-xl border border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/40 transition-all shadow-sm hover:shadow-md cursor-pointer"
+                    className="w-full text-left p-3 rounded-xl border border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/40 transition-all shadow-sm hover:shadow-md cursor-pointer overflow-hidden"
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+                    <div className="flex items-center justify-between gap-2 min-w-0">
+                      <div className="flex flex-1 items-center gap-2 min-w-0 overflow-hidden">
+                        <div className="w-9 h-9 shrink-0 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
                           <UsersIcon className="w-4 h-4" />
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-slate-900 truncate">
+                        <div className="w-0 min-w-0 flex-1 overflow-hidden">
+                          <p className="block w-full text-sm font-semibold text-slate-900 truncate">
                             {user.username}
                           </p>
-                          <p className="text-xs text-slate-500 truncate">
+                          <p className="block w-full text-xs text-slate-500 truncate">
                             {user.branch || user.role}
                           </p>
                         </div>
                       </div>
                       <span
-                        className={`text-xs font-medium px-2 py-1 rounded-full ${user.isOnline
+                        className={`shrink-0 text-xs font-medium px-2 py-1 rounded-full ${user.isOnline
                           ? "bg-emerald-100 text-emerald-700"
                           : "bg-slate-100 text-slate-500"
                           }`}
