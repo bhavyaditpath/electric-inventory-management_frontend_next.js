@@ -8,7 +8,12 @@ import {
   useState,
   type ChangeEvent,
 } from "react";
-import { PaperAirplaneIcon, PaperClipIcon } from "@heroicons/react/24/outline";
+import {
+  FaceSmileIcon,
+  PaperAirplaneIcon,
+  PaperClipIcon,
+} from "@heroicons/react/24/outline";
+import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
 
 interface ChatComposerProps {
   roomId?: number | null;
@@ -30,8 +35,11 @@ export default function ChatComposer({
   const [messageInput, setMessageInput] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [fileWarning, setFileWarning] = useState<string | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const messageInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const emojiButtonRef = useRef<HTMLButtonElement | null>(null);
+  const emojiPickerRef = useRef<HTMLDivElement | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isComposingRef = useRef(false);
 
@@ -39,6 +47,7 @@ export default function ChatComposer({
     setMessageInput("");
     setSelectedFiles([]);
     setFileWarning(null);
+    setShowEmojiPicker(false);
   }, [roomId]);
 
   useEffect(() => {
@@ -60,6 +69,21 @@ export default function ChatComposer({
   );
 
   useEffect(() => {
+    if (!showEmojiPicker) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (emojiPickerRef.current?.contains(target)) return;
+      if (emojiButtonRef.current?.contains(target)) return;
+      setShowEmojiPicker(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
+  useEffect(() => {
     const el = messageInputRef.current;
     if (!el) return;
     el.style.height = "auto";
@@ -74,6 +98,7 @@ export default function ChatComposer({
     setMessageInput("");
     setSelectedFiles([]);
     setFileWarning(null);
+    setShowEmojiPicker(false);
   }, [messageInput, onSendMessage, roomId, selectedFiles]);
 
   const handlePickFiles = useCallback(() => {
@@ -107,6 +132,25 @@ export default function ChatComposer({
   const handleRemoveFile = useCallback((index: number) => {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   }, []);
+
+  const handleEmojiClick = useCallback(
+    (emojiData: EmojiClickData) => {
+      const textarea = messageInputRef.current;
+      const start = textarea?.selectionStart ?? messageInput.length;
+      const end = textarea?.selectionEnd ?? messageInput.length;
+      const nextValue = `${messageInput.slice(0, start)}${emojiData.emoji}${messageInput.slice(end)}`;
+      handleTypingChange(nextValue);
+
+      requestAnimationFrame(() => {
+        const input = messageInputRef.current;
+        if (!input) return;
+        const cursor = start + emojiData.emoji.length;
+        input.focus();
+        input.setSelectionRange(cursor, cursor);
+      });
+    },
+    [handleTypingChange, messageInput]
+  );
 
   const previewFiles = useMemo(
     () =>
@@ -173,6 +217,29 @@ export default function ChatComposer({
         >
           <PaperClipIcon className="w-4 h-4" />
         </button>
+        <div className="relative">
+          <button
+            ref={emojiButtonRef}
+            onClick={() => setShowEmojiPicker((prev) => !prev)}
+            className="p-2.5 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 cursor-pointer"
+            aria-label="Open emoji picker"
+          >
+            <FaceSmileIcon className="w-4 h-4" />
+          </button>
+          {showEmojiPicker && (
+            <div
+              ref={emojiPickerRef}
+              className="absolute bottom-12 left-0 z-20 shadow-xl rounded-xl overflow-hidden"
+            >
+              <EmojiPicker
+                onEmojiClick={handleEmojiClick}
+                lazyLoadEmojis
+                width={300}
+                height={360}
+              />
+            </div>
+          )}
+        </div>
         <textarea
           ref={messageInputRef}
           value={messageInput}
