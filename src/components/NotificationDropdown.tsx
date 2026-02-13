@@ -147,7 +147,7 @@ export default function NotificationDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={toggleDropdown}
-        className="relative p-2 sm:p-3 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer touch-manipulation"
+        className="relative p-2 sm:p-3 text-[var(--theme-text-muted)] hover:text-blue-600 hover:bg-blue-50/30 rounded-lg transition-all duration-200 cursor-pointer touch-manipulation"
         aria-label="Toggle notifications"
       >
         <BellIcon className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -159,32 +159,32 @@ export default function NotificationDropdown() {
       {dropdownOpen && (
         <>
           {/* Mobile Modal - Clean bottom sheet without overlay */}
-          <div className="fixed inset-x-0 bottom-0 z-50 sm:hidden bg-white rounded-t-2xl shadow-2xl max-h-[80vh] overflow-hidden border-t border-slate-200">
+          <div className="fixed inset-x-0 bottom-0 z-50 sm:hidden bg-[var(--theme-surface)] rounded-t-2xl shadow-2xl max-h-[80vh] overflow-hidden border-t border-[var(--theme-border)]">
             {/* Mobile Header */}
-            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-white">
-              <h3 className="text-lg font-semibold text-slate-800">Notifications</h3>
+            <div className="flex items-center justify-between p-4 border-b border-[var(--theme-border)] bg-[var(--theme-surface)]">
+              <h3 className="text-lg font-semibold text-[var(--theme-text)]">Notifications</h3>
               <button
                 onClick={() => setDropdownOpen(false)}
-                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                className="p-2 hover:bg-[var(--theme-surface-muted)] rounded-full transition-colors"
               >
-                <XMarkIcon className="w-6 h-6 text-slate-600" />
+                <XMarkIcon className="w-6 h-6 text-[var(--theme-text-muted)]" />
               </button>
             </div>
 
             {/* Mobile Content */}
-            <div className="flex-1 overflow-y-auto p-4 bg-white">
+            <div className="flex-1 overflow-y-auto p-4 bg-[var(--theme-surface)]">
               {loading ? (
                 <div className="space-y-3">
                   {[...Array(3)].map((_, i) => (
                     <div key={i} className="animate-pulse">
-                      <div className="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
-                      <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                      <div className="h-4 bg-[var(--theme-surface-muted)] rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-[var(--theme-surface-muted)] rounded w-1/2"></div>
                     </div>
                   ))}
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-slate-500">No notifications found</p>
+                  <p className="text-[var(--theme-text-muted)]">No notifications found</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -193,7 +193,7 @@ export default function NotificationDropdown() {
                       key={notification.id}
                       className={`p-3 rounded-lg border transition-all touch-manipulation ${!notification.read
                         ? 'bg-blue-50 border-blue-200'
-                        : 'bg-slate-50 border-slate-200'
+                        : 'bg-[var(--theme-surface-muted)] border-[var(--theme-border)]'
                       }`}
                       onClick={() => markAsRead(notification.id)}
                     >
@@ -203,7 +203,7 @@ export default function NotificationDropdown() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-start">
-                            <h4 className={`text-sm font-medium line-clamp-1 ${!notification.read ? 'text-blue-600' : 'text-slate-800'
+                            <h4 className={`text-sm font-medium line-clamp-1 ${!notification.read ? 'text-blue-600' : 'text-[var(--theme-text)]'
                               }`}>
                               {notification.title}
                             </h4>
@@ -214,11 +214,11 @@ export default function NotificationDropdown() {
                               {notification.type}
                             </span>
                           </div>
-                          <p className={`text-xs mt-1 line-clamp-2 ${!notification.read ? 'text-slate-700' : 'text-slate-500'
-                            }`}>
+                          <p className={`text-xs mt-1 line-clamp-2 ${!notification.read ? 'text-[var(--theme-text)]' : 'text-[var(--theme-text-muted)]'
+                             }`}>
                             {notification.message}
                           </p>
-                          <p className="text-xs text-slate-400 mt-1">
+                          <p className="text-xs text-[var(--theme-text-muted)] mt-1">
                             {new Date(notification.createdAt).toLocaleDateString()}
                           </p>
                         </div>
@@ -230,10 +230,10 @@ export default function NotificationDropdown() {
             </div>
 
             {/* Mobile Footer */}
-            <div className="p-4 border-t border-slate-200 bg-white">
+            <div className="p-4 border-t border-[var(--theme-border)] bg-[var(--theme-surface)]">
               <button
                 onClick={handleSeeMore}
-                className="w-full text-center text-sm text-blue-600 hover:bg-blue-50 py-3 rounded-lg transition-all touch-manipulation"
+                className="w-full text-center text-sm text-blue-600 hover:bg-blue-50/30 py-3 rounded-lg transition-all touch-manipulation"
               >
                 See All Notifications
               </button>
@@ -241,9 +241,9 @@ export default function NotificationDropdown() {
           </div>
 
           {/* Desktop Dropdown - Original Design */}
-          <div className="hidden sm:block absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-slate-200 py-2 z-50">
-            <div className="px-4 py-2 border-b border-slate-200 flex justify-between items-center">
-              <h3 className="text-sm font-semibold text-slate-800">Notifications</h3>
+          <div className="hidden sm:block absolute right-0 mt-2 w-80 bg-[var(--theme-surface)] rounded-lg shadow-lg border border-[var(--theme-border)] py-2 z-50">
+            <div className="px-4 py-2 border-b border-[var(--theme-border)] flex justify-between items-center">
+              <h3 className="text-sm font-semibold text-[var(--theme-text)]">Notifications</h3>
               {unreadCount > 0 && (
                 <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">{unreadCount} new</span>
               )}
@@ -254,20 +254,20 @@ export default function NotificationDropdown() {
                 <div className="p-4 space-y-3">
                   {[...Array(5)].map((_, i) => (
                     <div key={i} className="animate-pulse">
-                      <div className="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
-                      <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                      <div className="h-4 bg-[var(--theme-surface-muted)] rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-[var(--theme-surface-muted)] rounded w-1/2"></div>
                     </div>
                   ))}
                 </div>
               ) : notifications.length === 0 ? (
-                <div className="px-4 py-4 text-center text-slate-500">
+                <div className="px-4 py-4 text-center text-[var(--theme-text-muted)]">
                   <p className="text-sm">No notifications found</p>
                 </div>
               ) : (
                 notifications.slice(0, 5).map(notification => (
                   <div
                     key={notification.id}
-                    className={`px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition-all touch-manipulation ${!notification.read ? 'bg-blue-50' : ''
+                    className={`px-4 py-3 border-b border-[var(--theme-border)] hover:bg-[var(--theme-surface-muted)] transition-all touch-manipulation ${!notification.read ? 'bg-blue-50/40' : ''
                       }`}
                     onClick={() => markAsRead(notification.id)}
                   >
@@ -277,17 +277,17 @@ export default function NotificationDropdown() {
                       </div>
                       <div className="flex-1">
                         <div className="flex justify-between items-start">
-                          <h4 className={`text-sm font-medium ${!notification.read ? 'text-blue-600' : 'text-slate-800'}`}>
+                          <h4 className={`text-sm font-medium ${!notification.read ? 'text-blue-600' : 'text-[var(--theme-text)]'}`}>
                             {notification.title}
                           </h4>
                           <span className={`text-xs px-2 py-1 rounded-full ml-2 ${notification.type === 'user' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}>
                             {notification.type}
                           </span>
                         </div>
-                        <p className={`text-xs mt-1 ${!notification.read ? 'text-slate-700' : 'text-slate-500'}`}>
+                        <p className={`text-xs mt-1 ${!notification.read ? 'text-[var(--theme-text)]' : 'text-[var(--theme-text-muted)]'}`}>
                           {notification.message}
                         </p>
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-xs text-[var(--theme-text-muted)] mt-1">
                           {new Date(notification.createdAt).toLocaleString()}
                         </p>
                       </div>
@@ -297,10 +297,10 @@ export default function NotificationDropdown() {
               )}
             </div>
 
-            <div className="px-4 py-2 border-t border-slate-200">
+            <div className="px-4 py-2 border-t border-[var(--theme-border)]">
               <button
                 onClick={handleSeeMore}
-                className="w-full text-center text-sm text-blue-600 hover:bg-blue-50 py-1 rounded transition-all"
+                className="w-full text-center text-sm text-blue-600 hover:bg-blue-50/30 py-1 rounded transition-all"
               >
                 See More
               </button>

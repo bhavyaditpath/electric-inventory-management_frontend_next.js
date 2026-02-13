@@ -81,15 +81,15 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="p-3 sm:p-4 lg:p-6">
+    <div className="p-3 sm:p-4 lg:p-6 bg-[var(--theme-bg)] text-[var(--theme-text)] min-h-screen">
       {/* Header Section */}
       <div className="mb-4 sm:mb-0">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
           <div className="flex-1">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-800">
+            <h1 className="text-xl sm:text-2xl font-bold text-[var(--theme-text)]">
               Notifications
             </h1>
-            <p className="text-sm sm:text-base text-slate-500 mt-1">
+            <p className="text-sm sm:text-base text-[var(--theme-text-muted)] mt-1">
               {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!'}
             </p>
           </div>
@@ -106,13 +106,13 @@ export default function NotificationsPage() {
 
       {/* Tab Navigation */}
       <div className="mb-4 sm:mb-3">
-        <div className="flex border-b border-slate-200 overflow-x-auto">
+        <div className="flex border-b border-[var(--theme-border)] overflow-x-auto">
           <button
             onClick={() => setActiveTab('user')}
             className={`px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-all whitespace-nowrap touch-manipulation ${
               activeTab === 'user' 
                 ? 'border-b-2 border-blue-500 text-blue-600' 
-                : 'text-slate-500 hover:text-slate-700'
+                : 'text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]'
             }`}
           >
             User Notifications
@@ -122,7 +122,7 @@ export default function NotificationsPage() {
             className={`px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-all whitespace-nowrap touch-manipulation ${
               activeTab === 'branch' 
                 ? 'border-b-2 border-blue-500 text-blue-600' 
-                : 'text-slate-500 hover:text-slate-700'
+                : 'text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]'
             }`}
           >
             Branch Notifications
@@ -133,7 +133,7 @@ export default function NotificationsPage() {
       {/* Notifications List */}
       <div className="">
         {filteredNotifications.length === 0 ? (
-          <div className="p-6 sm:p-8 text-center text-slate-500">
+          <div className="p-6 sm:p-8 text-center text-[var(--theme-text-muted)]">
             <div className="max-w-sm mx-auto">
               <p className="text-sm sm:text-base">No notifications found for this category</p>
             </div>
@@ -144,7 +144,7 @@ export default function NotificationsPage() {
               <div
                 key={notification.id}
                 className={`p-4 border rounded-lg hover:shadow-md transition-all touch-manipulation cursor-pointer ${
-                  !notification.read ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-200'
+                  !notification.read ? 'bg-blue-50/40 border-blue-200' : 'bg-[var(--theme-surface)] border-[var(--theme-border)]'
                 }`}
                 onClick={() => markAsRead(notification.id)}
               >
@@ -155,7 +155,7 @@ export default function NotificationsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
                       <h3 className={`text-sm sm:text-base font-medium line-clamp-2 ${
-                        !notification.read ? 'text-blue-600' : 'text-slate-800'
+                        !notification.read ? 'text-blue-600' : 'text-[var(--theme-text)]'
                       }`}>
                         {notification.title}
                       </h3>
@@ -168,11 +168,11 @@ export default function NotificationsPage() {
                       </span>
                     </div>
                     <p className={`text-sm sm:text-base mt-1 line-clamp-3 ${
-                      !notification.read ? 'text-slate-700' : 'text-slate-500'
+                      !notification.read ? 'text-[var(--theme-text)]' : 'text-[var(--theme-text-muted)]'
                     }`}>
                       {notification.message}
                     </p>
-                    <p className="text-xs text-slate-400 mt-2">
+                    <p className="text-xs text-[var(--theme-text-muted)] mt-2">
                       {new Date(notification.createdAt).toLocaleString()}
                     </p>
                     {!notification.read && (
@@ -192,14 +192,14 @@ export default function NotificationsPage() {
       {/* Loading State */}
       {loading && (
         <div className="mt-4">
-          <div className="bg-white rounded-lg shadow border border-slate-200 p-6 sm:p-8">
+          <div className="bg-[var(--theme-surface)] rounded-lg shadow border border-[var(--theme-border)] p-6 sm:p-8">
             <div className="animate-pulse space-y-4">
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="flex space-x-4">
-                  <div className="rounded-full bg-slate-200 h-10 w-10"></div>
+                  <div className="rounded-full bg-[var(--theme-surface-muted)] h-10 w-10"></div>
                   <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-                    <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+                    <div className="h-4 bg-[var(--theme-surface-muted)] rounded w-3/4"></div>
+                    <div className="h-4 bg-[var(--theme-surface-muted)] rounded w-1/2"></div>
                   </div>
                 </div>
               ))}
