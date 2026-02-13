@@ -2,7 +2,6 @@
 
 import DataTable, { TableColumn } from "@/components/DataTable";
 import { userApi } from "@/Services/user.api";
-import { branchApi } from "@/Services/branch.api";
 import { PencilIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { ArrowPathIcon, UsersIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
@@ -11,7 +10,7 @@ import ConfirmModal from "@/components/ConfirmModal";
 import InputField from "@/components/InputField";
 import { UserRole } from "@/types/enums";
 import { showSuccess, showError } from "@/Services/toast.service";
-import { User, Branch, PaginatedResponse } from "@/types/api-types";
+import { User, PaginatedResponse } from "@/types/api-types";
 
 export default function UserPage() {
     const [users, setUsers] = useState<User[]>([]);
@@ -21,9 +20,9 @@ export default function UserPage() {
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deletingUser, setDeletingUser] = useState<User | null>(null);
-    const [branches, setBranches] = useState<Branch[]>([]);
-    const [formData, setFormData] = useState({ username: '', password: '', role: UserRole.BRANCH, branchId: 0 });
-    const [errors, setErrors] = useState({ username: '', password: '', branchId: '' });
+    const [branches, setBranches] = useState<string[]>([]);
+    const [formData, setFormData] = useState({ username: '', password: '', role: UserRole.BRANCH, branchName: '' });
+    const [errors, setErrors] = useState({ username: '', password: '', branchName: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -40,11 +39,9 @@ export default function UserPage() {
 
     const loadBranches = useCallback(async () => {
         if (branches.length > 0) return;
-        const response = await branchApi.getAll();
+        const response = await userApi.getAllBranches();
         if (response.success) {
-            const data = response.data;
-            const paginatedData = data as PaginatedResponse<Branch>;
-            setBranches(paginatedData.items);
+            setBranches(response.data as string[]);
         }
     }, [branches]);
 
@@ -157,8 +154,8 @@ export default function UserPage() {
 
     const handleCreateUser = useCallback(() => {
         setModalMode('create');
-        setFormData({ username: '', password: '', role: UserRole.BRANCH, branchId: 0 });
-        setErrors({ username: '', password: '', branchId: '' });
+        setFormData({ username: '', password: '', role: UserRole.BRANCH, branchName: '' });
+        setErrors({ username: '', password: '', branchName: '' });
         loadBranches();
         setShowModal(true);
     }, [])
@@ -170,9 +167,9 @@ export default function UserPage() {
             username: user.username,
             password: '',
             role: user.role as UserRole,
-            branchId: user.branchId,
+            branchName: user.branch || '',
         });
-        setErrors({ username: '', password: '', branchId: '' });
+        setErrors({ username: '', password: '', branchName: '' });
         loadBranches();
         setShowModal(true);
     }, []);
@@ -204,7 +201,7 @@ export default function UserPage() {
     }, [deletingUser, currentPage, pageSize, searchTerm, sortBy, sortOrder, loadUsers]);
 
     const validateForm = useCallback(() => {
-        const newErrors = { username: '', password: '', branchId: '' };
+        const newErrors = { username: '', password: '', branchName: '' };
 
         if (!formData.username.trim()) {
             newErrors.username = 'Username is required';
@@ -221,24 +218,18 @@ export default function UserPage() {
             newErrors.password = 'Password is required';
         }
 
-        if (formData.branchId === 0) {
-            newErrors.branchId = 'Branch is required';
+        if (!formData.branchName.trim()) {
+            newErrors.branchName = 'Branch is required';
         }
 
         setErrors(newErrors);
-        return !newErrors.username && !newErrors.password && !newErrors.branchId;
+        return !newErrors.username && !newErrors.password && !newErrors.branchName;
     }, [formData, modalMode]);
 
     const handleSubmit = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!validateForm()) {
-            return;
-        }
-
-        const branchName = branches.find(b => b.id === formData.branchId)?.name;
-        if (!branchName) {
-            showError('Invalid branch selected');
             return;
         }
 
@@ -250,14 +241,14 @@ export default function UserPage() {
                     username: formData.username,
                     password: formData.password,
                     role: formData.role,
-                    branchName
+                    branchName: formData.branchName
                 });
             } else if (modalMode === 'edit' && editingUser) {
                 response = await userApi.update(editingUser.id, {
                     username: formData.username,
                     password: formData.password || undefined,
                     role: formData.role,
-                    branchName
+                    branchName: formData.branchName
                 });
             }
 
@@ -410,7 +401,7 @@ export default function UserPage() {
                             id="role"
                             value={formData.role}
                             onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-700 [color-scheme:light]"
                         >
                             <option value={UserRole.ADMIN}>Admin</option>
                             <option value={UserRole.BRANCH}>Branch</option>
@@ -418,21 +409,23 @@ export default function UserPage() {
                     </div>
 
                     <div>
-                        <label htmlFor="branchId" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="branchName" className="block text-sm font-medium text-gray-700 mb-1">
                             Branch <span className="text-red-500">*</span>
                         </label>
                         <select
-                            id="branchId"
-                            value={formData.branchId}
-                            onChange={(e) => setFormData({ ...formData, branchId: Number(e.target.value) })}
-                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700 ${errors.branchId ? 'border-red-500' : 'border-gray-300'}`}
+                            id="branchName"
+                            value={formData.branchName}
+                            onChange={(e) => setFormData({ ...formData, branchName: e.target.value })}
+                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-700 [color-scheme:light] ${errors.branchName ? 'border-red-500' : 'border-gray-300'}`}
                         >
-                            <option value={0}>Select Branch</option>
+                            <option value="" disabled hidden>
+                                Select Branch
+                            </option>
                             {branches.map(branch => (
-                                <option key={branch.id} value={branch.id}>{branch.name}</option>
+                                <option key={branch} value={branch}>{branch}</option>
                             ))}
                         </select>
-                        {errors.branchId && <p className="text-red-500 text-xs mt-1">{errors.branchId}</p>}
+                        {errors.branchName && <p className="text-red-500 text-xs mt-1">{errors.branchName}</p>}
                     </div>
 
                     <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-xl">

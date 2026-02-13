@@ -27,4 +27,5 @@ export const userApi = {
     update: (id: number, userData: Partial<{ username: string; password: string; role: UserRole; branchName: string }>) =>
         apiClient.patch(`/users/${id}`, userData),
     delete: (id: number) => apiClient.delete(`/users/${id}`),
+    getAllBranches: () => apiClient.get('/users/branch-names'),
 };
