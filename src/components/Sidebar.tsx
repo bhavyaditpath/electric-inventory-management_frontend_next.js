@@ -76,9 +76,9 @@ export default function Sidebar({
     >
       {/* Header - Hide when in mobile overlay since LayoutWrapper provides its own header */}
       {!isMobile && (
-        <div className="flex items-center justify-between p-3 lg:p-4 border-b border-[var(--theme-border)]">
+        <div className="h-16 px-4 flex items-center justify-between border-b border-[var(--theme-border)]">
           {!isCollapsed && (
-            <h2 className="text-base lg:text-lg font-semibold text-[var(--theme-text)] truncate">
+            <h2 className="text-lg font-semibold text-[var(--theme-text)] truncate">
               Admin Panel
             </h2>
           )}
@@ -107,7 +107,7 @@ export default function Sidebar({
               onClick={handleMenuClick}
                 className={`flex items-center px-3 py-3 lg:py-2 rounded-lg transition-all duration-200 group ${
                   isActive
-                    ? "bg-blue-50 text-blue-700 border-r-2 border-blue-600"
+                    ? "bg-blue-500/15 text-blue-600 border-r-2 border-blue-600"
                     : "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] hover:text-blue-600"
                 } ${isMobile ? 'text-base' : ''}`}
               >
@@ -128,7 +128,7 @@ export default function Sidebar({
       <div className="p-3 lg:p-4 border-t border-[var(--theme-border)] mt-auto">
         <button
           onClick={handleLogout}
-          className={`flex items-center w-full px-3 py-3 lg:py-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 group ${
+          className={`flex items-center w-full px-3 py-3 lg:py-2 text-red-600 hover:bg-red-500/10 rounded-lg transition-all duration-200 group ${
             isCollapsed ? "justify-center" : ""
           } ${isMobile ? 'text-base' : ''}`}
         >

@@ -99,13 +99,15 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
         {/* Left section */}
         <div className="flex items-center gap-2 lg:gap-4">
           {/* Mobile menu button */}
-          <button
-            onClick={onMobileToggle}
-            className="p-2 text-[var(--theme-text-muted)] hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer lg:hidden"
-            aria-label="Open menu"
-          >
-            <Bars3Icon className="w-5 h-5" />
-          </button>
+          {isMobile && (
+            <button
+              onClick={onMobileToggle}
+              className="p-2 text-[var(--theme-text-muted)] hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer md:hidden"
+              aria-label="Open menu"
+            >
+              <Bars3Icon className="w-5 h-5" />
+            </button>
+          )}
 
           {/* Desktop search */}
           {!isMobile && (

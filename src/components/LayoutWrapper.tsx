@@ -55,26 +55,26 @@ export default function LayoutWrapper({
 
   return (
     <RoleProtectedRoute requiredRole={requiredRole}>
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)]">
 
         {isMobile && isMobileOpen && (
           <div className="fixed inset-0 z-50 flex">
 
             <div
-              className="absolute inset-0 bg-black/50"
+              className="absolute inset-0 bg-[var(--theme-overlay)]"
               onClick={closeMobile}
             />
 
-            <div className="relative w-72 max-w-[90vw] bg-white shadow-xl z-50 transform transition-transform duration-300 translate-x-0">
+            <div className="relative w-72 max-w-[90vw] bg-[var(--theme-surface)] border-r border-[var(--theme-border)] shadow-xl z-50 transform transition-transform duration-300 translate-x-0">
 
-              <div className="flex items-center justify-between p-4 border-b">
-                <h2 className="text-lg font-semibold text-black">
+              <div className="flex items-center justify-between p-4 border-b border-[var(--theme-border)]">
+                <h2 className="text-lg font-semibold text-[var(--theme-text)]">
                   {requiredRole === UserRole.ADMIN ? "Admin Panel" : "Branch Panel"}
                 </h2>
 
                 <button
                   onClick={closeMobile}
-                  className="p-2 rounded-md hover:bg-gray-100 text-black"
+                  className="p-2 rounded-md hover:bg-[var(--theme-surface-muted)] text-[var(--theme-text)]"
                 >
                   <XMarkIcon className="w-6 h-6" />
                 </button>
