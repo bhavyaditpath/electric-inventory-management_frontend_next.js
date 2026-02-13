@@ -177,36 +177,36 @@ const PurchasePage = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 bg-gray-50">
+    <div className="p-4 sm:p-6 bg-[var(--theme-bg)] text-[var(--theme-text)] min-h-screen">
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Purchase Management</h1>
-            <p className="text-gray-600 mt-1 text-sm sm:text-base">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--theme-text)]">Purchase Management</h1>
+            <p className="text-[var(--theme-text-muted)] mt-1 text-sm sm:text-base">
               Record and manage inventory purchases
             </p>
           </div>
           <button
             onClick={loadPurchases}
             disabled={loadingPurchases}
-            className="inline-flex items-center justify-center px-3 py-2 sm:px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base disabled:opacity-60 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center px-3 py-2 sm:px-4 bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-lg hover:bg-[var(--theme-surface-muted)] transition-colors text-sm sm:text-base disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <ArrowPathIcon
-              className={`w-4 h-4 mr-1 sm:mr-2 text-gray-600 ${loadingPurchases ? 'animate-spin' : ''}`}
+              className={`w-4 h-4 mr-1 sm:mr-2 text-[var(--theme-text-muted)] ${loadingPurchases ? 'animate-spin' : ''}`}
             />
-            <span className="text-gray-700">{loadingPurchases ? 'Refreshing...' : 'Refresh'}</span>
+            <span className="text-[var(--theme-text)]">{loadingPurchases ? 'Refreshing...' : 'Refresh'}</span>
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+        <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] shadow-sm">
+          <div className="px-4 sm:px-6 py-4 border-b border-[var(--theme-border)]">
             <div className="flex items-center">
               <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
                 <ShoppingCartIcon className="w-5 h-5 text-blue-600" />
               </div>
-              <h2 className="text-base sm:text-lg font-semibold text-gray-900">
+              <h2 className="text-base sm:text-lg font-semibold text-[var(--theme-text)]">
                 {editingPurchase ? 'Edit Purchase' : 'Record New Purchase'}
               </h2>
             </div>
@@ -235,12 +235,12 @@ const PurchasePage = () => {
                 />
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Unit</label>
+                  <label className="block text-sm font-semibold text-[var(--theme-text)] mb-2">Unit</label>
                   <select
                     name="unit"
                     value={formData.unit}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white text-gray-900"
+                    className="w-full px-4 py-3 border border-[var(--theme-border)] rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-[var(--theme-surface)] text-[var(--theme-text)]"
                   >
                     <option value="pieces">Pieces</option>
                     <option value="boxes">Boxes</option>
@@ -261,12 +261,12 @@ const PurchasePage = () => {
               />
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Total Price</label>
+                <label className="block text-sm font-semibold text-[var(--theme-text)] mb-2">Total Price</label>
                 <input
                   type="text"
                   value={`Rs ${formData.totalPrice}`}
                   readOnly
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-gray-50 text-gray-900 font-medium"
+                  className="w-full px-4 py-3 border border-[var(--theme-border)] rounded-lg shadow-sm bg-[var(--theme-surface-muted)] text-[var(--theme-text)] font-medium"
                 />
                 {errors.totalPrice && <p className="text-red-500 text-sm mt-1">{errors.totalPrice}</p>}
               </div>
@@ -314,7 +314,7 @@ const PurchasePage = () => {
                   <button
                     type="button"
                     onClick={handleCancelEdit}
-                    className="flex-1 py-3 px-4 rounded-lg font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:ring-2 focus:ring-gray-200 transition-colors"
+                    className="flex-1 py-3 px-4 rounded-lg font-semibold text-[var(--theme-text)] bg-[var(--theme-surface)] border border-[var(--theme-border)] hover:bg-[var(--theme-surface-muted)] focus:ring-2 focus:ring-gray-200 transition-colors"
                   >
                     Cancel Edit
                   </button>
@@ -324,16 +324,16 @@ const PurchasePage = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+        <div className="bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] shadow-sm">
+          <div className="px-4 sm:px-6 py-4 border-b border-[var(--theme-border)]">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
                   <DocumentTextIcon className="w-5 h-5 text-green-600" />
                 </div>
                 <div>
-                  <h2 className="text-base sm:text-lg font-semibold text-gray-900">Recent Purchases</h2>
-                  <p className="text-xs sm:text-sm text-gray-500">Latest records from this page</p>
+                  <h2 className="text-base sm:text-lg font-semibold text-[var(--theme-text)]">Recent Purchases</h2>
+                  <p className="text-xs sm:text-sm text-[var(--theme-text-muted)]">Latest records from this page</p>
                 </div>
               </div>
               <button
@@ -355,26 +355,26 @@ const PurchasePage = () => {
             {loadingPurchases ? (
               <div className="text-center py-12">
                 <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-600 font-medium">Loading purchases...</p>
+                <p className="text-[var(--theme-text-muted)] font-medium">Loading purchases...</p>
               </div>
             ) : !purchases || purchases.length === 0 ? (
               <div className="text-center py-12">
-                <ShoppingCartIcon className="w-14 h-14 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 font-medium text-base sm:text-lg">No purchases recorded yet</p>
-                <p className="text-gray-500 text-sm mt-1">Start by recording your first purchase</p>
+                <ShoppingCartIcon className="w-14 h-14 text-[var(--theme-text-muted)] mx-auto mb-4" />
+                <p className="text-[var(--theme-text-muted)] font-medium text-base sm:text-lg">No purchases recorded yet</p>
+                <p className="text-[var(--theme-text-muted)] text-sm mt-1">Start by recording your first purchase</p>
               </div>
             ) : (
               <div className="space-y-3 max-h-[35rem] overflow-y-auto pr-1">
                 {purchases.slice(0, 10).map((purchase) => (
                   <div
                     key={purchase.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                    className="border border-[var(--theme-border)] rounded-lg p-4 hover:bg-[var(--theme-surface-muted)] transition-colors"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h3 className="font-semibold text-gray-900 truncate">{purchase.productName}</h3>
-                        <p className="text-sm text-gray-600">{purchase.brand}</p>
-                        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600">
+                        <h3 className="font-semibold text-[var(--theme-text)] truncate">{purchase.productName}</h3>
+                        <p className="text-sm text-[var(--theme-text-muted)]">{purchase.brand}</p>
+                        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[var(--theme-text-muted)]">
                           <span>
                             {purchase.quantity} {purchase.unit}
                           </span>
@@ -388,7 +388,7 @@ const PurchasePage = () => {
                         Threshold: {purchase.lowStockThreshold}
                       </span>
                     </div>
-                    <div className="mt-2 flex items-center text-xs text-gray-500">
+                    <div className="mt-2 flex items-center text-xs text-[var(--theme-text-muted)]">
                       <ClockIcon className="w-4 h-4 mr-1" />
                       {new Date(purchase.createdAt).toLocaleDateString()}
                     </div>
@@ -413,3 +413,5 @@ const PurchasePage = () => {
 };
 
 export default PurchasePage;
+
+

@@ -202,7 +202,7 @@ export default function AdminInventoryPage() {
       render: (value: number, row: InventoryItem) => (
         <span
           className={
-            row.currentQuantity <= value ? "text-red-600 font-medium" : "text-gray-600"
+            row.currentQuantity <= value ? "text-red-600 font-medium" : "text-[var(--theme-text-muted)]"
           }
         >
           {value} {row.unit}
@@ -226,23 +226,23 @@ export default function AdminInventoryPage() {
   );
 
   return (
-    <div className="p-6 bg-gray-50 ">
+    <div className="p-6 bg-[var(--theme-bg)] text-[var(--theme-text)] min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
           <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Global Inventory Overview</h1>
-            <p className="text-gray-600 mt-1 text-sm sm:text-base">View purchased items and stock levels across all branches</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--theme-text)]">Global Inventory Overview</h1>
+            <p className="text-[var(--theme-text-muted)] mt-1 text-sm sm:text-base">View purchased items and stock levels across all branches</p>
           </div>
           <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
             <button
               onClick={() =>
                 loadInventory(currentPage, pageSize, searchTerm, sortBy, sortOrder)
               }
-              className="inline-flex items-center justify-center px-3 py-2 sm:px-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
+              className="inline-flex items-center justify-center px-3 py-2 sm:px-4 bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-lg hover:bg-[var(--theme-surface-muted)] transition-colors text-sm sm:text-base"
             >
-              <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2 text-gray-600" />
-              <span className="text-gray-700">Refresh</span>
+              <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2 text-[var(--theme-text-muted)]" />
+              <span className="text-[var(--theme-text)]">Refresh</span>
             </button>
             <button
               onClick={() => setShowCustomizer(true)}
@@ -283,13 +283,13 @@ export default function AdminInventoryPage() {
 
       {/* STOCK SUMMARY */}
       {inventory.length > 0 && (
-        <div className="mt-8 bg-white rounded-lg border border-gray-200 shadow-sm">
-          <div className="px-6 py-4 border-b border-gray-200">
+        <div className="mt-8 bg-[var(--theme-surface)] rounded-lg border border-[var(--theme-border)] shadow-sm">
+          <div className="px-6 py-4 border-b border-[var(--theme-border)]">
             <div className="flex items-center">
               <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
                 <CubeIcon className="w-5 h-5 text-orange-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Global Stock Alert Summary</h3>
+              <h3 className="text-lg font-semibold text-[var(--theme-text)]">Global Stock Alert Summary</h3>
             </div>
           </div>
 

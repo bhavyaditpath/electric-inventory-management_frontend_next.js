@@ -177,22 +177,22 @@ export default function ColumnCustomizer<T>({
     <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/25 backdrop-blur-sm transition-all duration-300 ease-out z-40"
+        className="fixed inset-0 bg-[var(--theme-overlay)] backdrop-blur-sm transition-all duration-300 ease-out z-40"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative z-50 w-full max-w-2xl transform overflow-hidden rounded-xl bg-white shadow-2xl transition-all duration-300 ease-out">
+        <div className="relative z-50 w-full max-w-2xl transform overflow-hidden rounded-xl bg-[var(--theme-surface)] border border-[var(--theme-border)] shadow-2xl transition-all duration-300 ease-out">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 px-6 py-4">
-            <h3 className="text-xl font-semibold text-gray-900 leading-6">
+          <div className="flex items-center justify-between border-b border-[var(--theme-border)] bg-[var(--theme-surface-muted)] px-6 py-4">
+            <h3 className="text-xl font-semibold text-[var(--theme-text)] leading-6">
               Choose which columns you see
             </h3>
             <button
               onClick={onClose}
-              className="group rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+              className="group rounded-full p-2 text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-muted)] hover:text-[var(--theme-text)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
               aria-label="Close modal"
             >
               <XMarkIcon className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
@@ -203,8 +203,8 @@ export default function ColumnCustomizer<T>({
           <div className="max-h-[70vh] overflow-y-auto px-6 py-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* All columns section */}
-              <div className="bg-gray-50 p-3 rounded border border-gray-200">
-                <div className="mb-2 text-sm font-medium text-gray-700">All columns</div>
+              <div className="bg-[var(--theme-surface-muted)] p-3 rounded border border-[var(--theme-border)]">
+                <div className="mb-2 text-sm font-medium text-[var(--theme-text)]">All columns</div>
                 <div className="space-y-2">
                   {totalColumns.map((column) => (
                     <div key={String(column.key)} className="flex items-center py-1">
@@ -213,9 +213,9 @@ export default function ColumnCustomizer<T>({
                         id={String(column.key)}
                         checked={column.isChecked}
                         onChange={(e) => handleColumnSelectionChange(String(column.key), e.target.checked)}
-                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        className="h-4 w-4 text-blue-600 border-[var(--theme-border)] rounded focus:ring-blue-500"
                       />
-                      <label htmlFor={String(column.key)} className="ml-2 text-sm text-gray-700">
+                      <label htmlFor={String(column.key)} className="ml-2 text-sm text-[var(--theme-text)]">
                         {column.header}
                       </label>
                     </div>
@@ -229,21 +229,21 @@ export default function ColumnCustomizer<T>({
                   <button
                     type="button"
                     onClick={removeAllColumns}
-                    className="text-sm text-blue-600 hover:text-blue-800 underline"
+                    className="text-sm text-blue-600 hover:text-blue-700 underline"
                   >
                     Remove all columns
                   </button>
                 </div>
 
-                <div className="bg-gray-50 p-3 rounded border border-gray-200">
+                <div className="bg-[var(--theme-surface-muted)] p-3 rounded border border-[var(--theme-border)]">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-[var(--theme-text)]">
                       Selected columns ({selectedColumns.length})
                     </span>
                   </div>
 
                   {selectedColumns.length === 0 ? (
-                    <div className="text-sm text-gray-500">No columns selected.</div>
+                    <div className="text-sm text-[var(--theme-text-muted)]">No columns selected.</div>
                   ) : (
                     <DragDropContext onDragEnd={onDragEnd}>
                       <Droppable droppableId="selectedColumns">
@@ -264,16 +264,16 @@ export default function ColumnCustomizer<T>({
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
-                                    className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded group"
+                                    className="flex items-center justify-between p-2 bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded group"
                                   >
                                     <div className="flex items-center flex-1">
-                                      <Bars3Icon className="w-4 h-4 text-gray-400 mr-2 cursor-move" />
-                                      <span className="text-sm text-gray-700">{column.header}</span>
+                                      <Bars3Icon className="w-4 h-4 text-[var(--theme-text-muted)] mr-2 cursor-move" />
+                                      <span className="text-sm text-[var(--theme-text)]">{column.header}</span>
                                     </div>
                                     <button
                                       type="button"
                                       onClick={() => removeColumn(String(column.key))}
-                                      className="text-gray-400 hover:text-gray-600"
+                                      className="text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
                                     >
                                       <XMarkIcon className="w-4 h-4" />
                                     </button>
@@ -296,7 +296,7 @@ export default function ColumnCustomizer<T>({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-2 text-sm font-medium text-[var(--theme-text)] bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-md hover:bg-[var(--theme-surface-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 Cancel
               </button>
@@ -314,3 +314,4 @@ export default function ColumnCustomizer<T>({
     </div>
   );
 }
+
