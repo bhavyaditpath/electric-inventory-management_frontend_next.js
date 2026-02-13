@@ -32,6 +32,7 @@ export default function ChatComposer({
   maxFiles = 10,
   maxFileSizeBytes = 10 * 1024 * 1024,
 }: ChatComposerProps) {
+  const totalLimitMb = Math.floor(maxFileSizeBytes / (1024 * 1024));
   const [messageInput, setMessageInput] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [fileWarning, setFileWarning] = useState<string | null>(null);
@@ -109,24 +110,49 @@ export default function ChatComposer({
     (event: ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(event.target.files || []);
       if (files.length === 0) return;
-      setFileWarning(null);
-      const filtered = files.filter(
-        (file) =>
-          file.type.startsWith("image/") ||
-          file.type === "application/pdf"
-      );
-      const sizeOk = filtered.filter((file) => file.size <= maxFileSizeBytes);
-      if (sizeOk.length < filtered.length) {
-        setFileWarning("Some files were too large (max 10 MB) and were skipped.");
+      let warning: string | null = null;
+      let skippedForType = false;
+      let skippedForCount = false;
+      let skippedForTotalSize = false;
+
+      const nextFiles = [...selectedFiles];
+      let totalSize = nextFiles.reduce((sum, file) => sum + file.size, 0);
+
+      for (const file of files) {
+        const isSupportedType =
+          file.type.startsWith("image/") || file.type === "application/pdf";
+        if (!isSupportedType) {
+          skippedForType = true;
+          continue;
+        }
+
+        if (nextFiles.length >= maxFiles) {
+          skippedForCount = true;
+          continue;
+        }
+
+        if (totalSize + file.size > maxFileSizeBytes) {
+          skippedForTotalSize = true;
+          continue;
+        }
+
+        nextFiles.push(file);
+        totalSize += file.size;
       }
-      const combined = [...selectedFiles, ...sizeOk].slice(0, maxFiles);
-      if (combined.length < selectedFiles.length + sizeOk.length) {
-        setFileWarning("You can attach up to 10 files per message.");
+
+      if (skippedForTotalSize) {
+        warning = `Total attachment size cannot exceed ${totalLimitMb} MB.`;
+      } else if (skippedForCount) {
+        warning = "You can attach up to 10 files per message.";
+      } else if (skippedForType) {
+        warning = "Only images and PDFs are allowed.";
       }
-      setSelectedFiles(combined);
+
+      setFileWarning(warning);
+      setSelectedFiles(nextFiles);
       event.target.value = "";
     },
-    [maxFileSizeBytes, maxFiles, selectedFiles]
+    [maxFileSizeBytes, maxFiles, selectedFiles, totalLimitMb]
   );
 
   const handleRemoveFile = useCallback((index: number) => {
@@ -270,6 +296,7 @@ export default function ChatComposer({
       </div>
       <div className="mt-2 text-[11px] text-slate-500 flex flex-wrap items-center gap-2">
         <span>Max 10 files per message.</span>
+        <span>Total attachment size up to {totalLimitMb} MB.</span>
         <span>Images and PDFs only.</span>
         {fileWarning && <span className="text-amber-600">{fileWarning}</span>}
       </div>
