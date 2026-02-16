@@ -7,7 +7,7 @@ import { CallDirection, CallOutcome, CallState, CallType } from "@/types/enums";
 
 const SOCKET_BASE_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-const OUTGOING_CALL_TTL_MS = 90000;
+const OUTGOING_CALL_TTL_MS = 30000;
 const CALL_SESSION_KEY = "chat_call_session";
 
 type StoredCallSession = {

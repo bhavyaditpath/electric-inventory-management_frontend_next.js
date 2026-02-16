@@ -26,13 +26,27 @@ export const useWebRTC = (
   const ensurePeerConnection = async (targetUserId: number) => {
     if (pcRef.current) return pcRef.current;
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    let stream: MediaStream | null = null;
+    try {
+      if (navigator.mediaDevices?.getUserMedia) {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } else {
+        console.warn("mediaDevices.getUserMedia is not available in this browser");
+      }
+    } catch (error) {
+      // Allow signaling to continue even without local audio input.
+      // This avoids uncaught NotFoundError when no capture device exists.
+      console.warn("Failed to capture local audio stream:", error);
+      stream = null;
+    }
     localStreamRef.current = stream;
 
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
     pcRef.current = pc;
 
-    stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+    if (stream) {
+      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+    }
 
     pc.ontrack = (event) => {
       if (remoteAudioRef.current) {
