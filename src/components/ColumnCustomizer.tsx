@@ -177,7 +177,7 @@ export default function ColumnCustomizer<T>({
     <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-[var(--theme-overlay)] backdrop-blur-sm transition-all duration-300 ease-out z-40"
+        className="fixed inset-0 bg-[var(--theme-overlay)] transition-all duration-300 ease-out z-40"
         onClick={onClose}
         aria-hidden="true"
       />
