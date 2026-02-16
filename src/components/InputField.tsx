@@ -8,6 +8,9 @@ interface InputFieldProps {
   step?: string;
   name?: string;
   error?: string;
+  min?: string | number;
+  max?: string | number;
+  maxLength?: number;
 }
 
 const InputField = ({
@@ -18,6 +21,9 @@ const InputField = ({
   step,
   name,
   error,
+  min,
+  max,
+  maxLength,
 }: InputFieldProps) => {
   return (
     <div className="mb-2">
@@ -31,6 +37,9 @@ const InputField = ({
         onChange={onChange}
         step={step}
         name={name}
+        min={min}
+        max={max}
+        maxLength={maxLength}
         className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-[var(--theme-surface)] text-[var(--theme-text)]
           ${error ? 'border-red-500' : 'border-[var(--theme-border)]'}
         `}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import InputField from '../../../components/InputField';
 import ConfirmModal from '../../../components/ConfirmModal';
@@ -8,6 +8,7 @@ import { purchaseApi } from '../../../Services/purchase.service';
 import { PurchaseDto, PurchaseResponseDto } from '../../../types/api-types';
 import { showSuccess, showError } from '../../../Services/toast.service';
 import { exportPurchasesToPDF } from '../../../utils/pdfExport';
+import { calculatePurchaseTotalPrice, validatePurchaseForm } from '../../../utils/purchaseValidation';
 import { useAuth } from '../../../contexts/AuthContext';
 import {
   ArrowPathIcon,
@@ -39,28 +40,20 @@ const PurchasePage = () => {
     brand: '',
   });
 
+  const buildNormalizedFormData = useCallback(
+    (data: PurchaseDto): PurchaseDto => ({
+      ...data,
+      productName: data.productName.trim(),
+      unit: data.unit.trim(),
+      brand: data.brand.trim(),
+      totalPrice: calculatePurchaseTotalPrice(data.quantity, data.pricePerUnit),
+    }),
+    [],
+  );
+
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.productName.trim()) newErrors.productName = 'Product name is required';
-    if (!formData.brand.trim()) newErrors.brand = 'Supplier name is required';
-
-    const qty = parseFloat(formData.quantity);
-    if (!qty || qty <= 0) newErrors.quantity = 'Quantity must be greater than 0';
-
-    if (!formData.unit.trim()) newErrors.unit = 'Unit is required';
-
-    const price = parseFloat(formData.pricePerUnit);
-    if (!price || price <= 0) newErrors.pricePerUnit = 'Price per unit must be greater than 0';
-
-    const total = parseFloat(formData.totalPrice);
-    if (!total || total <= 0) newErrors.totalPrice = 'Total price must be greater than 0';
-
-    const threshold = parseFloat(formData.lowStockThreshold);
-    if (!threshold || threshold <= 0) {
-      newErrors.lowStockThreshold = 'Low stock threshold must be at least 1';
-    }
-
+    const normalized = buildNormalizedFormData(formData);
+    const newErrors = validatePurchaseForm(normalized);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -107,9 +100,9 @@ const PurchasePage = () => {
       const updated = { ...prev, [name]: value };
 
       if (name === 'quantity' || name === 'pricePerUnit') {
-        const quantityValue = parseFloat(name === 'quantity' ? value : prev.quantity);
-        const priceValue = parseFloat(name === 'pricePerUnit' ? value : prev.pricePerUnit);
-        updated.totalPrice = (quantityValue * priceValue).toString();
+        const quantityValue = name === 'quantity' ? value : prev.quantity;
+        const priceValue = name === 'pricePerUnit' ? value : prev.pricePerUnit;
+        updated.totalPrice = calculatePurchaseTotalPrice(quantityValue, priceValue);
       }
 
       return updated;
@@ -158,11 +151,13 @@ const PurchasePage = () => {
 
     setLoading(true);
     try {
+      const payload = buildNormalizedFormData(formData);
+
       if (editingPurchase) {
-        await purchaseApi.editRecordPurchase(editingPurchase.id.toString(), formData);
+        await purchaseApi.editRecordPurchase(editingPurchase.id.toString(), payload);
         showSuccess('Purchase updated');
       } else {
-        await purchaseApi.recordPurchase(formData);
+        await purchaseApi.recordPurchase(payload);
         showSuccess('Purchase recorded');
       }
 
@@ -220,6 +215,7 @@ const PurchasePage = () => {
                 value={formData.productName}
                 onChange={handleInputChange}
                 name="productName"
+                maxLength={255}
                 error={errors.productName}
               />
 
@@ -231,6 +227,8 @@ const PurchasePage = () => {
                   onChange={handleInputChange}
                   name="quantity"
                   step="0.01"
+                  min="0.01"
+                  max="99999999.99"
                   error={errors.quantity}
                 />
 
@@ -257,6 +255,8 @@ const PurchasePage = () => {
                 onChange={handleInputChange}
                 name="pricePerUnit"
                 step="0.01"
+                min="0.01"
+                max="99999999.99"
                 error={errors.pricePerUnit}
               />
 
@@ -277,6 +277,8 @@ const PurchasePage = () => {
                 value={formData.lowStockThreshold}
                 onChange={handleInputChange}
                 name="lowStockThreshold"
+                min="1"
+                step="1"
                 error={errors.lowStockThreshold}
               />
 
@@ -286,6 +288,7 @@ const PurchasePage = () => {
                 value={formData.brand}
                 onChange={handleInputChange}
                 name="brand"
+                maxLength={255}
                 error={errors.brand}
               />
 
