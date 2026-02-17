@@ -260,6 +260,10 @@ export const useCallWebSocket = () => {
             clearPersistedSession();
             setCallState(CallState.Connected);
             setConnectedAt(Date.now());
+
+            setTimeout(() => {
+                webrtc.tryStartRecordingNow();
+            }, 500);
         },
         () => resetCallState()
     );
