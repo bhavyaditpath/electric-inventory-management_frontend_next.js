@@ -52,6 +52,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     acceptCall,
     rejectCall,
     endCall,
+    toggleRecording,
+    isRecording,
   } = useCallWebSocket();
 
   const isIncoming = callDirection === CallDirection.Incoming;
@@ -87,6 +89,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         onAccept={acceptCall}
         onReject={rejectCall}
         onEnd={endCall}
+        isRecording={isRecording?.()}
+        onToggleRecording={toggleRecording}
       />
     </CallContext.Provider>
   );

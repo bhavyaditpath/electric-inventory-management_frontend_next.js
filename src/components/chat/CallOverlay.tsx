@@ -17,6 +17,8 @@ interface Props {
   onAccept?: () => void;
   onReject?: () => void;
   onEnd?: () => void;
+  isRecording?: boolean;
+  onToggleRecording?: () => void;
 }
 
 export default function CallOverlay({
@@ -31,6 +33,8 @@ export default function CallOverlay({
   onAccept,
   onReject,
   onEnd,
+  isRecording,
+  onToggleRecording,
 }: Props) {
   const avatarStyles = [
     "bg-rose-100 text-rose-700 border-rose-200",
@@ -176,7 +180,20 @@ export default function CallOverlay({
         {(state === CallState.Calling ||
           state === CallState.Connecting ||
           state === CallState.Connected) && (
-            <div className="flex justify-center">
+            <div className="flex flex-col items-center gap-3">
+
+              {state === CallState.Connected && (
+                <button
+                  onClick={onToggleRecording}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold shadow-sm
+        ${isRecording
+                      ? "bg-red-500 hover:bg-red-600 text-white"
+                      : "bg-slate-200 hover:bg-slate-300 text-slate-800"}`}
+                >
+                  ● {isRecording ? "Recording..." : "Start Recording"}
+                </button>
+              )}
+
               <button
                 onClick={onEnd}
                 className="flex items-center gap-2 px-6 py-3 rounded-full bg-red-600 text-white text-sm font-semibold shadow-sm hover:bg-red-700"
@@ -186,8 +203,8 @@ export default function CallOverlay({
               </button>
             </div>
           )}
+
       </div>
     </div>
   );
 }
-

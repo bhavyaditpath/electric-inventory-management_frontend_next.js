@@ -40,7 +40,9 @@ export const useCallWebSocket = () => {
     const [callDirection, setCallDirection] = useState<CallDirection | null>(null);
     const [callOutcome, setCallOutcome] = useState<CallOutcome | null>(null);
     const [isGroupCall, setIsGroupCall] = useState(false);
-
+    const callLogIdRef = useRef<number | null>(null);
+    const toggleRecording = () => webrtc.toggleRecording?.();
+    const isRecording = () => webrtc.isRecording?.();
     const audioCtxRef = useRef<AudioContext | null>(null);
     const outgoingTimeoutRef = useRef<number | null>(null);
     const loopToneRef = useRef<{
@@ -252,6 +254,7 @@ export const useCallWebSocket = () => {
     const webrtc = useWebRTC(
         socketRef,
         targetUserIdRef,
+        callLogIdRef,
         () => {
             clearOutgoingTimeout();
             clearPersistedSession();
@@ -308,10 +311,11 @@ export const useCallWebSocket = () => {
         socketRef.current = socket;
 
         // ---------- INCOMING CALL ----------
-        socket.on("incomingCall", async ({ callerId, callerName, callType, roomId, isGroupCall }) => {
+        socket.on("incomingCall", async ({ callerId, callerName, callType, roomId, isGroupCall, callLogId }) => {
             callerIdRef.current = callerId;
             roomIdRef.current = roomId ?? null;
             isGroupCallRef.current = !!isGroupCall;
+            callLogIdRef.current = callLogId ?? null;
             setCallerId(callerId);
             setPeerUserId(callerId);
             setPeerName(callerName ?? null);
@@ -338,7 +342,9 @@ export const useCallWebSocket = () => {
         });
 
         // ---------- CALL ACCEPTED ----------
-        socket.on("callAccepted", async ({ receiverId }) => {
+        socket.on("callAccepted", async ({ receiverId, callLogId }) => {
+            if (callLogId) callLogIdRef.current = callLogId;
+            if (callLogId && webrtc.tryStartRecordingNow) webrtc.tryStartRecordingNow();
             if (isGroupCallRef.current && targetUserIdRef.current) {
                 return;
             }
@@ -577,5 +583,7 @@ export const useCallWebSocket = () => {
         acceptCall,
         rejectCall,
         endCall,
+        toggleRecording,
+        isRecording,
     };
 };
