@@ -53,11 +53,6 @@ export default function ChatWindow({
   onTyping,
   onDeleteMessage,
   onStartCall,
-  onEndCall,
-  onAcceptCall,
-  onRejectCall,
-  incomingCall,
-  callState = CallState.Idle,
   onOpenCallLogs,
 }: ChatWindowProps) {
   const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(
@@ -126,6 +121,20 @@ export default function ChatWindow({
     (room.participants || []).filter((p) => p.userId !== currentUserId).length > 0;
   const canOpenLogs = !!onOpenCallLogs;
 
+  const handleStartCall = (type: CallType) => {
+    setShowCallMenu(false);
+
+    // Direct chat
+    if (canDirectCall && otherUserId) {
+      onStartCall?.(type, otherUserId);
+      return;
+    }
+
+    // Group chat
+    if (canGroupCall) {
+      onStartCall?.(type);
+    }
+  };
 
   if (!room) {
     return (
@@ -191,79 +200,43 @@ export default function ChatWindow({
                     </p>
                   </div>
                   <div className="px-2 pb-2">
+
+                    {/* AUDIO CALL */}
                     <button
-                      onClick={() => {
-                        if (!canDirectCall) return;
-                        setShowCallMenu(false);
-                        onStartCall?.(CallType.Audio, otherUserId!);
-                      }}
-                      disabled={!canDirectCall}
-                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
-                        canDirectCall
-                          ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
-                          : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
-                      }`}
-                      title={!canDirectCall ? "Available in direct chats only" : "Start audio call"}
+                      onClick={() => handleStartCall(CallType.Audio)}
+                      disabled={!canDirectCall && !canGroupCall}
+                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${canDirectCall || canGroupCall
+                        ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                        : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
+                        }`}
+                      title={
+                        !canDirectCall && !canGroupCall
+                          ? "Calling not available"
+                          : "Start audio call"
+                      }
                     >
                       <PhoneIcon className="w-4 h-4" />
                       Audio Call
                     </button>
 
+                    {/* VIDEO CALL */}
                     <button
-                      onClick={() => {
-                        if (!canDirectCall) return;
-                        setShowCallMenu(false);
-                        onStartCall?.(CallType.Video, otherUserId!);
-                      }}
-                      disabled={!canDirectCall}
-                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
-                        canDirectCall
-                          ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
-                          : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
-                      }`}
-                      title={!canDirectCall ? "Available in direct chats only" : "Start video call"}
+                      onClick={() => handleStartCall(CallType.Video)}
+                      disabled={!canDirectCall && !canGroupCall}
+                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${canDirectCall || canGroupCall
+                        ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                        : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
+                        }`}
+                      title={
+                        !canDirectCall && !canGroupCall
+                          ? "Calling not available"
+                          : "Start video call"
+                      }
                     >
                       <VideoCameraIcon className="w-4 h-4" />
                       Video Call
                     </button>
-
-                    <button
-                      onClick={() => {
-                        if (!canGroupCall) return;
-                        setShowCallMenu(false);
-                        onStartCall?.(CallType.Audio);
-                      }}
-                      disabled={!canGroupCall}
-                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
-                        canGroupCall
-                          ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
-                          : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
-                      }`}
-                      title={!canGroupCall ? "Available in group chats only" : "Start group audio call"}
-                    >
-                      <PhoneIcon className="w-4 h-4" />
-                      Audio Group Call
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        if (!canGroupCall) return;
-                        setShowCallMenu(false);
-                        onStartCall?.(CallType.Video);
-                      }}
-                      disabled={!canGroupCall}
-                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
-                        canGroupCall
-                          ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
-                          : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
-                      }`}
-                      title={!canGroupCall ? "Available in group chats only" : "Start group video call"}
-                    >
-                      <VideoCameraIcon className="w-4 h-4" />
-                      Video Group Call
-                    </button>
                   </div>
-
                   <div className="border-t border-[var(--theme-border)]" />
 
                   <div className="px-4 pt-3 pb-2">
@@ -279,11 +252,10 @@ export default function ChatWindow({
                         onOpenCallLogs?.({ tab: "history", type: "all" });
                       }}
                       disabled={!canOpenLogs}
-                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
-                        canOpenLogs
-                          ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
-                          : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
-                      }`}
+                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${canOpenLogs
+                        ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                        : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
+                        }`}
                     >
                       <ClockIcon className="w-4 h-4" />
                       All Calls
@@ -295,11 +267,10 @@ export default function ChatWindow({
                         onOpenCallLogs?.({ tab: "history", type: CallType.Audio });
                       }}
                       disabled={!canOpenLogs}
-                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
-                        canOpenLogs
-                          ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
-                          : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
-                      }`}
+                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${canOpenLogs
+                        ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                        : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
+                        }`}
                     >
                       <PhoneIcon className="w-4 h-4" />
                       Audio Calls
@@ -311,11 +282,10 @@ export default function ChatWindow({
                         onOpenCallLogs?.({ tab: "history", type: CallType.Video });
                       }}
                       disabled={!canOpenLogs}
-                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
-                        canOpenLogs
-                          ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
-                          : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
-                      }`}
+                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${canOpenLogs
+                        ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                        : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
+                        }`}
                     >
                       <VideoCameraIcon className="w-4 h-4" />
                       Video Calls
@@ -327,11 +297,10 @@ export default function ChatWindow({
                         onOpenCallLogs?.({ tab: "missed", type: "all" });
                       }}
                       disabled={!canOpenLogs}
-                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${
-                        canOpenLogs
-                          ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
-                          : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
-                      }`}
+                      className={`flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg transition ${canOpenLogs
+                        ? "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                        : "text-[var(--theme-text-muted)]/60 cursor-not-allowed"
+                        }`}
                     >
                       <ClockIcon className="w-4 h-4" />
                       Missed Calls
