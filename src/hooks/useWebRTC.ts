@@ -119,7 +119,11 @@ export const useWebRTC = (
       if (remoteAudioRef.current) {
         remoteAudioRef.current.srcObject = event.streams[0];
       }
-      tryStartRecorder(event.streams[0]);
+
+      if (!mediaRecorderRef.current && callLogIdRef.current) {
+        tryStartRecorder(event.streams[0]);
+      }
+
       onConnected?.();
     };
 
@@ -206,18 +210,6 @@ export const useWebRTC = (
     onEnded?.();
   };
 
-  const tryStartRecordingNow = () => {
-    const pc = pcRef.current;
-    if (!pc) return;
-
-    const receivers = pc.getReceivers();
-    const remoteTrack = receivers.find(r => r.track && r.track.kind === "audio")?.track;
-    if (!remoteTrack) return;
-
-    const stream = new MediaStream([remoteTrack]);
-    tryStartRecorder(stream);
-  };
-
 
   return {
     prepareReceiver,
@@ -226,7 +218,6 @@ export const useWebRTC = (
     handleAnswer,
     handleIceCandidate,
     endCall,
-    tryStartRecordingNow,
     toggleRecording,
     isRecording,
   };

@@ -260,10 +260,6 @@ export const useCallWebSocket = () => {
             clearPersistedSession();
             setCallState(CallState.Connected);
             setConnectedAt(Date.now());
-
-            setTimeout(() => {
-                webrtc.tryStartRecordingNow();
-            }, 500);
         },
         () => resetCallState()
     );
@@ -348,7 +344,6 @@ export const useCallWebSocket = () => {
         // ---------- CALL ACCEPTED ----------
         socket.on("callAccepted", async ({ receiverId, callLogId }) => {
             if (callLogId) callLogIdRef.current = callLogId;
-            if (callLogId && webrtc.tryStartRecordingNow) webrtc.tryStartRecordingNow();
             if (isGroupCallRef.current && targetUserIdRef.current) {
                 return;
             }
