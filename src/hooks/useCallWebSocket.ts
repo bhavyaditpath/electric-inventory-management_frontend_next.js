@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { useWebRTC } from "./useWebRTC";
 import { CallDirection, CallOutcome, CallState, CallType } from "@/types/enums";
+import { useAuth } from "@/contexts/AuthContext";
 
 const SOCKET_BASE_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
@@ -23,6 +24,7 @@ type StoredCallSession = {
 };
 
 export const useCallWebSocket = () => {
+    const { isAuthenticated, isLoading } = useAuth();
     const socketRef = useRef<Socket | null>(null);
     const targetUserIdRef = useRef<number | null>(null);
     const callerIdRef = useRef<number | null>(null);
@@ -300,6 +302,8 @@ export const useCallWebSocket = () => {
 
     // ================= CONNECT SOCKET =================
     useEffect(() => {
+        if (isLoading || !isAuthenticated) return;
+
         const token =
             localStorage.getItem("access_token");
         if (!token) return;
@@ -435,7 +439,7 @@ export const useCallWebSocket = () => {
             socket.removeAllListeners();
             socket.disconnect();
         };
-    }, []);
+    }, [isAuthenticated, isLoading]);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
