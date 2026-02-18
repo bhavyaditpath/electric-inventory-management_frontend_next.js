@@ -205,6 +205,7 @@ export const useCallWebSocket = () => {
     const resetCallState = () => {
         clearOutgoingTimeout();
         clearPersistedSession();
+        callLogIdRef.current = null;
         callerIdRef.current = null;
         targetUserIdRef.current = null;
         roomIdRef.current = null;

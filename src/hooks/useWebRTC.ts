@@ -71,6 +71,10 @@ export const useWebRTC = (
     const callLogId = callLogIdRef.current;
     if (!callLogId || mediaRecorderRef.current) return;
 
+    // New call recording session: enable uploads and use a fresh stream id.
+    uploadAbortRef.current = false;
+    streamIdRef.current = crypto.randomUUID();
+
     const mixed = new MediaStream([
       ...(localStreamRef.current?.getTracks() || []),
       ...remoteStream.getTracks(),
@@ -87,6 +91,7 @@ export const useWebRTC = (
 
     recorder.start(2000);
     mediaRecorderRef.current = recorder;
+    isRecordingRef.current = true;
   };
 
 
@@ -206,6 +211,7 @@ export const useWebRTC = (
 
       mediaRecorderRef.current = null;
     }
+    isRecordingRef.current = false;
 
     onEnded?.();
   };
