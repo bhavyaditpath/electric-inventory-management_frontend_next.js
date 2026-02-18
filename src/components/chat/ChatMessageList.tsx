@@ -1,9 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChatAttachment, ChatMessage, ChatUser } from "@/types/chat.types";
-import { EllipsisHorizontalIcon, TrashIcon } from "@heroicons/react/24/outline";
+import {
+  EllipsisHorizontalIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import { chatApi } from "@/Services/chat.api";
+import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
 
 interface ChatMessageListProps {
   messages: ChatMessage[];
@@ -16,6 +21,7 @@ interface ChatMessageListProps {
   onOpenLightbox: (url: string, name: string) => void;
   isAdmin?: boolean;
   onDeleteMessage?: (messageId: number) => void;
+  onReactionUpdated?: (message: ChatMessage) => void;
 }
 
 export default function ChatMessageList({
@@ -29,13 +35,28 @@ export default function ChatMessageList({
   onOpenLightbox,
   isAdmin,
   onDeleteMessage,
+  onReactionUpdated,
 }: ChatMessageListProps) {
+  type MessageReactionView = {
+    emoji: string;
+    count: number;
+    reactedByMe: boolean;
+  };
+
   const [openMenuMessageId, setOpenMenuMessageId] = useState<number | null>(
     null
   );
   const [openAttachmentMenuId, setOpenAttachmentMenuId] = useState<number | null>(
     null
   );
+  const [fullReactionPickerMessageId, setFullReactionPickerMessageId] = useState<number | null>(
+    null
+  );
+  const [reactionOverrides, setReactionOverrides] = useState<
+    Record<number, MessageReactionView[]>
+  >({});
+  const reactionActionRef = useRef<HTMLDivElement | null>(null);
+  const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👏", "😮"];
 
   const getFileExtension = (name: string) => {
     const parts = name.split(".");
@@ -61,6 +82,156 @@ export default function ChatMessageList({
   const hasText = (value?: string) => !!value && value.trim().length > 0;
 
   const isImageAttachment = (mimeType: string) => mimeType.startsWith("image/");
+
+  const normalizeReactions = useCallback(
+    (input: unknown): MessageReactionView[] => {
+      if (!Array.isArray(input)) return [];
+
+      return input
+        .map((item) => {
+          if (!item || typeof item !== "object") return null;
+          const raw = item as Record<string, unknown>;
+          const emoji = typeof raw.emoji === "string" ? raw.emoji : "";
+          if (!emoji) return null;
+
+          const userIds = Array.isArray(raw.userIds)
+            ? raw.userIds.filter((id): id is number => typeof id === "number")
+            : [];
+          const users = Array.isArray(raw.users) ? raw.users : [];
+
+          const countFromUsers = userIds.length || users.length || 0;
+          const count =
+            typeof raw.count === "number"
+              ? raw.count
+              : typeof raw.total === "number"
+                ? raw.total
+                : countFromUsers;
+
+          let reactedByMe = false;
+          if (typeof raw.reactedByMe === "boolean") {
+            reactedByMe = raw.reactedByMe;
+          } else if (typeof currentUserId === "number") {
+            reactedByMe =
+              userIds.includes(currentUserId) ||
+              users.some((u) => {
+                if (typeof u === "number") return u === currentUserId;
+                if (!u || typeof u !== "object") return false;
+                const user = u as Record<string, unknown>;
+                return user.id === currentUserId || user.userId === currentUserId;
+              });
+          }
+
+          return {
+            emoji,
+            count: Math.max(1, count),
+            reactedByMe,
+          };
+        })
+        .filter((reaction): reaction is MessageReactionView => !!reaction);
+    },
+    [currentUserId]
+  );
+
+  const getMessageReactions = useCallback(
+    (message: ChatMessage) => {
+      const override = reactionOverrides[message.id];
+      if (override) return override;
+      return normalizeReactions((message as ChatMessage & { reactions?: unknown }).reactions);
+    },
+    [normalizeReactions, reactionOverrides]
+  );
+
+  const getMessageFromCollection = useCallback(
+    (messageId: number) => messages.find((m) => m.id === messageId),
+    [messages]
+  );
+
+  const computeNextReactions = useCallback(
+    (base: MessageReactionView[], emoji: string) => {
+      const target = base.find((r) => r.emoji === emoji);
+      if (!target) {
+        return [...base, { emoji, count: 1, reactedByMe: true }];
+      }
+
+      if (target.reactedByMe) {
+        if (target.count <= 1) {
+          return base.filter((r) => r.emoji !== emoji);
+        }
+        return base.map((r) =>
+          r.emoji === emoji ? { ...r, count: r.count - 1, reactedByMe: false } : r
+        );
+      }
+
+      return base.map((r) =>
+        r.emoji === emoji ? { ...r, count: r.count + 1, reactedByMe: true } : r
+      );
+    },
+    []
+  );
+
+  const handleToggleReaction = useCallback(
+    async (messageId: number, emoji: string) => {
+      let previousSnapshot: MessageReactionView[] = [];
+
+      setReactionOverrides((prev) => {
+        const base =
+          prev[messageId] ??
+          normalizeReactions(
+            (getMessageFromCollection(messageId) as ChatMessage & {
+              reactions?: unknown;
+            } | null)?.reactions
+          );
+        previousSnapshot = base;
+        return {
+          ...prev,
+          [messageId]: computeNextReactions(base, emoji),
+        };
+      });
+
+      try {
+        const response = await chatApi.toggleMessageReaction(messageId, emoji);
+        if (response.success && response.data) {
+          onReactionUpdated?.(response.data);
+          setReactionOverrides((prev) => {
+            const next = { ...prev };
+            delete next[messageId];
+            return next;
+          });
+          return;
+        }
+
+        const serverReactions = (response.data as ChatMessage & { reactions?: unknown } | undefined)?.reactions;
+        if (Array.isArray(serverReactions)) {
+          setReactionOverrides((prev) => ({
+            ...prev,
+            [messageId]: normalizeReactions(serverReactions),
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to toggle reaction:", error);
+        setReactionOverrides((prev) => ({
+          ...prev,
+          [messageId]: previousSnapshot,
+        }));
+      }
+    },
+    [computeNextReactions, getMessageFromCollection, normalizeReactions, onReactionUpdated]
+  );
+
+  useEffect(() => {
+    if (fullReactionPickerMessageId == null) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (reactionActionRef.current?.contains(target)) return;
+      setFullReactionPickerMessageId(null);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [fullReactionPickerMessageId]);
 
   const handleDownloadAttachment = async (attachment: ChatAttachment) => {
     try {
@@ -93,6 +264,7 @@ export default function ChatMessageList({
           const isMe = message.senderId === currentUserId;
           const canDelete = !!onDeleteMessage && (isMe || isAdmin);
           const senderName = message.sender?.username || "Unknown";
+          const reactions = getMessageReactions(message);
           return (
             <div
               key={message.id}
@@ -102,8 +274,59 @@ export default function ChatMessageList({
                 className={`max-w-[75%] md:max-w-[60%] w-fit rounded-2xl px-4 py-2 text-sm shadow-sm ${isMe
                   ? "bg-blue-600 text-white border border-blue-600 rounded-br-md"
                   : "bg-[var(--theme-surface)] text-[var(--theme-text)] border border-[var(--theme-border)] rounded-bl-md"
-                  }`}
+                  } relative group`}
               >
+                <div
+                  className="absolute -top-5 left-1/2 -translate-x-1/2 z-30 hidden sm:flex items-center"
+                  ref={
+                    fullReactionPickerMessageId === message.id
+                      ? reactionActionRef
+                      : null
+                  }
+                >
+                  <div className="inline-flex items-center gap-1 px-1.5 py-1 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-md opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+                    {QUICK_REACTIONS.map((emoji) => (
+                      <button
+                        key={`${message.id}-quick-${emoji}`}
+                        onClick={() => {
+                          void handleToggleReaction(message.id, emoji);
+                          setFullReactionPickerMessageId(null);
+                        }}
+                        className="h-6 w-6 rounded-full hover:bg-[var(--theme-surface-muted)] text-sm"
+                        aria-label={`React with ${emoji}`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() =>
+                        setFullReactionPickerMessageId((prev) =>
+                          prev === message.id ? null : message.id
+                        )
+                      }
+                      className="h-6 w-6 rounded-full hover:bg-[var(--theme-surface-muted)] text-[var(--theme-text-muted)] inline-flex items-center justify-center"
+                      aria-label="More emojis"
+                    >
+                      <PlusIcon className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {fullReactionPickerMessageId === message.id && (
+                    <div className="absolute top-9 left-1/2 -translate-x-1/2 z-40 shadow-xl rounded-xl overflow-hidden w-[18rem]">
+                      <EmojiPicker
+                        onEmojiClick={(emojiData: EmojiClickData) => {
+                          void handleToggleReaction(message.id, emojiData.emoji);
+                          setFullReactionPickerMessageId(null);
+                        }}
+                        lazyLoadEmojis
+                        width="100%"
+                        height={320}
+                        skinTonesDisabled
+                      />
+                    </div>
+                  )}
+                </div>
+
                 {isGroupChat && (
                   <p
                     className={`text-[11px] font-semibold mb-1 ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"
@@ -276,6 +499,24 @@ export default function ChatMessageList({
                     </div>
                   )}
                 </div>
+                {reactions.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {reactions.map((reaction) => (
+                      <button
+                        key={`${message.id}-${reaction.emoji}`}
+                        onClick={() => void handleToggleReaction(message.id, reaction.emoji)}
+                        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] border transition cursor-pointer ${reaction.reactedByMe
+                          ? "bg-sky-100 text-sky-700 border-sky-300"
+                          : "bg-white/80 text-slate-700 border-slate-300 hover:bg-slate-100"
+                          }`}
+                        aria-label={`React with ${reaction.emoji}`}
+                      >
+                        <span>{reaction.emoji}</span>
+                        <span className="font-semibold">{reaction.count}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -290,4 +531,3 @@ export default function ChatMessageList({
     </div>
   );
 }
-

@@ -83,6 +83,11 @@ export const chatApi = {
   deleteMessage: (messageId: number) =>
     apiClient.delete<null>(`/chat/messages/${messageId}`),
 
+  toggleMessageReaction: (messageId: number, emoji: string) =>
+    apiClient.post<ChatMessage>(`/chat/messages/${messageId}/reactions`, {
+      emoji,
+    }),
+
   deleteRoom: (roomId: number) =>
     apiClient.delete<null>(`/chat/rooms/${roomId}`),
 

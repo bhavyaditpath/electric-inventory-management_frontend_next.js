@@ -32,8 +32,16 @@ export interface ChatMessage {
   createdAt: string;
   sender?: ChatUser;
   attachments?: ChatAttachment[];
+  reactions?: ChatReaction[];
   isRead?: boolean;
   readAt?: string | null;
+}
+
+export interface ChatReaction {
+  emoji: string;
+  count?: number;
+  reactedByMe?: boolean;
+  userIds?: number[];
 }
 
 export interface ChatAttachment {

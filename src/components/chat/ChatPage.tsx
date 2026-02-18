@@ -159,6 +159,30 @@ export default function ChatPage() {
     });
   }, [fetchRooms]);
 
+  const handleMessageReactionUpdated = useCallback((updatedMessage: ChatMessage) => {
+    const currentRoomId = activeRoomIdRef.current;
+    if (currentRoomId === updatedMessage.chatRoomId) {
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.id === updatedMessage.id
+            ? { ...message, ...updatedMessage }
+            : message
+        )
+      );
+    }
+
+    setRooms((prev) =>
+      prev.map((room) => {
+        if (room.id !== updatedMessage.chatRoomId) return room;
+        if (!room.lastMessage || room.lastMessage.id !== updatedMessage.id) return room;
+        return {
+          ...room,
+          lastMessage: { ...room.lastMessage, ...updatedMessage },
+        };
+      })
+    );
+  }, []);
+
   const handleTyping = useCallback((payload: { userId: number; isTyping: boolean }) => {
     if (!activeRoomIdRef.current) return;
     setTypingUserIds((prev) => {
@@ -208,6 +232,7 @@ export default function ChatPage() {
     markAsRead,
   } = useChatWebSocket({
     onMessage: handleIncomingMessage,
+    onMessageReactionUpdated: handleMessageReactionUpdated,
     onMessageDeleted: (payload) => {
       setMessages((prev) => prev.filter((m) => m.id !== payload.id));
       setRooms((prev) =>
@@ -803,6 +828,7 @@ export default function ChatPage() {
                 onBack={handleBackToList}
                 onOpenMembers={openMembers}
                 onDeleteMessage={requestDeleteMessage}
+                onReactionUpdated={handleMessageReactionUpdated}
                 onStartCall={handleStartCall}
                 callState={callState}
                 onEndCall={handleEndCall}
@@ -875,6 +901,7 @@ export default function ChatPage() {
               onTyping={handleTypingStatus}
               onOpenMembers={openMembers}
               onDeleteMessage={requestDeleteMessage}
+              onReactionUpdated={handleMessageReactionUpdated}
               onStartCall={handleStartCall}
               callState={callState}
               onEndCall={handleEndCall}
