@@ -307,7 +307,7 @@ export default function ReportsPage() {
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-[var(--theme-text)]">Reports Management</h1>
             <p className="text-[var(--theme-text-muted)] mt-1 text-sm sm:text-base">View, generate and manage system reports and preferences</p>
           </div>
-          <div className="flex justify-center lg:justify-end">
+          {/* <div className="flex justify-center lg:justify-end">
             <button
               onClick={() => window.location.reload()}
               className="inline-flex items-center px-3 py-2 sm:px-4 bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-lg hover:bg-[var(--theme-surface-muted)] transition-colors text-sm sm:text-base"
@@ -315,7 +315,7 @@ export default function ReportsPage() {
               <ArrowPathIcon className="w-4 h-4 mr-1 sm:mr-2 text-[var(--theme-text-muted)]" />
               <span className=" text-[var(--theme-text)]">Refresh</span>
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
 
