@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Modal from "@/components/Modal";
 import { callApi, CallLog, CallLogStatus } from "@/Services/call.api";
 import { CallType } from "@/types/enums";
@@ -83,13 +83,26 @@ export default function CallLogsModal({
   const [missed, setMissed] = useState<CallLog[]>([]);
   const [roomLogs, setRoomLogs] = useState<CallLog[]>([]);
   const [loading, setLoading] = useState(false);
+  const [audioUrls, setAudioUrls] = useState<Record<number, string>>({});
+  const [loadingAudioId, setLoadingAudioId] = useState<number | null>(null);
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const audioUrlsRef = useRef<Record<number, string>>({});
 
-  const extractList = (response: any): CallLog[] => {
+  const extractList = (response: unknown): CallLog[] => {
+    const payload = response as {
+      data?: unknown;
+      items?: unknown;
+      message?: string;
+    };
+
     if (Array.isArray(response)) return response;
-    if (Array.isArray(response?.data)) return response.data;
-    if (Array.isArray(response?.items)) return response.items;
-    if (Array.isArray(response?.data?.data)) return response.data.data;
-    if (Array.isArray(response?.data?.items)) return response.data.items;
+    if (Array.isArray(payload?.data)) return payload.data as CallLog[];
+    if (Array.isArray(payload?.items)) return payload.items as CallLog[];
+
+    const nestedData = payload?.data as { data?: unknown; items?: unknown } | undefined;
+    if (Array.isArray(nestedData?.data)) return nestedData.data as CallLog[];
+    if (Array.isArray(nestedData?.items)) return nestedData.items as CallLog[];
+
     return [];
   };
 
@@ -166,6 +179,27 @@ export default function CallLogsModal({
     }
   }, [activeTab, isOpen, roomId]);
 
+  useEffect(() => {
+    if (isOpen) return;
+    setAudioUrls((prev) => {
+      Object.values(prev).forEach((url) => URL.revokeObjectURL(url));
+      if (Object.keys(prev).length === 0) return prev;
+      return {};
+    });
+    setLoadingAudioId(null);
+    setDownloadingId(null);
+  }, [isOpen]);
+
+  useEffect(() => {
+    audioUrlsRef.current = audioUrls;
+  }, [audioUrls]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(audioUrlsRef.current).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
+
   const activeLogs = useMemo(() => {
     if (activeTab === "missed") return missed;
     if (activeTab === "room") return roomLogs;
@@ -176,6 +210,40 @@ export default function CallLogsModal({
     if (typeFilter === "all") return activeLogs;
     return activeLogs.filter((log) => normalizeCallType(log.callType) === typeFilter);
   }, [activeLogs, typeFilter]);
+
+  const loadRecordingAudio = useCallback(async (log: CallLog) => {
+    const hasRecording = Boolean(log.hasRecording || log.recordingPlayUrl);
+    if (!hasRecording) return;
+
+    if (audioUrls[log.id]) return;
+
+    setLoadingAudioId(log.id);
+    try {
+      const blob = await callApi.getRecordingPlayBlob(log.id);
+      const objectUrl = URL.createObjectURL(blob);
+      setAudioUrls((prev) => ({ ...prev, [log.id]: objectUrl }));
+    } catch (error) {
+      console.error("Failed to load recording:", error);
+      showError("Unable to load recording");
+    } finally {
+      setLoadingAudioId(null);
+    }
+  }, [audioUrls]);
+
+  const handleDownloadRecording = useCallback(async (log: CallLog) => {
+    const hasRecording = Boolean(log.hasRecording || log.recordingDownloadUrl);
+    if (!hasRecording) return;
+
+    setDownloadingId(log.id);
+    try {
+      await callApi.downloadRecording(log.id, `call_${log.id}.webm`);
+    } catch (error) {
+      console.error("Failed to download recording:", error);
+      showError("Unable to download recording");
+    } finally {
+      setDownloadingId(null);
+    }
+  }, []);
 
   const renderLogs = () => {
     if (loading) {
@@ -201,9 +269,11 @@ export default function CallLogsModal({
               ? "Audio"
               : "Video"
             : "Unknown";
+          const hasRecording = Boolean(log.hasRecording || log.recordingPlayUrl || log.recordingDownloadUrl);
+          const audioUrl = audioUrls[log.id];
           return (
             <div key={log.id} className="py-3 flex items-start justify-between gap-4">
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-[var(--theme-text)] truncate">
                   {getNamesLabel(log)}
                 </p>
@@ -213,6 +283,41 @@ export default function CallLogsModal({
                 <p className="text-xs text-[var(--theme-text-muted)]">
                   Ended: {formatDate(log.endedAt)}
                 </p>
+                <div className="mt-2">
+                  {!hasRecording && (
+                    <p className="text-xs text-[var(--theme-text-muted)]">No recording available.</p>
+                  )}
+                  {hasRecording && (
+                    <div className="flex flex-col gap-2">
+                      {!audioUrl ? (
+                        <button
+                          onClick={() => loadRecordingAudio(log)}
+                          disabled={loadingAudioId === log.id}
+                          className={`w-fit px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
+                            loadingAudioId === log.id
+                              ? "opacity-60 cursor-not-allowed bg-[var(--theme-surface-muted)] border-[var(--theme-border)] text-[var(--theme-text-muted)]"
+                              : "bg-[var(--theme-surface)] border-[var(--theme-border)] text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                          }`}
+                        >
+                          {loadingAudioId === log.id ? "Loading..." : "Listen Recording"}
+                        </button>
+                      ) : (
+                        <audio controls preload="none" src={audioUrl} className="w-full max-w-sm" />
+                      )}
+                      <button
+                        onClick={() => handleDownloadRecording(log)}
+                        disabled={downloadingId === log.id}
+                        className={`w-fit px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
+                          downloadingId === log.id
+                            ? "opacity-60 cursor-not-allowed bg-[var(--theme-surface-muted)] border-[var(--theme-border)] text-[var(--theme-text-muted)]"
+                            : "bg-[var(--theme-surface)] border-[var(--theme-border)] text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                        }`}
+                      >
+                        {downloadingId === log.id ? "Downloading..." : "Download Recording"}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex flex-col items-end gap-1">
                 <span className={`text-xs font-medium px-2 py-1 rounded-full border ${badgeClass}`}>

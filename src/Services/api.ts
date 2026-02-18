@@ -17,6 +17,22 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
+    const response = await this.fetchWithAuth(endpoint, options);
+
+    try {
+      return await response.json();
+    } catch {
+      if (response.ok) {
+        return { success: true, message: 'Operation completed successfully' };
+      }
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+  }
+
+  private async fetchWithAuth(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<Response> {
     const url = `${this.baseURL}${endpoint}`;
 
     const isFormData =
@@ -62,14 +78,7 @@ class ApiClient {
         }
       }
 
-      try {
-        return await response.json();
-      } catch {
-        if (response.ok) {
-          return { success: true, message: 'Operation completed successfully' };
-        }
-        throw new Error(`API request failed with status ${response.status}`);
-      }
+      return response;
     } catch (error) {
       console.error('API Error:', error);
       throw error;
@@ -142,6 +151,14 @@ class ApiClient {
 
   async get<T>(endpoint: string): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint);
+  }
+
+  async getBlob(endpoint: string): Promise<Blob> {
+    const response = await this.fetchWithAuth(endpoint, { method: "GET" });
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+    return response.blob();
   }
 
   async put<T>(endpoint: string, data: any): Promise<ApiResponse<T>> {

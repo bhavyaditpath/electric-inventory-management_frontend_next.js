@@ -20,6 +20,9 @@ export interface CallLog {
   participants?: CallParticipant[];
   callerName?: string | null;
   receiverName?: string | null;
+  hasRecording?: boolean;
+  recordingPlayUrl?: string | null;
+  recordingDownloadUrl?: string | null;
 }
 
 export const callApi = {
@@ -31,4 +34,26 @@ export const callApi = {
 
   getRoomCallHistory: (roomId: number) =>
     apiClient.get<CallLog[]>(`/call-logs/${roomId}`),
+
+  getRecordingPlayBlob: async (callLogId: number): Promise<Blob> => {
+    return apiClient.getBlob(
+      `/call-recording/${callLogId}/play`
+    );
+  },
+
+  downloadRecording: async (callLogId: number, fallbackName?: string) => {
+    const blob = await apiClient.getBlob(
+      `/call-recording/${callLogId}/download`
+    );
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const defaultName = fallbackName || `call_${callLogId}.webm`;
+
+    link.href = objectUrl;
+    link.download = defaultName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+  },
 };
