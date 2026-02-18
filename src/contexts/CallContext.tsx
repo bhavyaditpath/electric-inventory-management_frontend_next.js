@@ -25,6 +25,7 @@ interface CallContextType {
   acceptCall: () => void;
   rejectCall: () => void;
   endCall: () => void;
+  ignoreIncomingCall: () => void;
 }
 
 const CallContext = createContext<CallContextType | undefined>(undefined);
@@ -48,10 +49,12 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     isGroupCall,
     callDirection,
     connectedAt,
+    isIncomingIgnored,
     callUser,
     acceptCall,
     rejectCall,
     endCall,
+    ignoreIncomingCall,
     toggleRecording,
     isRecording,
   } = useCallWebSocket();
@@ -72,13 +75,17 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     acceptCall,
     rejectCall,
     endCall,
+    ignoreIncomingCall,
   };
+
+  const overlayVisible =
+    callState !== CallState.Idle && !(isIncoming && callState === CallState.Ringing && isIncomingIgnored);
 
   return (
     <CallContext.Provider value={value}>
       {children}
       <CallOverlay
-        visible={callState !== CallState.Idle}
+        visible={overlayVisible}
         state={callState}
         userId={peerUserId ?? undefined}
         displayName={isIncoming ? callerName ?? undefined : peerName ?? undefined}
@@ -88,6 +95,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         connectedAt={connectedAt}
         onAccept={acceptCall}
         onReject={rejectCall}
+        onIgnore={ignoreIncomingCall}
         onEnd={endCall}
         isRecording={isRecording?.()}
         onToggleRecording={toggleRecording}

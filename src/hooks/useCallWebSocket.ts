@@ -42,6 +42,7 @@ export const useCallWebSocket = () => {
     const [callDirection, setCallDirection] = useState<CallDirection | null>(null);
     const [callOutcome, setCallOutcome] = useState<CallOutcome | null>(null);
     const [isGroupCall, setIsGroupCall] = useState(false);
+    const [isIncomingIgnored, setIsIncomingIgnored] = useState(false);
     const callLogIdRef = useRef<number | null>(null);
     const toggleRecording = () => webrtc.toggleRecording?.();
     const isRecording = () => webrtc.isRecording?.();
@@ -219,6 +220,7 @@ export const useCallWebSocket = () => {
         setIncomingCallType(null);
         setCallDirection(null);
         setIsGroupCall(false);
+        setIsIncomingIgnored(false);
         setCallState(CallState.Idle);
         setConnectedAt(null);
     };
@@ -270,6 +272,10 @@ export const useCallWebSocket = () => {
     useEffect(() => {
         callStateRef.current = callState;
         if (callState === CallState.Ringing) {
+            if (isIncomingIgnored) {
+                stopLoopTone();
+                return;
+            }
             startLoopTone(CallDirection.Incoming);
             return;
         }
@@ -278,7 +284,7 @@ export const useCallWebSocket = () => {
             return;
         }
         stopLoopTone();
-    }, [callState]);
+    }, [callState, isIncomingIgnored]);
 
     useEffect(() => {
         if (!callOutcome) return;
@@ -330,6 +336,7 @@ export const useCallWebSocket = () => {
             if (normalizedType) setIncomingCallType(normalizedType);
             setCallDirection(CallDirection.Incoming);
             setCallOutcome(null);
+            setIsIncomingIgnored(false);
             setCallState(CallState.Ringing);
             persistSession({
                 direction: CallDirection.Incoming,
@@ -355,6 +362,7 @@ export const useCallWebSocket = () => {
             targetUserIdRef.current = receiverId;
             setPeerUserId(receiverId);
             setCallOutcome(CallOutcome.Accepted);
+            setIsIncomingIgnored(false);
             clearOutgoingTimeout();
             clearPersistedSession();
             setCallState(CallState.Connecting);
@@ -481,6 +489,7 @@ export const useCallWebSocket = () => {
                 setIncomingCallType(parsed.callType ?? null);
                 setIsGroupCall(!!parsed.isGroupCall);
                 setCallDirection(CallDirection.Incoming);
+                setIsIncomingIgnored(false);
                 setCallState(CallState.Ringing);
             }
         } catch {
@@ -505,6 +514,7 @@ export const useCallWebSocket = () => {
         setCallDirection(CallDirection.Outgoing);
         setCallOutcome(null);
         setIsGroupCall(groupCall);
+        setIsIncomingIgnored(false);
         setCallState(CallState.Calling);
         const normalizedType = callType ?? CallType.Audio;
         setIncomingCallType(normalizedType);
@@ -535,6 +545,7 @@ export const useCallWebSocket = () => {
         setPeerUserId(caller);
         setPeerName(callerName ?? null);
         setCallOutcome(CallOutcome.Accepted);
+        setIsIncomingIgnored(false);
         setCallState(CallState.Connecting);
         clearOutgoingTimeout();
 
@@ -572,6 +583,12 @@ export const useCallWebSocket = () => {
         resetCallState();
     };
 
+    const ignoreIncomingCall = () => {
+        if (callStateRef.current !== CallState.Ringing || callDirection !== CallDirection.Incoming) return;
+        setIsIncomingIgnored(true);
+        stopLoopTone();
+    };
+
     return {
         callState,
         callerId,
@@ -583,10 +600,12 @@ export const useCallWebSocket = () => {
         callDirection,
         callOutcome,
         connectedAt,
+        isIncomingIgnored,
         callUser,
         acceptCall,
         rejectCall,
         endCall,
+        ignoreIncomingCall,
         toggleRecording,
         isRecording,
     };

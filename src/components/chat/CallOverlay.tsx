@@ -16,6 +16,7 @@ interface Props {
   connectedAt?: number | null;
   onAccept?: () => void;
   onReject?: () => void;
+  onIgnore?: () => void;
   onEnd?: () => void;
   isRecording?: boolean;
   onToggleRecording?: () => void;
@@ -32,6 +33,7 @@ export default function CallOverlay({
   connectedAt,
   onAccept,
   onReject,
+  onIgnore,
   onEnd,
   isRecording,
   onToggleRecording,
@@ -157,7 +159,13 @@ export default function CallOverlay({
 
         {/* Incoming buttons */}
         {incoming && state === CallState.Ringing && (
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center gap-3">
+            <button
+              onClick={onIgnore}
+              className="flex items-center gap-2 px-4 py-3 rounded-full bg-slate-200 text-slate-700 text-sm font-semibold shadow-sm hover:bg-slate-300"
+            >
+              Ignore
+            </button>
             <button
               onClick={onReject}
               className="flex items-center gap-2 px-5 py-3 rounded-full bg-red-500 text-white text-sm font-semibold shadow-sm hover:bg-red-600"
