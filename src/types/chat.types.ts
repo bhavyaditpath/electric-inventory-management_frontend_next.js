@@ -44,6 +44,25 @@ export interface ChatReaction {
   userIds?: number[];
 }
 
+export interface ChatReactionNotification {
+  messageId: number;
+  chatRoomId: number;
+  emoji: string;
+  reactorId: number;
+  reactorName: string;
+  action: "added" | "removed";
+  createdAt: string;
+}
+
+export interface ChatMessageNotification {
+  messageId: number;
+  chatRoomId: number;
+  senderId: number;
+  senderName: string;
+  content?: string;
+  createdAt: string;
+}
+
 export interface ChatAttachment {
   id: number;
   url: string;

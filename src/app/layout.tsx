@@ -2,6 +2,7 @@ import "./globals.css";
 import { AuthProvider } from "../contexts/AuthContext";
 import { RootToaster } from "@/components/RootToaster";
 import { CallProvider } from "@/contexts/CallContext";
+import ChatReactionNotifier from "@/components/chat/ChatReactionNotifier";
 
 export const metadata = {
   title: "Electric Inventory System",
@@ -13,7 +14,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <AuthProvider>
-          <CallProvider>{children}</CallProvider>
+          <CallProvider>
+            <ChatReactionNotifier />
+            {children}
+          </CallProvider>
         </AuthProvider>
 
         {/* CLIENT TOASTER HERE */}

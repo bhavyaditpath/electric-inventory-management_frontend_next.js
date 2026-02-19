@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
-import { ChatMessage } from "@/types/chat.types";
+import {
+  ChatMessage,
+  ChatMessageNotification,
+  ChatReactionNotification,
+} from "@/types/chat.types";
 
 const SOCKET_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
@@ -18,8 +22,10 @@ interface UserStatusPayload {
 
 interface UseChatWebSocketOptions {
   onMessage?: (message: ChatMessage) => void;
+  onMessageNotification?: (payload: ChatMessageNotification) => void;
   onMessageDeleted?: (payload: { id: number; chatRoomId: number }) => void;
   onMessageReactionUpdated?: (message: ChatMessage) => void;
+  onReactionNotification?: (payload: ChatReactionNotification) => void;
   onTyping?: (payload: TypingPayload) => void;
   onUserOnline?: (userId: number) => void;
   onUserOffline?: (userId: number) => void;
@@ -53,11 +59,17 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions = {}) => {
     socket.on("newMessage", (message: ChatMessage) => {
       handlersRef.current.onMessage?.(message);
     });
+    socket.on("messageNotification", (payload: ChatMessageNotification) => {
+      handlersRef.current.onMessageNotification?.(payload);
+    });
     socket.on("messageDeleted", (payload: { id: number; chatRoomId: number }) => {
       handlersRef.current.onMessageDeleted?.(payload);
     });
     socket.on("messageReactionUpdated", (message: ChatMessage) => {
       handlersRef.current.onMessageReactionUpdated?.(message);
+    });
+    socket.on("reactionNotification", (payload: ChatReactionNotification) => {
+      handlersRef.current.onReactionNotification?.(payload);
     });
     socket.on("userTyping", (payload: TypingPayload) => {
       handlersRef.current.onTyping?.(payload);
