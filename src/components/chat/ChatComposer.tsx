@@ -227,7 +227,7 @@ export default function ChatComposer({
           ))}
         </div>
       )}
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <input
           ref={fileInputRef}
           type="file"
@@ -243,7 +243,7 @@ export default function ChatComposer({
         >
           <PaperClipIcon className="w-4 h-4" />
         </button>
-        <div className="relative">
+        <div className="relative shrink-0">
           <button
             ref={emojiButtonRef}
             onClick={() => setShowEmojiPicker((prev) => !prev)}
@@ -255,12 +255,12 @@ export default function ChatComposer({
           {showEmojiPicker && (
             <div
               ref={emojiPickerRef}
-              className="absolute bottom-12 left-0 z-20 shadow-xl rounded-xl overflow-hidden"
+              className="absolute bottom-12 left-0 z-20 shadow-xl rounded-xl overflow-hidden w-[min(18rem,calc(100vw-2rem))] sm:w-auto"
             >
               <EmojiPicker
                 onEmojiClick={handleEmojiClick}
                 lazyLoadEmojis
-                width={300}
+                width="100%"
                 height={360}
               />
             </div>
@@ -284,7 +284,7 @@ export default function ChatComposer({
           }}
           placeholder="Type a message..."
           rows={1}
-          className="flex-1 border border-[var(--theme-border)] rounded-2xl px-4 py-2 text-sm bg-[var(--theme-surface-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--theme-text)] resize-none overflow-y-auto max-h-[120px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="flex-1 min-w-0 border border-[var(--theme-border)] rounded-2xl px-4 py-2 text-sm bg-[var(--theme-surface-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--theme-text)] resize-none overflow-y-auto max-h-[120px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         />
         <button
           onClick={handleSend}
@@ -303,4 +303,3 @@ export default function ChatComposer({
     </div>
   );
 }
-

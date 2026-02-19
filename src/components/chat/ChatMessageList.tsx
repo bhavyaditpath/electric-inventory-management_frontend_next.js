@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type MouseEvent as ReactMouseEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ChatAttachment, ChatMessage, ChatUser } from "@/types/chat.types";
 import {
   EllipsisHorizontalIcon,
@@ -52,10 +59,17 @@ export default function ChatMessageList({
   const [fullReactionPickerMessageId, setFullReactionPickerMessageId] = useState<number | null>(
     null
   );
+  const [reactionPickerPosition, setReactionPickerPosition] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
   const [reactionOverrides, setReactionOverrides] = useState<
     Record<number, MessageReactionView[]>
   >({});
+  const listRef = useRef<HTMLDivElement | null>(null);
   const reactionActionRef = useRef<HTMLDivElement | null>(null);
+  const reactionPickerRef = useRef<HTMLDivElement | null>(null);
   const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👏", "😮"];
 
   const getFileExtension = (name: string) => {
@@ -224,7 +238,9 @@ export default function ChatMessageList({
       const target = event.target as Node | null;
       if (!target) return;
       if (reactionActionRef.current?.contains(target)) return;
+      if (reactionPickerRef.current?.contains(target)) return;
       setFullReactionPickerMessageId(null);
+      setReactionPickerPosition(null);
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -232,6 +248,55 @@ export default function ChatMessageList({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [fullReactionPickerMessageId]);
+
+  useEffect(() => {
+    if (fullReactionPickerMessageId == null) return;
+    const closePicker = () => {
+      setFullReactionPickerMessageId(null);
+      setReactionPickerPosition(null);
+    };
+    window.addEventListener("resize", closePicker);
+    window.addEventListener("scroll", closePicker, true);
+    return () => {
+      window.removeEventListener("resize", closePicker);
+      window.removeEventListener("scroll", closePicker, true);
+    };
+  }, [fullReactionPickerMessageId]);
+
+  const handleOpenMoreReactions = useCallback(
+    (event: ReactMouseEvent<HTMLButtonElement>, messageId: number) => {
+      const nextId = fullReactionPickerMessageId === messageId ? null : messageId;
+      if (nextId == null) {
+        setFullReactionPickerMessageId(null);
+        setReactionPickerPosition(null);
+        return;
+      }
+
+      const triggerRect = event.currentTarget.getBoundingClientRect();
+      const listRect = listRef.current?.getBoundingClientRect();
+      const horizontalPadding = 8;
+      const pickerHeight = 320;
+      const defaultWidth = 288;
+      const maxWidthByList = listRect
+        ? Math.max(220, listRect.width - horizontalPadding * 2)
+        : window.innerWidth - horizontalPadding * 2;
+      const width = Math.min(defaultWidth, maxWidthByList);
+
+      const minLeft = (listRect?.left ?? 0) + horizontalPadding;
+      const maxLeft = (listRect?.right ?? window.innerWidth) - width - horizontalPadding;
+      let left = triggerRect.left + triggerRect.width / 2 - width / 2;
+      left = Math.min(Math.max(left, minLeft), Math.max(minLeft, maxLeft));
+
+      let top = triggerRect.bottom + 8;
+      if (top + pickerHeight > window.innerHeight - horizontalPadding) {
+        top = Math.max(horizontalPadding, triggerRect.top - pickerHeight - 8);
+      }
+
+      setReactionPickerPosition({ top, left, width });
+      setFullReactionPickerMessageId(messageId);
+    },
+    [fullReactionPickerMessageId]
+  );
 
   const handleDownloadAttachment = async (attachment: ChatAttachment) => {
     try {
@@ -250,7 +315,10 @@ export default function ChatMessageList({
   };
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 space-y-4 scrollbar-default bg-[var(--theme-bg)]">
+    <div
+      ref={listRef}
+      className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden px-3 sm:px-6 py-4 space-y-4 scrollbar-default bg-[var(--theme-bg)]"
+    >
       {isLoading ? (
         <div className="text-sm text-[var(--theme-text-muted)] px-3 py-6 text-center">
           Loading messages...
@@ -271,20 +339,20 @@ export default function ChatMessageList({
               className={`flex ${isMe ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[75%] md:max-w-[60%] w-fit rounded-2xl px-4 py-2 text-sm shadow-sm ${isMe
+                className={`max-w-[88%] sm:max-w-[75%] md:max-w-[60%] w-fit min-w-0 rounded-2xl px-3 sm:px-4 py-2 text-sm shadow-sm ${isMe
                   ? "bg-blue-600 text-white border border-blue-600 rounded-br-md"
                   : "bg-[var(--theme-surface)] text-[var(--theme-text)] border border-[var(--theme-border)] rounded-bl-md"
                   } relative group`}
               >
                 <div
-                  className="absolute -top-5 left-1/2 -translate-x-1/2 z-30 hidden sm:flex items-center"
+                  className={`absolute -top-5 z-30 hidden sm:flex items-center ${isMe ? "right-0" : "left-0"}`}
                   ref={
                     fullReactionPickerMessageId === message.id
                       ? reactionActionRef
                       : null
                   }
                 >
-                  <div className="inline-flex items-center gap-1 px-1.5 py-1 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-md opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+                  <div className="inline-flex max-w-[min(20rem,calc(100vw-2rem))] items-center gap-1 px-1.5 py-1 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-md opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                     {QUICK_REACTIONS.map((emoji) => (
                       <button
                         key={`${message.id}-quick-${emoji}`}
@@ -299,32 +367,13 @@ export default function ChatMessageList({
                       </button>
                     ))}
                     <button
-                      onClick={() =>
-                        setFullReactionPickerMessageId((prev) =>
-                          prev === message.id ? null : message.id
-                        )
-                      }
+                      onClick={(event) => handleOpenMoreReactions(event, message.id)}
                       className="h-6 w-6 rounded-full hover:bg-[var(--theme-surface-muted)] text-[var(--theme-text-muted)] inline-flex items-center justify-center"
                       aria-label="More emojis"
                     >
                       <PlusIcon className="w-3.5 h-3.5" />
                     </button>
                   </div>
-
-                  {fullReactionPickerMessageId === message.id && (
-                    <div className="absolute top-9 left-1/2 -translate-x-1/2 z-40 shadow-xl rounded-xl overflow-hidden w-[18rem]">
-                      <EmojiPicker
-                        onEmojiClick={(emojiData: EmojiClickData) => {
-                          void handleToggleReaction(message.id, emojiData.emoji);
-                          setFullReactionPickerMessageId(null);
-                        }}
-                        lazyLoadEmojis
-                        width="100%"
-                        height={320}
-                        skinTonesDisabled
-                      />
-                    </div>
-                  )}
                 </div>
 
                 {isGroupChat && (
@@ -500,12 +549,12 @@ export default function ChatMessageList({
                   )}
                 </div>
                 {reactions.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-1.5">
                     {reactions.map((reaction) => (
                       <button
                         key={`${message.id}-${reaction.emoji}`}
                         onClick={() => void handleToggleReaction(message.id, reaction.emoji)}
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] border transition cursor-pointer ${reaction.reactedByMe
+                        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] transition cursor-pointer ${reaction.reactedByMe
                           ? "bg-sky-100 text-sky-700 border-sky-300"
                           : "bg-white/80 text-slate-700 border-slate-300 hover:bg-slate-100"
                           }`}
@@ -521,6 +570,29 @@ export default function ChatMessageList({
             </div>
           );
         })
+      )}
+      {fullReactionPickerMessageId != null && reactionPickerPosition && (
+        <div
+          ref={reactionPickerRef}
+          className="fixed z-50 shadow-xl rounded-xl overflow-hidden"
+          style={{
+            top: `${reactionPickerPosition.top}px`,
+            left: `${reactionPickerPosition.left}px`,
+            width: `${reactionPickerPosition.width}px`,
+          }}
+        >
+          <EmojiPicker
+            onEmojiClick={(emojiData: EmojiClickData) => {
+              void handleToggleReaction(fullReactionPickerMessageId, emojiData.emoji);
+              setFullReactionPickerMessageId(null);
+              setReactionPickerPosition(null);
+            }}
+            lazyLoadEmojis
+            width="100%"
+            height={320}
+            skinTonesDisabled
+          />
+        </div>
       )}
       {visibleTypingUsers.length > 0 && (
         <div className="text-xs text-[var(--theme-text-muted)] px-2">
