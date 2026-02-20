@@ -1,32 +1,60 @@
 "use client";
 
-import { RefObject, useEffect, useRef } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 const ICE_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
 ];
 
+const sleep = (ms: number) =>
+  new Promise((resolve) => window.setTimeout(resolve, ms));
+
 const uploadChunk = async (blob: Blob, callLogId: number, streamId: string) => {
-  try {
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      setTimeout(() => uploadChunk(blob, callLogId, streamId), 500);
-      return;
+  const maxAttempts = 8;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        await sleep(500);
+        continue;
+      }
+
+      const form = new FormData();
+      form.append("file", blob, `${streamId}.webm`);
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/call-recording/${callLogId}/chunk`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: form,
+      });
+
+      if (res.ok) return true;
+    } catch {
+      // retry below
     }
 
-    const form = new FormData();
-    form.append("file", blob, `${streamId}.webm`);
+    await sleep(700);
+  }
 
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/call-recording/${callLogId}/chunk`, {
+  return false;
+};
+
+const finalizeRecording = async (callLogId: number) => {
+  try {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/call-recording/${callLogId}/finalize`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      body: form,
     });
   } catch {
-    // ignore network errors (next chunk will continue)
+    // Best effort finalize.
   }
 };
 
@@ -39,40 +67,32 @@ export const useWebRTC = (
 ) => {
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
+  const remoteStreamRef = useRef<MediaStream | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const uploadAbortRef = useRef(false);
-  const isRecordingRef = useRef(false);
   const streamIdRef = useRef<string>(crypto.randomUUID());
+  const pendingUploadsRef = useRef<Set<Promise<unknown>>>(new Set());
+  const isEndingRef = useRef(false);
+  const [isRecording, setIsRecording] = useState(false);
 
-  const toggleRecording = () => {
-    if (!mediaRecorderRef.current) return;
-
-    if (mediaRecorderRef.current.state === "recording") {
-      mediaRecorderRef.current.pause();
-      isRecordingRef.current = false;
-    } else {
-      mediaRecorderRef.current.resume();
-      isRecordingRef.current = true;
-    }
+  const trackPendingUpload = (uploadPromise: Promise<unknown>) => {
+    pendingUploadsRef.current.add(uploadPromise);
+    uploadPromise.finally(() => {
+      pendingUploadsRef.current.delete(uploadPromise);
+    });
   };
 
-  const isRecording = () => {
-    return mediaRecorderRef.current?.state === "recording";
+  const waitForPendingUploads = async () => {
+    const uploads = Array.from(pendingUploadsRef.current);
+    if (!uploads.length) return;
+    await Promise.allSettled(uploads);
   };
 
-  // create audio element once
-  useEffect(() => {
-    remoteAudioRef.current = new Audio();
-    remoteAudioRef.current.autoplay = true;
-  }, []);
+  const createRecorder = () => {
+    const remoteStream = remoteStreamRef.current;
+    if (!remoteStream || mediaRecorderRef.current) return;
+    if (!callLogIdRef.current) return;
 
-  const tryStartRecorder = (remoteStream: MediaStream) => {
-    const callLogId = callLogIdRef.current;
-    if (!callLogId || mediaRecorderRef.current) return;
-
-    // New call recording session: enable uploads and use a fresh stream id.
-    uploadAbortRef.current = false;
     streamIdRef.current = crypto.randomUUID();
 
     const mixed = new MediaStream([
@@ -85,15 +105,51 @@ export const useWebRTC = (
     });
 
     recorder.ondataavailable = (e) => {
-      if (!e.data.size || uploadAbortRef.current) return;
-      uploadChunk(e.data, callLogId, streamIdRef.current);
+      if (!e.data.size) return;
+      const callLogId = callLogIdRef.current;
+      if (!callLogId) return;
+      const uploadPromise = uploadChunk(e.data, callLogId, streamIdRef.current);
+      trackPendingUpload(uploadPromise);
+    };
+
+    recorder.onstop = () => {
+      setIsRecording(false);
     };
 
     recorder.start(2000);
     mediaRecorderRef.current = recorder;
-    isRecordingRef.current = true;
+    setIsRecording(true);
   };
 
+  const maybeStartRecorder = () => {
+    if (mediaRecorderRef.current) return;
+    if (!pcRef.current) return;
+    if (!remoteStreamRef.current) return;
+    if (!callLogIdRef.current) return;
+    createRecorder();
+  };
+
+  const toggleRecording = () => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder) {
+      createRecorder();
+      return;
+    }
+
+    if (recorder.state === "recording") {
+      recorder.pause();
+      setIsRecording(false);
+    } else {
+      recorder.resume();
+      setIsRecording(true);
+    }
+  };
+
+  // create audio element once
+  useEffect(() => {
+    remoteAudioRef.current = new Audio();
+    remoteAudioRef.current.autoplay = true;
+  }, []);
 
   const ensurePeerConnection = async (targetUserId: number) => {
     if (pcRef.current) return pcRef.current;
@@ -121,13 +177,12 @@ export const useWebRTC = (
     }
 
     pc.ontrack = (event) => {
+      remoteStreamRef.current = event.streams[0];
       if (remoteAudioRef.current) {
         remoteAudioRef.current.srcObject = event.streams[0];
       }
-
-      if (!mediaRecorderRef.current && callLogIdRef.current) {
-        tryStartRecorder(event.streams[0]);
-      }
+      // Auto-start recording when media + callLogId are ready.
+      maybeStartRecorder();
 
       onConnected?.();
     };
@@ -147,6 +202,14 @@ export const useWebRTC = (
   const prepareReceiver = async (callerId: number) => {
     await ensurePeerConnection(callerId);
   };
+
+  // Fallback: if callLogId arrives after track, start recorder as soon as possible.
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      maybeStartRecorder();
+    }, 400);
+    return () => window.clearInterval(interval);
+  }, []);
 
   // ================= START CALL (caller) =================
   const startCall = async () => {
@@ -194,26 +257,47 @@ export const useWebRTC = (
 
   // ================= END =================
   const endCall = () => {
-    pcRef.current?.close();
-    pcRef.current = null;
+    if (isEndingRef.current) return;
+    isEndingRef.current = true;
 
-    localStreamRef.current?.getTracks().forEach(t => t.stop());
-    localStreamRef.current = null;
+    const finalize = async () => {
+      const callLogId = callLogIdRef.current;
+      const recorder = mediaRecorderRef.current;
 
-    if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
-    uploadAbortRef.current = true;
+      if (recorder) {
+        try {
+          if (recorder.state !== "inactive") {
+            recorder.requestData();
+            recorder.stop();
+          }
+        } catch {
+          // no-op
+        }
+      }
 
-    if (mediaRecorderRef.current) {
-      try {
-        mediaRecorderRef.current.requestData();
-        mediaRecorderRef.current.stop();
-      } catch { }
+      await waitForPendingUploads();
 
+      if (callLogId) {
+        await finalizeRecording(callLogId);
+      }
+    };
+
+    void finalize().finally(() => {
       mediaRecorderRef.current = null;
-    }
-    isRecordingRef.current = false;
+      setIsRecording(false);
 
-    onEnded?.();
+      pcRef.current?.close();
+      pcRef.current = null;
+
+      localStreamRef.current?.getTracks().forEach(t => t.stop());
+      localStreamRef.current = null;
+
+      remoteStreamRef.current = null;
+      if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
+
+      onEnded?.();
+      isEndingRef.current = false;
+    });
   };
 
 

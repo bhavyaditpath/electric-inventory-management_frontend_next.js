@@ -97,7 +97,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         onReject={rejectCall}
         onIgnore={ignoreIncomingCall}
         onEnd={endCall}
-        isRecording={isRecording?.()}
+        isRecording={isRecording}
         onToggleRecording={toggleRecording}
       />
     </CallContext.Provider>

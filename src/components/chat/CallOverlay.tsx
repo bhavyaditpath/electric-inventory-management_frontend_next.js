@@ -190,7 +190,7 @@ export default function CallOverlay({
           state === CallState.Connected) && (
             <div className="flex flex-col items-center gap-3">
 
-              {state === CallState.Connected && (
+              {/* {state === CallState.Connected && (
                 <button
                   onClick={onToggleRecording}
                   className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold shadow-sm
@@ -200,7 +200,7 @@ export default function CallOverlay({
                 >
                   ● {isRecording ? "Recording..." : "Start Recording"}
                 </button>
-              )}
+              )} */}
 
               <button
                 onClick={onEnd}

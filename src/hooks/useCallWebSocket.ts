@@ -44,8 +44,6 @@ export const useCallWebSocket = () => {
     const [isGroupCall, setIsGroupCall] = useState(false);
     const [isIncomingIgnored, setIsIncomingIgnored] = useState(false);
     const callLogIdRef = useRef<number | null>(null);
-    const toggleRecording = () => webrtc.toggleRecording?.();
-    const isRecording = () => webrtc.isRecording?.();
     const audioCtxRef = useRef<AudioContext | null>(null);
     const outgoingTimeoutRef = useRef<number | null>(null);
     const loopToneRef = useRef<{
@@ -268,6 +266,8 @@ export const useCallWebSocket = () => {
         },
         () => resetCallState()
     );
+    const toggleRecording = () => webrtc.toggleRecording?.();
+    const isRecording = webrtc.isRecording;
 
     useEffect(() => {
         callStateRef.current = callState;
