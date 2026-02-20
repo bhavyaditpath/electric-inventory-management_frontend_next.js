@@ -25,6 +25,10 @@ export interface PinRoomPayload {
   pinned: boolean;
 }
 
+export interface UpdateRoomNamePayload {
+  name: string;
+}
+
 export interface RemoveParticipantPayload {
   userId?: number;
   newAdminId?: number;
@@ -58,6 +62,12 @@ export const chatApi = {
 
   pinRoom: (roomId: number, payload: PinRoomPayload) =>
     apiClient.post<{ pinned: boolean }>(`/chat/rooms/${roomId}/pin`, payload),
+
+  updateRoomName: (roomId: number, payload: UpdateRoomNamePayload) =>
+    apiClient.patch<{ id: number; name: string }>(
+      `/chat/rooms/${roomId}/name`,
+      payload
+    ),
 
   sendMessage: (payload: SendMessagePayload, files?: File[]) => {
     if (files && files.length > 0) {

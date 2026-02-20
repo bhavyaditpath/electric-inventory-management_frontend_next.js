@@ -15,6 +15,7 @@ import MembersModal from "./MembersModal";
 import AddMembersModal from "./AddMembersModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import RemoveParticipantModal from "./RemoveParticipantModal";
+import RenameRoomModal from "./RenameRoomModal";
 import { CallState } from "@/types/enums";
 import { CallType } from "@/types/enums";
 import CallLogsModal from "./CallLogsModal";
@@ -53,6 +54,9 @@ export default function ChatPage() {
     type: "room" | "message";
     id: number;
   } | null>(null);
+  const [renameRoom, setRenameRoom] = useState<{ roomId: number } | null>(null);
+  const [renameRoomName, setRenameRoomName] = useState("");
+  const [renameLoading, setRenameLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   // ===== CALL STATE =====
   const [showCallLogs, setShowCallLogs] = useState(false);
@@ -233,6 +237,16 @@ export default function ChatPage() {
   } = useChatWebSocket({
     onMessage: handleIncomingMessage,
     onMessageReactionUpdated: handleMessageReactionUpdated,
+    onRoomUpdated: (payload) => {
+      setRooms((prev) =>
+        prev.map((room) =>
+          room.id === payload.id ? { ...room, name: payload.name } : room
+        )
+      );
+      setMembersRoom((prev) =>
+        prev && prev.id === payload.id ? { ...prev, name: payload.name } : prev
+      );
+    },
     onMessageDeleted: (payload) => {
       setMessages((prev) => prev.filter((m) => m.id !== payload.id));
       setRooms((prev) =>
@@ -504,6 +518,62 @@ export default function ChatPage() {
   const requestDeleteRoom = useCallback((roomId: number) => {
     setConfirmDelete({ type: "room", id: roomId });
   }, []);
+
+  const requestRenameRoom = useCallback(
+    (roomId: number) => {
+      const room = rooms.find((r) => r.id === roomId);
+      if (!room || !room.isGroupChat) return;
+      setRenameRoom({ roomId });
+      setRenameRoomName(room.name || "");
+    },
+    [rooms]
+  );
+
+  const handleCloseRenameRoom = useCallback(() => {
+    if (renameLoading) return;
+    setRenameRoom(null);
+    setRenameRoomName("");
+  }, [renameLoading]);
+
+  const handleRenameRoom = useCallback(async () => {
+    if (!renameRoom) return;
+    const nextName = renameRoomName.trim();
+    if (!nextName) return;
+
+    setRenameLoading(true);
+    try {
+      const response = await chatApi.updateRoomName(renameRoom.roomId, {
+        name: nextName,
+      });
+
+      if (response.success) {
+        const resolvedName = response.data?.name || nextName;
+        setRooms((prev) =>
+          prev.map((room) =>
+            room.id === renameRoom.roomId
+              ? { ...room, name: resolvedName }
+              : room
+          )
+        );
+        setMembersRoom((prev) =>
+          prev && prev.id === renameRoom.roomId
+            ? { ...prev, name: resolvedName }
+            : prev
+        );
+        if (response.message) showSuccess(response.message);
+        handleCloseRenameRoom();
+      } else if (response.message) {
+        showError(response.message);
+      } else {
+        showError("Failed to rename group");
+      }
+    } catch (error) {
+      console.error("Failed to rename group:", error);
+      showError("Failed to rename group");
+    } finally {
+      setRenameLoading(false);
+    }
+  }, [handleCloseRenameRoom, renameRoom, renameRoomName]);
 
   const requestDeleteMessage = useCallback((messageId: number) => {
     setConfirmDelete({ type: "message", id: messageId });
@@ -808,6 +878,7 @@ export default function ChatPage() {
                 onSelectRoom={handleSelectRoom}
                 onSelectUser={handleSelectUser}
                 onPinRoom={handlePinRoom}
+                onRenameRoom={requestRenameRoom}
                 onDeleteRoom={requestDeleteRoom}
               />
             </div>
@@ -857,6 +928,7 @@ export default function ChatPage() {
             onSelectRoom={handleSelectRoom}
             onSelectUser={handleSelectUser}
             onPinRoom={handlePinRoom}
+            onRenameRoom={requestRenameRoom}
             onDeleteRoom={requestDeleteRoom}
           />
 
@@ -968,6 +1040,15 @@ export default function ChatPage() {
         isLoading={deleteLoading}
         onConfirm={handleConfirmDelete}
         onClose={handleCloseDelete}
+      />
+
+      <RenameRoomModal
+        isOpen={!!renameRoom}
+        roomName={renameRoomName}
+        isLoading={renameLoading}
+        onChangeRoomName={setRenameRoomName}
+        onRename={handleRenameRoom}
+        onClose={handleCloseRenameRoom}
       />
 
       <RemoveParticipantModal

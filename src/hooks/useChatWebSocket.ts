@@ -20,12 +20,19 @@ interface UserStatusPayload {
   userId: number;
 }
 
+interface RoomUpdatedPayload {
+  id: number;
+  name: string;
+  isGroupChat: boolean;
+}
+
 interface UseChatWebSocketOptions {
   onMessage?: (message: ChatMessage) => void;
   onMessageNotification?: (payload: ChatMessageNotification) => void;
   onMessageDeleted?: (payload: { id: number; chatRoomId: number }) => void;
   onMessageReactionUpdated?: (message: ChatMessage) => void;
   onReactionNotification?: (payload: ChatReactionNotification) => void;
+  onRoomUpdated?: (payload: RoomUpdatedPayload) => void;
   onTyping?: (payload: TypingPayload) => void;
   onUserOnline?: (userId: number) => void;
   onUserOffline?: (userId: number) => void;
@@ -70,6 +77,9 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions = {}) => {
     });
     socket.on("reactionNotification", (payload: ChatReactionNotification) => {
       handlersRef.current.onReactionNotification?.(payload);
+    });
+    socket.on("roomUpdated", (payload: RoomUpdatedPayload) => {
+      handlersRef.current.onRoomUpdated?.(payload);
     });
     socket.on("userTyping", (payload: TypingPayload) => {
       handlersRef.current.onTyping?.(payload);

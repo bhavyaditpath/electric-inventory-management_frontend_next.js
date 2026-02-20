@@ -8,6 +8,7 @@ import {
   BookmarkIcon,
   EllipsisVerticalIcon,
   TrashIcon,
+  PencilSquareIcon,
 } from "@heroicons/react/24/outline";
 
 interface ChatSidebarProps {
@@ -25,6 +26,7 @@ interface ChatSidebarProps {
   onSelectRoom: (roomId: number) => void;
   onSelectUser: (user: ChatUser) => void;
   onPinRoom?: (roomId: number, pinned: boolean) => void;
+  onRenameRoom?: (roomId: number) => void;
   onDeleteRoom?: (roomId: number) => void;
 }
 
@@ -43,6 +45,7 @@ const ChatSidebar = ({
   onSelectRoom,
   onSelectUser,
   onPinRoom,
+  onRenameRoom,
   onDeleteRoom,
 }: ChatSidebarProps) => {
   const [openMenuRoomId, setOpenMenuRoomId] = useState<number | null>(null);
@@ -153,7 +156,7 @@ const ChatSidebar = ({
                         </div>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
-                        {(onPinRoom || onDeleteRoom) && (
+                        {(onPinRoom || onRenameRoom || onDeleteRoom) && (
                           <div
                             className="relative"
                             ref={openMenuRoomId === room.id ? menuRef : null}
@@ -172,6 +175,19 @@ const ChatSidebar = ({
                             </button>
                             {openMenuRoomId === room.id && (
                               <div className="absolute right-0 mt-2 w-36 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20">
+                                {onRenameRoom && room.isGroupChat && (
+                                  <button
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      onRenameRoom(room.id);
+                                      closeMenu();
+                                    }}
+                                    className="w-full px-3 py-2 text-left text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] flex items-center gap-2 cursor-pointer"
+                                  >
+                                    <PencilSquareIcon className="w-4 h-4" />
+                                    Rename
+                                  </button>
+                                )}
                                 {onPinRoom && (
                                   <button
                                     onClick={(event) => {
