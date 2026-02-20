@@ -61,6 +61,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.removeItem('adminInventoryColumnConfig');
     setUser(null);
     router.push('/auth/login');
+    router.refresh();
   };
 
   const scheduleTokenExpiryLogout = (token?: string) => {
@@ -146,6 +147,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.removeItem('adminInventoryColumnConfig');
     setUser(null);
     router.push('/auth/login');
+    router.refresh();
   };
 
   const value: AuthContextType = {
