@@ -80,7 +80,7 @@ export default function Sidebar({
       {!isMobile && (
         <div className="h-16 px-4 flex items-center justify-between border-b border-[var(--theme-border)]">
           {!isCollapsed && (
-            <h2 className="text-lg font-semibold text-[var(--theme-text)] truncate">
+            <h2 className="text-lg text-[var(--theme-text)] truncate">
               Admin Panel
             </h2>
           )}
