@@ -126,12 +126,12 @@ export default function AdminAlertsPage() {
         </span>
       ),
     },
-    {
-      key: "createdAt",
-      header: "Created Date",
-      sortable: true,
-      render: (value: string) => new Date(value).toLocaleDateString(),
-    },
+    // {
+    //   key: "createdAt",
+    //   header: "Created Date",
+    //   sortable: true,
+    //   render: (value: string) => new Date(value).toLocaleDateString(),
+    // },
   ];
 
   const handleResolve = (alert: StockAlert) => {
