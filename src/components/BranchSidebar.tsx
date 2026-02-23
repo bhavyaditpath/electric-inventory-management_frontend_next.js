@@ -115,7 +115,7 @@ export default function BranchSidebar({ isCollapsed, onToggle, isMobile = false,
       </nav>
 
       {/* Logout Button */}
-      <div className="p-3 lg:p-4 border-t border-[var(--theme-border)] mt-auto">
+      {/* <div className="p-3 lg:p-4 border-t border-[var(--theme-border)] mt-auto">
         <button
           onClick={handleLogout}
           className={`flex items-center w-full px-3 py-3 lg:py-2 text-red-600 hover:bg-red-500/10 rounded-lg transition-all duration-200 group ${isCollapsed ? "justify-center" : ""
@@ -127,7 +127,7 @@ export default function BranchSidebar({ isCollapsed, onToggle, isMobile = false,
           />
           {!isCollapsed && <span className="font-medium">Logout</span>}
         </button>
-      </div>
+      </div> */}
     </div>
   );
 }
