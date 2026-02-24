@@ -60,6 +60,11 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   } = useCallWebSocket();
 
   const isIncoming = callDirection === CallDirection.Incoming;
+  const showJoinAfterIgnore =
+    isIncoming &&
+    isGroupCall &&
+    callState === CallState.Ringing &&
+    isIncomingIgnored;
 
   const value: CallContextType = {
     callState,
@@ -79,7 +84,8 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   };
 
   const overlayVisible =
-    callState !== CallState.Idle && !(isIncoming && callState === CallState.Ringing && isIncomingIgnored);
+    callState !== CallState.Idle &&
+    !(isIncoming && callState === CallState.Ringing && isIncomingIgnored && !showJoinAfterIgnore);
 
   return (
     <CallContext.Provider value={value}>
@@ -96,6 +102,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
         onAccept={acceptCall}
         onReject={rejectCall}
         onIgnore={ignoreIncomingCall}
+        showJoinAfterIgnore={showJoinAfterIgnore}
         onEnd={endCall}
         isRecording={isRecording}
         onToggleRecording={toggleRecording}

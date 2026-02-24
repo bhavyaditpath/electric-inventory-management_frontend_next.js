@@ -21,15 +21,18 @@ type StoredCallSession = {
     peerName?: string | null;
     callType?: CallType | null;
     isGroupCall?: boolean;
+    isIncomingIgnored?: boolean;
 };
 
 export const useCallWebSocket = () => {
-    const { isAuthenticated, isLoading } = useAuth();
+    const { isAuthenticated, isLoading, user } = useAuth();
     const socketRef = useRef<Socket | null>(null);
+    const currentUserIdRef = useRef<number | null>(null);
     const targetUserIdRef = useRef<number | null>(null);
     const callerIdRef = useRef<number | null>(null);
     const roomIdRef = useRef<number | null>(null);
     const isGroupCallRef = useRef(false);
+    const acceptedPeersRef = useRef<Set<number>>(new Set());
     const callStateRef = useRef<CallState>(CallState.Idle);
 
     const [callState, setCallState] = useState<CallState>(CallState.Idle);
@@ -44,6 +47,8 @@ export const useCallWebSocket = () => {
     const [isGroupCall, setIsGroupCall] = useState(false);
     const [isIncomingIgnored, setIsIncomingIgnored] = useState(false);
     const callLogIdRef = useRef<number | null>(null);
+    const incomingCreatedAtRef = useRef<number | null>(null);
+    const ignoredIncomingTimeoutRef = useRef<number | null>(null);
     const audioCtxRef = useRef<AudioContext | null>(null);
     const outgoingTimeoutRef = useRef<number | null>(null);
     const loopToneRef = useRef<{
@@ -85,6 +90,25 @@ export const useCallWebSocket = () => {
             clearTimeout(outgoingTimeoutRef.current);
             outgoingTimeoutRef.current = null;
         }
+    };
+
+    const clearIgnoredIncomingTimeout = () => {
+        if (ignoredIncomingTimeoutRef.current != null) {
+            clearTimeout(ignoredIncomingTimeoutRef.current);
+            ignoredIncomingTimeoutRef.current = null;
+        }
+    };
+
+    const scheduleIgnoredIncomingAutoClear = (remainingMs: number) => {
+        clearIgnoredIncomingTimeout();
+        if (remainingMs <= 0) {
+            resetCallState();
+            return;
+        }
+
+        ignoredIncomingTimeoutRef.current = window.setTimeout(() => {
+            resetCallState();
+        }, remainingMs);
     };
 
     const persistSession = (payload: StoredCallSession) => {
@@ -205,8 +229,12 @@ export const useCallWebSocket = () => {
 
     const resetCallState = () => {
         clearOutgoingTimeout();
+        clearIgnoredIncomingTimeout();
         clearPersistedSession();
+        callStateRef.current = CallState.Idle;
+        acceptedPeersRef.current.clear();
         callLogIdRef.current = null;
+        incomingCreatedAtRef.current = null;
         callerIdRef.current = null;
         targetUserIdRef.current = null;
         roomIdRef.current = null;
@@ -253,9 +281,29 @@ export const useCallWebSocket = () => {
         return false;
     };
 
+    const removeAcceptedPeer = (peerId?: number) => {
+        if (!isGroupCallRef.current || typeof peerId !== "number") return false;
+        if (!acceptedPeersRef.current.has(peerId)) return false;
+
+        acceptedPeersRef.current.delete(peerId);
+        webrtc.endPeer?.(peerId);
+
+        if (targetUserIdRef.current === peerId) {
+            const nextPeer = acceptedPeersRef.current.values().next().value ?? null;
+            targetUserIdRef.current = nextPeer;
+            setPeerUserId(nextPeer);
+            if (!nextPeer) {
+                setPeerName(null);
+            }
+        }
+
+        return acceptedPeersRef.current.size > 0;
+    };
+
     // Attach WebRTC (IMPORTANT: pass refs)
     const webrtc = useWebRTC(
         socketRef,
+        currentUserIdRef,
         targetUserIdRef,
         callLogIdRef,
         () => {
@@ -287,6 +335,10 @@ export const useCallWebSocket = () => {
     }, [callState, isIncomingIgnored]);
 
     useEffect(() => {
+        currentUserIdRef.current = user?.id ?? null;
+    }, [user?.id]);
+
+    useEffect(() => {
         if (!callOutcome) return;
         playOneShotTone(callOutcome);
         const timer = window.setTimeout(() => setCallOutcome(null), 1200);
@@ -296,6 +348,7 @@ export const useCallWebSocket = () => {
     useEffect(() => {
         return () => {
             clearOutgoingTimeout();
+            clearIgnoredIncomingTimeout();
             stopLoopTone();
             if (audioCtxRef.current) {
                 audioCtxRef.current.close().catch(() => {
@@ -323,9 +376,12 @@ export const useCallWebSocket = () => {
 
         // ---------- INCOMING CALL ----------
         socket.on("incomingCall", async ({ callerId, callerName, callType, roomId, isGroupCall, callLogId }) => {
+            const createdAt = Date.now();
+            clearIgnoredIncomingTimeout();
             callerIdRef.current = callerId;
             roomIdRef.current = roomId ?? null;
             isGroupCallRef.current = !!isGroupCall;
+            incomingCreatedAtRef.current = createdAt;
             callLogIdRef.current = callLogId ?? null;
             setCallerId(callerId);
             setPeerUserId(callerId);
@@ -340,13 +396,14 @@ export const useCallWebSocket = () => {
             setCallState(CallState.Ringing);
             persistSession({
                 direction: CallDirection.Incoming,
-                createdAt: Date.now(),
+                createdAt,
                 callerId,
                 callerName: callerName ?? null,
                 peerName: callerName ?? null,
                 callType: normalizedType,
                 roomId: roomId ?? undefined,
                 isGroupCall: !!isGroupCall,
+                isIncomingIgnored: false,
             });
 
             // prepare peer BEFORE offer arrives (critical)
@@ -355,24 +412,38 @@ export const useCallWebSocket = () => {
 
         // ---------- CALL ACCEPTED ----------
         socket.on("callAccepted", async ({ receiverId, callLogId }) => {
-            if (callLogId) callLogIdRef.current = callLogId;
-            if (isGroupCallRef.current && targetUserIdRef.current) {
+            const isGroup = isGroupCallRef.current;
+            const currentTarget = targetUserIdRef.current;
+            if (!isGroup && currentTarget && currentTarget !== receiverId) {
                 return;
             }
-            targetUserIdRef.current = receiverId;
-            setPeerUserId(receiverId);
-            setCallOutcome(CallOutcome.Accepted);
-            setIsIncomingIgnored(false);
-            clearOutgoingTimeout();
-            clearPersistedSession();
-            setCallState(CallState.Connecting);
+            if (acceptedPeersRef.current.has(receiverId)) return;
 
-            if (isGroupCallRef.current && roomIdRef.current) {
-                socketRef.current?.emit("cancelCall", { roomId: roomIdRef.current });
+            const state = callStateRef.current;
+            if (state !== CallState.Calling && state !== CallState.Connecting && state !== CallState.Connected) {
+                return;
+            }
+
+            acceptedPeersRef.current.add(receiverId);
+            if (!callLogIdRef.current && callLogId) {
+                callLogIdRef.current = callLogId;
+            }
+
+            if (!targetUserIdRef.current) {
+                targetUserIdRef.current = receiverId;
+                setPeerUserId(receiverId);
+            }
+
+            if (state === CallState.Calling) {
+                setCallOutcome(CallOutcome.Accepted);
+                setIsIncomingIgnored(false);
+                clearOutgoingTimeout();
+                clearPersistedSession();
+                setCallState(CallState.Connecting);
             }
 
             // caller starts WebRTC
-            await webrtc.startCall();
+            await webrtc.startCall(receiverId);
         });
 
         // ---------- CALL REJECTED ----------
@@ -386,14 +457,34 @@ export const useCallWebSocket = () => {
         });
 
         // ---------- CALL ENDED ----------
-        socket.on("callEnded", () => {
+        socket.on("callEnded", ({ byUserId }: { byUserId?: number } = {}) => {
+            if (removeAcceptedPeer(byUserId)) {
+                return;
+            }
+            if (
+                typeof byUserId === "number" &&
+                targetUserIdRef.current &&
+                byUserId !== targetUserIdRef.current
+            ) {
+                return;
+            }
             setCallOutcome(CallOutcome.Ended);
             webrtc.endCall();
             resetCallState();
         });
 
-        socket.on("callCancelled", () => {
+        socket.on("callCancelled", ({ byUserId }: { byUserId?: number } = {}) => {
+            if (removeAcceptedPeer(byUserId)) {
+                return;
+            }
             if (shouldIgnoreGroupTerminalEvent()) {
+                return;
+            }
+            if (
+                typeof byUserId === "number" &&
+                targetUserIdRef.current &&
+                byUserId !== targetUserIdRef.current
+            ) {
                 return;
             }
             setCallOutcome(CallOutcome.Cancelled);
@@ -402,8 +493,15 @@ export const useCallWebSocket = () => {
         });
 
         // ---------- NO ANSWER / MISSED ----------
-        socket.on("callNoAnswer", () => {
+        socket.on("callNoAnswer", ({ targetUserId }: { targetUserId?: number } = {}) => {
             if (shouldIgnoreGroupTerminalEvent()) {
+                return;
+            }
+            if (
+                typeof targetUserId === "number" &&
+                targetUserIdRef.current &&
+                targetUserId !== targetUserIdRef.current
+            ) {
                 return;
             }
             setCallOutcome(CallOutcome.Missed);
@@ -418,8 +516,15 @@ export const useCallWebSocket = () => {
         });
 
         // ---------- USER BUSY ----------
-        socket.on("userBusy", () => {
+        socket.on("userBusy", ({ targetUserId }: { targetUserId?: number } = {}) => {
             if (shouldIgnoreGroupTerminalEvent()) {
+                return;
+            }
+            if (
+                typeof targetUserId === "number" &&
+                targetUserIdRef.current &&
+                targetUserId !== targetUserIdRef.current
+            ) {
                 return;
             }
             setCallOutcome(CallOutcome.Busy);
@@ -428,19 +533,24 @@ export const useCallWebSocket = () => {
         });
 
         // ---------- WEBRTC SIGNALING ----------
-        socket.on("offer", async (offer) => {
-            setCallState(CallState.Connecting);
-            const caller = callerIdRef.current;
+        socket.on("offer", async (offerPayload) => {
+            if (callStateRef.current !== CallState.Connected) {
+                setCallState(CallState.Connecting);
+            }
+            const wrapped = offerPayload as { fromUserId?: number };
+            const caller = wrapped?.fromUserId ?? callerIdRef.current;
             if (!caller) return;
-            await webrtc.handleOffer(offer, caller);
+            await webrtc.handleOffer(offerPayload, caller);
         });
 
-        socket.on("answer", async (answer) => {
-            await webrtc.handleAnswer(answer);
+        socket.on("answer", async (answerPayload) => {
+            const wrapped = answerPayload as { fromUserId?: number };
+            await webrtc.handleAnswer(answerPayload, wrapped?.fromUserId);
         });
 
-        socket.on("iceCandidate", async (candidate) => {
-            await webrtc.handleIceCandidate(candidate);
+        socket.on("iceCandidate", async (candidatePayload) => {
+            const wrapped = candidatePayload as { fromUserId?: number };
+            await webrtc.handleIceCandidate(candidatePayload, wrapped?.fromUserId);
         });
 
         return () => {
@@ -479,6 +589,7 @@ export const useCallWebSocket = () => {
                 return;
             }
             if (parsed.direction === CallDirection.Incoming && parsed.callerId) {
+                incomingCreatedAtRef.current = parsed.createdAt;
                 callerIdRef.current = parsed.callerId;
                 setCallerId(parsed.callerId);
                 roomIdRef.current = parsed.roomId ?? null;
@@ -489,7 +600,12 @@ export const useCallWebSocket = () => {
                 setIncomingCallType(parsed.callType ?? null);
                 setIsGroupCall(!!parsed.isGroupCall);
                 setCallDirection(CallDirection.Incoming);
-                setIsIncomingIgnored(false);
+                const ignored = Boolean(parsed.isGroupCall && parsed.isIncomingIgnored);
+                setIsIncomingIgnored(ignored);
+                if (ignored) {
+                    const remaining = OUTGOING_CALL_TTL_MS - (Date.now() - parsed.createdAt);
+                    scheduleIgnoredIncomingAutoClear(remaining);
+                }
                 setCallState(CallState.Ringing);
             }
         } catch {
@@ -508,6 +624,7 @@ export const useCallWebSocket = () => {
     ) => {
         roomIdRef.current = roomId;
         isGroupCallRef.current = groupCall;
+        acceptedPeersRef.current.clear();
         targetUserIdRef.current = userId;
         setPeerUserId(userId ?? null);
         setPeerName(targetName ?? null);
@@ -541,6 +658,7 @@ export const useCallWebSocket = () => {
         const caller = callerIdRef.current;
         if (!caller) return;
 
+        clearIgnoredIncomingTimeout();
         targetUserIdRef.current = caller;
         setPeerUserId(caller);
         setPeerName(callerName ?? null);
@@ -585,7 +703,21 @@ export const useCallWebSocket = () => {
 
     const ignoreIncomingCall = () => {
         if (callStateRef.current !== CallState.Ringing || callDirection !== CallDirection.Incoming) return;
+        const createdAt = incomingCreatedAtRef.current ?? Date.now();
+        const remaining = OUTGOING_CALL_TTL_MS - (Date.now() - createdAt);
         setIsIncomingIgnored(true);
+        persistSession({
+            direction: CallDirection.Incoming,
+            createdAt,
+            callerId: callerIdRef.current ?? undefined,
+            callerName: callerName ?? null,
+            peerName: peerName ?? callerName ?? null,
+            callType: incomingCallType,
+            roomId: roomIdRef.current ?? undefined,
+            isGroupCall: isGroupCallRef.current,
+            isIncomingIgnored: true,
+        });
+        scheduleIgnoredIncomingAutoClear(remaining);
         stopLoopTone();
     };
 

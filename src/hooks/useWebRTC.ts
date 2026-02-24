@@ -60,18 +60,20 @@ const finalizeRecording = async (callLogId: number) => {
 
 export const useWebRTC = (
   socketRef: RefObject<Socket | null>,
+  currentUserIdRef: RefObject<number | null>,
   targetUserIdRef: RefObject<number | null>,
   callLogIdRef: RefObject<number | null>,
   onConnected?: () => void,
   onEnded?: () => void
 ) => {
-  const pcRef = useRef<RTCPeerConnection | null>(null);
+  const pcsRef = useRef<Map<number, RTCPeerConnection>>(new Map());
   const localStreamRef = useRef<MediaStream | null>(null);
-  const remoteStreamRef = useRef<MediaStream | null>(null);
-  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
+  const remoteStreamsRef = useRef<Map<number, MediaStream>>(new Map());
+  const remoteAudioRefs = useRef<Map<number, HTMLAudioElement>>(new Map());
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamIdRef = useRef<string>(crypto.randomUUID());
   const pendingUploadsRef = useRef<Set<Promise<unknown>>>(new Set());
+  const pendingIceCandidatesRef = useRef<Map<number, RTCIceCandidateInit[]>>(new Map());
   const isEndingRef = useRef(false);
   const [isRecording, setIsRecording] = useState(false);
 
@@ -88,17 +90,40 @@ export const useWebRTC = (
     await Promise.allSettled(uploads);
   };
 
+  const getQueuedCandidates = (peerId: number) =>
+    pendingIceCandidatesRef.current.get(peerId) ?? [];
+
+  const queueIceCandidate = (peerId: number, candidate: RTCIceCandidateInit) => {
+    const current = getQueuedCandidates(peerId);
+    current.push(candidate);
+    pendingIceCandidatesRef.current.set(peerId, current);
+  };
+
+  const flushPendingIceCandidates = async (peerId: number) => {
+    const pc = pcsRef.current.get(peerId);
+    if (!pc || !pc.remoteDescription) return;
+
+    const queued = [...getQueuedCandidates(peerId)];
+    pendingIceCandidatesRef.current.delete(peerId);
+
+    for (const candidate of queued) {
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (error) {
+        console.warn("Failed to add queued ICE candidate:", error);
+      }
+    }
+  };
+
   const createRecorder = () => {
-    const remoteStream = remoteStreamRef.current;
-    if (!remoteStream || mediaRecorderRef.current) return;
+    const remoteStreams = Array.from(remoteStreamsRef.current.values());
+    if (!remoteStreams.length || mediaRecorderRef.current) return;
     if (!callLogIdRef.current) return;
 
     streamIdRef.current = crypto.randomUUID();
 
-    const mixed = new MediaStream([
-      ...(localStreamRef.current?.getTracks() || []),
-      ...remoteStream.getTracks(),
-    ]);
+    const remoteTracks = remoteStreams.flatMap((stream) => stream.getTracks());
+    const mixed = new MediaStream([...(localStreamRef.current?.getTracks() || []), ...remoteTracks]);
 
     const recorder = new MediaRecorder(mixed, {
       mimeType: "audio/webm;codecs=opus",
@@ -123,10 +148,27 @@ export const useWebRTC = (
 
   const maybeStartRecorder = () => {
     if (mediaRecorderRef.current) return;
-    if (!pcRef.current) return;
-    if (!remoteStreamRef.current) return;
+    if (!pcsRef.current.size) return;
+    if (!remoteStreamsRef.current.size) return;
     if (!callLogIdRef.current) return;
     createRecorder();
+  };
+
+  const cleanupPeerResources = (peerId: number) => {
+    const pc = pcsRef.current.get(peerId);
+    if (pc) {
+      pc.close();
+      pcsRef.current.delete(peerId);
+    }
+
+    const audio = remoteAudioRefs.current.get(peerId);
+    if (audio) {
+      audio.srcObject = null;
+      remoteAudioRefs.current.delete(peerId);
+    }
+
+    remoteStreamsRef.current.delete(peerId);
+    pendingIceCandidatesRef.current.delete(peerId);
   };
 
   const toggleRecording = () => {
@@ -145,15 +187,8 @@ export const useWebRTC = (
     }
   };
 
-  // create audio element once
-  useEffect(() => {
-    remoteAudioRef.current = new Audio();
-    remoteAudioRef.current.autoplay = true;
-  }, []);
-
-  const ensurePeerConnection = async (targetUserId: number) => {
-    if (pcRef.current) return pcRef.current;
-
+  const ensureLocalStream = async () => {
+    if (localStreamRef.current) return localStreamRef.current;
     let stream: MediaStream | null = null;
     try {
       if (navigator.mediaDevices?.getUserMedia) {
@@ -168,19 +203,37 @@ export const useWebRTC = (
       stream = null;
     }
     localStreamRef.current = stream;
+    return stream;
+  };
+
+  const ensurePeerConnection = async (targetUserId: number) => {
+    const existing = pcsRef.current.get(targetUserId);
+    if (existing) return existing;
+
+    const stream = await ensureLocalStream();
 
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-    pcRef.current = pc;
+    pcsRef.current.set(targetUserId, pc);
 
     if (stream) {
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
     }
 
     pc.ontrack = (event) => {
-      remoteStreamRef.current = event.streams[0];
-      if (remoteAudioRef.current) {
-        remoteAudioRef.current.srcObject = event.streams[0];
+      const remoteStream = event.streams[0];
+      remoteStreamsRef.current.set(targetUserId, remoteStream);
+
+      let audioElement = remoteAudioRefs.current.get(targetUserId);
+      if (!audioElement) {
+        audioElement = new Audio();
+        audioElement.autoplay = true;
+        remoteAudioRefs.current.set(targetUserId, audioElement);
       }
+      audioElement.srcObject = remoteStream;
+      void audioElement.play().catch(() => {
+        return;
+      });
+
       // Auto-start recording when media + callLogId are ready.
       maybeStartRecorder();
 
@@ -189,9 +242,13 @@ export const useWebRTC = (
 
     pc.onicecandidate = (event) => {
       if (event.candidate) {
+        const fromUserId = currentUserIdRef.current;
         socketRef.current?.emit("iceCandidate", {
           targetUserId,
-          candidate: event.candidate,
+          candidate: {
+            fromUserId,
+            candidate: event.candidate,
+          },
         });
       }
     };
@@ -212,9 +269,9 @@ export const useWebRTC = (
   }, []);
 
   // ================= START CALL (caller) =================
-  const startCall = async () => {
+  const startCall = async (forcedTargetUserId?: number) => {
     const socket = socketRef.current;
-    const targetUserId = targetUserIdRef.current;
+    const targetUserId = forcedTargetUserId ?? targetUserIdRef.current;
     if (!socket || !targetUserId) return;
 
     const pc = await ensurePeerConnection(targetUserId);
@@ -222,37 +279,83 @@ export const useWebRTC = (
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
 
-    socket.emit("offer", { targetUserId, offer });
+    socket.emit("offer", {
+      targetUserId,
+      offer: {
+        fromUserId: currentUserIdRef.current,
+        sdp: offer,
+      },
+    });
   };
 
   // ================= RECEIVE OFFER (receiver) =================
   const handleOffer = async (
-    offer: RTCSessionDescriptionInit,
+    offerPayload: RTCSessionDescriptionInit | { fromUserId?: number; sdp?: RTCSessionDescriptionInit },
     callerId: number
   ) => {
     const socket = socketRef.current;
     if (!socket) return;
 
-    const pc = await ensurePeerConnection(callerId);
+    const wrapped = offerPayload as { fromUserId?: number; sdp?: RTCSessionDescriptionInit };
+    const resolvedCallerId = wrapped?.fromUserId ?? callerId;
+    const offer = wrapped?.sdp ?? (offerPayload as RTCSessionDescriptionInit);
+    if (!resolvedCallerId) return;
+
+    const pc = await ensurePeerConnection(resolvedCallerId);
 
     await pc.setRemoteDescription(new RTCSessionDescription(offer));
+    await flushPendingIceCandidates(resolvedCallerId);
 
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
 
-    socket.emit("answer", { targetUserId: callerId, answer });
+    socket.emit("answer", {
+      targetUserId: resolvedCallerId,
+      answer: {
+        fromUserId: currentUserIdRef.current,
+        sdp: answer,
+      },
+    });
   };
 
   // ================= RECEIVE ANSWER =================
-  const handleAnswer = async (answer: RTCSessionDescriptionInit) => {
-    if (!pcRef.current) return;
-    await pcRef.current.setRemoteDescription(new RTCSessionDescription(answer));
+  const handleAnswer = async (
+    answerPayload: RTCSessionDescriptionInit | { fromUserId?: number; sdp?: RTCSessionDescriptionInit },
+    fromUserId?: number
+  ) => {
+    const wrapped = answerPayload as { fromUserId?: number; sdp?: RTCSessionDescriptionInit };
+    const peerId = wrapped?.fromUserId ?? fromUserId;
+    const answer = wrapped?.sdp ?? (answerPayload as RTCSessionDescriptionInit);
+    if (!peerId) return;
+
+    const pc = pcsRef.current.get(peerId);
+    if (!pc) return;
+
+    await pc.setRemoteDescription(new RTCSessionDescription(answer));
+    await flushPendingIceCandidates(peerId);
   };
 
   // ================= ICE =================
-  const handleIceCandidate = async (candidate: RTCIceCandidateInit) => {
-    if (!pcRef.current) return;
-    await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+  const handleIceCandidate = async (
+    candidatePayload: RTCIceCandidateInit | { fromUserId?: number; candidate?: RTCIceCandidateInit },
+    fromUserId?: number
+  ) => {
+    const wrapped = candidatePayload as { fromUserId?: number; candidate?: RTCIceCandidateInit };
+    const peerId = wrapped?.fromUserId ?? fromUserId ?? targetUserIdRef.current;
+    const candidate = wrapped?.candidate ?? (candidatePayload as RTCIceCandidateInit);
+    if (!peerId || !candidate) return;
+
+    const pc = pcsRef.current.get(peerId);
+    if (!pc || !pc.remoteDescription) {
+      queueIceCandidate(peerId, candidate);
+      return;
+    }
+
+    try {
+      await pc.addIceCandidate(new RTCIceCandidate(candidate));
+    } catch (error) {
+      console.warn("Failed to add ICE candidate:", error);
+    }
   };
 
   // ================= END =================
@@ -286,18 +389,27 @@ export const useWebRTC = (
       mediaRecorderRef.current = null;
       setIsRecording(false);
 
-      pcRef.current?.close();
-      pcRef.current = null;
+      for (const peerId of Array.from(pcsRef.current.keys())) {
+        cleanupPeerResources(peerId);
+      }
+
+      pendingIceCandidatesRef.current.clear();
 
       localStreamRef.current?.getTracks().forEach(t => t.stop());
       localStreamRef.current = null;
 
-      remoteStreamRef.current = null;
-      if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
+      remoteStreamsRef.current.clear();
 
       onEnded?.();
       isEndingRef.current = false;
     });
+  };
+
+  const endPeer = (peerId: number) => {
+    cleanupPeerResources(peerId);
+    if (pcsRef.current.size === 0) {
+      endCall();
+    }
   };
 
 
@@ -307,6 +419,7 @@ export const useWebRTC = (
     handleOffer,
     handleAnswer,
     handleIceCandidate,
+    endPeer,
     endCall,
     toggleRecording,
     isRecording,

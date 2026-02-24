@@ -17,6 +17,7 @@ interface Props {
   onAccept?: () => void;
   onReject?: () => void;
   onIgnore?: () => void;
+  showJoinAfterIgnore?: boolean;
   onEnd?: () => void;
   isRecording?: boolean;
   onToggleRecording?: () => void;
@@ -34,6 +35,7 @@ export default function CallOverlay({
   onAccept,
   onReject,
   onIgnore,
+  showJoinAfterIgnore,
   onEnd,
   isRecording,
   onToggleRecording,
@@ -128,6 +130,34 @@ export default function CallOverlay({
   }, [displayName, userId]);
 
   if (!visible) return null;
+
+  if (showJoinAfterIgnore && incoming && state === CallState.Ringing) {
+    return (
+      <div className="fixed bottom-4 right-4 z-[999] w-[320px] rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-surface)] p-4 shadow-2xl">
+        <p className="text-sm font-semibold text-[var(--theme-text)]">
+          Group call is ongoing
+        </p>
+        <p className="mt-1 text-xs text-[var(--theme-text-muted)]">
+          {displayName || `User #${userId ?? "?"}`} is still on this call. You can join anytime while it is active.
+        </p>
+        <div className="mt-3 flex items-center justify-end gap-2">
+          <button
+            onClick={onReject}
+            className="flex items-center gap-1 px-3 py-2 rounded-full bg-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-300"
+          >
+            Dismiss
+          </button>
+          <button
+            onClick={onAccept}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600"
+          >
+            <PhoneIcon className="w-4 h-4" />
+            Join Call
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-slate-950/80 via-slate-900/80 to-slate-800/80 flex items-center justify-center z-[999]">
