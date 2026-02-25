@@ -158,13 +158,13 @@ export default function ChatMessageList({
     if (!message.replyTo) return null;
     if (message.replyTo.isRemoved) return "This message was deleted";
     const value = message.replyTo.content?.trim();
-    return value && value.length > 0 ? value : "(no text)";
+    return value && value.length > 0 ? value : "";
   };
   const getForwardedPreviewText = (message: ChatMessage) => {
     if (!message.forwardedFrom) return null;
     if (message.forwardedFrom.isRemoved) return "This message was deleted";
     const value = message.forwardedFrom.contentPreview?.trim();
-    return value && value.length > 0 ? value : "(no text)";
+    return value && value.length > 0 ? value : "";
   };
 
   const isImageAttachment = (mimeType: string) => mimeType.startsWith("image/");

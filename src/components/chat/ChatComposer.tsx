@@ -217,7 +217,7 @@ export default function ChatComposer({
               <p className="text-xs text-[var(--theme-text)] truncate">
                 {replyToMessage.isRemoved
                   ? "This message was deleted"
-                  : (replyToMessage.content || "(no text)")}
+                  : (replyToMessage.content)}
               </p>
             </div>
             <button

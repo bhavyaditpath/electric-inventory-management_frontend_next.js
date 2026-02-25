@@ -45,7 +45,7 @@ export default function ForwardMessageModal({
     if (sourceMessage.forwardedFrom?.contentPreview) {
       return sourceMessage.forwardedFrom.contentPreview;
     }
-    return "(no text)";
+    return "";
   }, [sourceMessage]);
 
   const toggleRoom = (roomId: number) => {
