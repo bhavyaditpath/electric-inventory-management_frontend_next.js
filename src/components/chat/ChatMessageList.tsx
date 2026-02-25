@@ -439,7 +439,7 @@ export default function ChatMessageList({
                     } relative group`}
                 >
                   <div
-                    className={`absolute -top-5 z-30 hidden sm:flex items-center ${isMe ? "right-0" : "left-0"}`}
+                    className={`absolute -top-5 z-30 hidden sm:items-center ${editingThisMessage ? "sm:hidden" : "sm:flex"} ${isMe ? "right-0" : "left-0"}`}
                     ref={
                       fullReactionPickerMessageId === message.id
                         ? reactionActionRef
@@ -498,7 +498,7 @@ export default function ChatMessageList({
                         className={`w-full rounded-lg border px-2.5 py-2 text-sm leading-relaxed resize-none ${isMe
                           ? "border-white/30 bg-white/10 text-white placeholder:text-blue-100"
                           : "border-[var(--theme-border)] bg-[var(--theme-surface-muted)] text-[var(--theme-text)]"
-                          }`}
+                          } focus:outline-none focus:ring-0 focus:border-current`}
                         placeholder="Edit message..."
                       />
                       <div className="flex items-center justify-end gap-2">
