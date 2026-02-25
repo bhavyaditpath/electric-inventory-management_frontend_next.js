@@ -16,6 +16,7 @@ import AddMembersModal from "./AddMembersModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import RemoveParticipantModal from "./RemoveParticipantModal";
 import RenameRoomModal from "./RenameRoomModal";
+import ForwardMessageModal from "./ForwardMessageModal";
 import { CallState } from "@/types/enums";
 import { CallType } from "@/types/enums";
 import CallLogsModal from "./CallLogsModal";
@@ -58,6 +59,8 @@ export default function ChatPage() {
   const [renameRoomName, setRenameRoomName] = useState("");
   const [renameLoading, setRenameLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [forwardSourceMessage, setForwardSourceMessage] = useState<ChatMessage | null>(null);
+  const [forwardLoading, setForwardLoading] = useState(false);
   // ===== CALL STATE =====
   const [showCallLogs, setShowCallLogs] = useState(false);
   const [callLogsTab, setCallLogsTab] = useState<"history" | "missed" | "room">("history");
@@ -562,6 +565,46 @@ export default function ChatPage() {
     [handleMessageUpdated]
   );
 
+  const requestForwardMessage = useCallback((message: ChatMessage) => {
+    setForwardSourceMessage(message);
+  }, []);
+
+  const handleCloseForward = useCallback(() => {
+    if (forwardLoading) return;
+    setForwardSourceMessage(null);
+  }, [forwardLoading]);
+
+  const handleForwardMessage = useCallback(
+    async (targetRoomIds: number[], note: string) => {
+      if (!forwardSourceMessage) return;
+
+      setForwardLoading(true);
+      try {
+        const response = await chatApi.forwardMessage({
+          sourceMessageId: forwardSourceMessage.id,
+          targetRoomIds,
+          note,
+        });
+
+        if (response.success && response.data) {
+          response.data.forEach((message) => handleIncomingMessage(message));
+          showSuccess(response.message || "Message forwarded");
+          setForwardSourceMessage(null);
+        } else if (response.message) {
+          showError(response.message);
+        } else {
+          showError("Failed to forward message");
+        }
+      } catch (error) {
+        console.error("Failed to forward message:", error);
+        showError("Failed to forward message");
+      } finally {
+        setForwardLoading(false);
+      }
+    },
+    [forwardSourceMessage, handleIncomingMessage]
+  );
+
   const requestDeleteRoom = useCallback((roomId: number) => {
     setConfirmDelete({ type: "room", id: roomId });
   }, []);
@@ -947,6 +990,7 @@ export default function ChatPage() {
                 onOpenMembers={openMembers}
                 onDeleteMessage={requestDeleteMessage}
                 onEditMessage={handleEditMessage}
+                onForwardMessage={requestForwardMessage}
                 onReactionUpdated={handleMessageReactionUpdated}
                 onStartCall={handleStartCall}
                 callState={callState}
@@ -1022,6 +1066,7 @@ export default function ChatPage() {
               onOpenMembers={openMembers}
               onDeleteMessage={requestDeleteMessage}
               onEditMessage={handleEditMessage}
+              onForwardMessage={requestForwardMessage}
               onReactionUpdated={handleMessageReactionUpdated}
               onStartCall={handleStartCall}
               callState={callState}
@@ -1098,6 +1143,17 @@ export default function ChatPage() {
         onChangeRoomName={setRenameRoomName}
         onRename={handleRenameRoom}
         onClose={handleCloseRenameRoom}
+      />
+
+      <ForwardMessageModal
+        key={`${forwardSourceMessage?.id ?? "none"}-${activeRoomId ?? "none"}-${forwardSourceMessage ? "open" : "closed"}`}
+        isOpen={!!forwardSourceMessage}
+        sourceMessage={forwardSourceMessage}
+        rooms={rooms}
+        currentRoomId={activeRoomId}
+        isLoading={forwardLoading}
+        onClose={handleCloseForward}
+        onConfirm={handleForwardMessage}
       />
 
       <RemoveParticipantModal

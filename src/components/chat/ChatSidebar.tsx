@@ -113,6 +113,9 @@ const ChatSidebar = ({
                   const last = room.lastMessage;
                   if (!last) return "No messages yet";
                   if (last.content && last.content.trim()) return last.content;
+                  if (last.isForwarded && last.forwardedFrom?.contentPreview) {
+                    return `Forwarded: ${last.forwardedFrom.contentPreview}`;
+                  }
                   if (last.attachments && last.attachments.length > 0) {
                     const count = last.attachments.length;
                     return count === 1 ? "Attachment" : `${count} attachments`;

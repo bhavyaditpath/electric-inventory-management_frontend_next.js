@@ -11,6 +11,7 @@ import {
 import { ChatAttachment, ChatMessage, ChatUser } from "@/types/chat.types";
 import { showError } from "@/Services/toast.service";
 import {
+  ArrowPathRoundedSquareIcon,
   ArrowUturnLeftIcon,
   EllipsisHorizontalIcon,
   PencilSquareIcon,
@@ -33,6 +34,7 @@ interface ChatMessageListProps {
   onDeleteMessage?: (messageId: number) => void;
   onEditMessage?: (messageId: number, content: string) => Promise<boolean>;
   onReplyMessage?: (message: ChatMessage) => void;
+  onForwardMessage?: (message: ChatMessage) => void;
   onReactionUpdated?: (message: ChatMessage) => void;
 }
 
@@ -49,6 +51,7 @@ export default function ChatMessageList({
   onDeleteMessage,
   onEditMessage,
   onReplyMessage,
+  onForwardMessage,
   onReactionUpdated,
 }: ChatMessageListProps) {
 
@@ -155,6 +158,12 @@ export default function ChatMessageList({
     if (!message.replyTo) return null;
     if (message.replyTo.isRemoved) return "This message was deleted";
     const value = message.replyTo.content?.trim();
+    return value && value.length > 0 ? value : "(no text)";
+  };
+  const getForwardedPreviewText = (message: ChatMessage) => {
+    if (!message.forwardedFrom) return null;
+    if (message.forwardedFrom.isRemoved) return "This message was deleted";
+    const value = message.forwardedFrom.contentPreview?.trim();
     return value && value.length > 0 ? value : "(no text)";
   };
 
@@ -429,10 +438,12 @@ export default function ChatMessageList({
           const canEdit = !!onEditMessage && isMe;
           const canDelete = !!onDeleteMessage && (isMe || isAdmin);
           const canReply = !!onReplyMessage && typeof currentUserId === "number";
+          const canForward = !!onForwardMessage && typeof currentUserId === "number";
           const senderName = message.sender?.username || "Unknown";
           const reactions = getMessageReactions(message);
           const editingThisMessage = editingMessageId === message.id;
           const replyPreviewText = getReplyPreviewText(message);
+          const forwardedPreviewText = getForwardedPreviewText(message);
           return (
             <div key={message.id}>
               {showDayHeader && (
@@ -501,6 +512,21 @@ export default function ChatMessageList({
                       </p>
                       <p className={`text-xs truncate ${isMe ? "text-blue-50" : "text-[var(--theme-text)]"}`}>
                         {replyPreviewText}
+                      </p>
+                    </div>
+                  )}
+                  {!!message.isForwarded && !!message.forwardedFrom && !editingThisMessage && (
+                    <div
+                      className={`mb-2 rounded-md border-l-2 px-2.5 py-1.5 ${isMe
+                        ? "border-white/80 bg-white/10"
+                        : "border-emerald-500 bg-[var(--theme-surface-muted)]"
+                        }`}
+                    >
+                      <p className={`text-[11px] font-semibold ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"}`}>
+                        Forwarded from {message.forwardedFrom.senderName || "Unknown user"}
+                      </p>
+                      <p className={`text-xs truncate ${isMe ? "text-blue-50" : "text-[var(--theme-text)]"}`}>
+                        {forwardedPreviewText}
                       </p>
                     </div>
                   )}
@@ -684,7 +710,7 @@ export default function ChatMessageList({
                       })}
                       {isEdited(message) ? " (edited)" : ""}
                     </p>
-                    {(canDelete || canEdit || canReply) && !editingThisMessage && (
+                    {(canDelete || canEdit || canReply || canForward) && !editingThisMessage && (
                       <div className="flex justify-end relative">
                         <button
                           onClick={() =>
@@ -701,7 +727,19 @@ export default function ChatMessageList({
                           <EllipsisHorizontalIcon className="w-4 h-4" />
                         </button>
                         {openMenuMessageId === message.id && (
-                          <div className="absolute right-0 top-6 w-36 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20">
+                          <div className="absolute right-0 top-6 w-40 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20">
+                            {canForward && (
+                              <button
+                                onClick={() => {
+                                  onForwardMessage?.(message);
+                                  setOpenMenuMessageId(null);
+                                }}
+                                className="w-full px-3 py-2 text-left text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] flex items-center gap-2 cursor-pointer"
+                              >
+                                <ArrowPathRoundedSquareIcon className="w-4 h-4" />
+                                Forward
+                              </button>
+                            )}
                             {canReply && (
                               <button
                                 onClick={() => {

@@ -36,6 +36,7 @@ interface ChatWindowProps {
   onTyping: (isTyping: boolean) => void;
   onDeleteMessage?: (messageId: number) => void;
   onEditMessage?: (messageId: number, content: string) => Promise<boolean>;
+  onForwardMessage?: (message: ChatMessage) => void;
   onReactionUpdated?: (message: ChatMessage) => void;
 
   onStartCall?: (kind: CallType, userId?: number) => void;
@@ -64,6 +65,7 @@ export default function ChatWindow({
   onTyping,
   onDeleteMessage,
   onEditMessage,
+  onForwardMessage,
   onReactionUpdated,
   onStartCall,
   onOpenCallLogs,
@@ -387,6 +389,7 @@ export default function ChatWindow({
         onDeleteMessage={onDeleteMessage}
         onEditMessage={onEditMessage}
         onReplyMessage={handleReplyMessage}
+        onForwardMessage={onForwardMessage}
         onReactionUpdated={onReactionUpdated}
       />
 

@@ -39,6 +39,12 @@ export interface EditMessagePayload {
   content: string;
 }
 
+export interface ForwardMessagePayload {
+  sourceMessageId: number;
+  targetRoomIds: number[];
+  note?: string;
+}
+
 export const chatApi = {
   createRoom: (payload: CreateChatRoomPayload) =>
     apiClient.post<ChatRoom>("/chat/rooms", payload),
@@ -103,6 +109,9 @@ export const chatApi = {
 
   editMessage: (messageId: number, payload: EditMessagePayload) =>
     apiClient.patch<ChatMessage>(`/chat/messages/${messageId}`, payload),
+
+  forwardMessage: (payload: ForwardMessagePayload) =>
+    apiClient.post<ChatMessage[]>("/chat/messages/forward", payload),
 
   toggleMessageReaction: (messageId: number, emoji: string) =>
     apiClient.post<ChatMessage>(`/chat/messages/${messageId}/reactions`, {

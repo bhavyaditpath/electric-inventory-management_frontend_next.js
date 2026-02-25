@@ -24,22 +24,6 @@ export interface ChatRoom {
   pinned?: boolean;
 }
 
-export interface ChatMessage {
-  id: number;
-  chatRoomId: number;
-  senderId: number;
-  replyToMessageId?: number | null;
-  content: string;
-  createdAt: string;
-  updatedAt?: string;
-  replyTo?: ChatReplyPreview | null;
-  sender?: ChatUser;
-  attachments?: ChatAttachment[];
-  reactions?: ChatReaction[];
-  isRead?: boolean;
-  readAt?: string | null;
-}
-
 export interface ChatReplyPreview {
   id: number;
   senderId: number;
@@ -47,6 +31,34 @@ export interface ChatReplyPreview {
   content?: string;
   createdAt: string;
   isRemoved?: boolean;
+}
+
+export interface ChatForwardedPreview {
+  messageId?: number | null;
+  senderId?: number | null;
+  senderName?: string;
+  createdAt?: string | null;
+  contentPreview?: string;
+  isRemoved?: boolean;
+}
+
+export interface ChatMessage {
+  id: number;
+  chatRoomId: number;
+  senderId: number;
+  replyToMessageId?: number | null;
+  isForwarded?: boolean;
+  forwardedFromMessageId?: number | null;
+  content: string;
+  createdAt: string;
+  updatedAt?: string;
+  replyTo?: ChatReplyPreview | null;
+  forwardedFrom?: ChatForwardedPreview | null;
+  sender?: ChatUser;
+  attachments?: ChatAttachment[];
+  reactions?: ChatReaction[];
+  isRead?: boolean;
+  readAt?: string | null;
 }
 
 export interface ChatReaction {
@@ -73,6 +85,8 @@ export interface ChatMessageNotification {
   senderName: string;
   content?: string;
   replyTo?: ChatReplyPreview | null;
+  isForwarded?: boolean;
+  forwardedFrom?: ChatForwardedPreview | null;
   createdAt: string;
 }
 
