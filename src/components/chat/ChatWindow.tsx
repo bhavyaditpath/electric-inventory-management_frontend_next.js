@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ChatMessage, ChatRoom, ChatUser } from "@/types/chat.types";
 import { CallState, CallType } from "@/types/enums";
 import {
@@ -67,9 +67,11 @@ export default function ChatWindow({
   const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length, room?.id]);
+  useLayoutEffect(() => {
+    if (!room) return;
+
+    bottomRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
+  }, [messages.length, room]);
 
   useEffect(() => {
     if (!showCallMenu) return;
