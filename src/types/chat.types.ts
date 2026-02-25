@@ -28,14 +28,25 @@ export interface ChatMessage {
   id: number;
   chatRoomId: number;
   senderId: number;
+  replyToMessageId?: number | null;
   content: string;
   createdAt: string;
   updatedAt?: string;
+  replyTo?: ChatReplyPreview | null;
   sender?: ChatUser;
   attachments?: ChatAttachment[];
   reactions?: ChatReaction[];
   isRead?: boolean;
   readAt?: string | null;
+}
+
+export interface ChatReplyPreview {
+  id: number;
+  senderId: number;
+  senderName?: string;
+  content?: string;
+  createdAt: string;
+  isRemoved?: boolean;
 }
 
 export interface ChatReaction {
@@ -61,6 +72,7 @@ export interface ChatMessageNotification {
   senderId: number;
   senderName: string;
   content?: string;
+  replyTo?: ChatReplyPreview | null;
   createdAt: string;
 }
 

@@ -423,20 +423,20 @@ export default function ChatPage() {
   );
 
   const handleSendMessage = useCallback(
-    async (content: string, files?: File[]) => {
+    async (content: string, files?: File[], replyToMessageId?: number) => {
       if (!activeRoomId) return;
       const trimmed = content.trim();
       const hasFiles = !!files && files.length > 0;
       if (!trimmed && !hasFiles) return;
 
-      if (isConnected && !hasFiles) {
+      if (isConnected && !hasFiles && typeof replyToMessageId !== "number") {
         sendMessage(activeRoomId, trimmed);
         return;
       }
 
       try {
         const response = await chatApi.sendMessage(
-          { chatRoomId: activeRoomId, content: trimmed },
+          { chatRoomId: activeRoomId, content: trimmed, replyToMessageId },
           files
         );
         if (response.success && response.data) {

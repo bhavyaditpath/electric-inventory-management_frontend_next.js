@@ -1,7 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ChatMessage, ChatRoom, ChatUser } from "@/types/chat.types";
+import {
+  ChatMessage,
+  ChatReplyPreview,
+  ChatRoom,
+  ChatUser,
+} from "@/types/chat.types";
 import { CallState, CallType } from "@/types/enums";
 import {
   ArrowLeftIcon,
@@ -23,7 +28,11 @@ interface ChatWindowProps {
   isAdmin?: boolean;
   onBack?: () => void;
   onOpenMembers?: () => void;
-  onSendMessage: (content: string, files?: File[]) => void;
+  onSendMessage: (
+    content: string,
+    files?: File[],
+    replyToMessageId?: number
+  ) => void;
   onTyping: (isTyping: boolean) => void;
   onDeleteMessage?: (messageId: number) => void;
   onEditMessage?: (messageId: number, content: string) => Promise<boolean>;
@@ -62,6 +71,10 @@ export default function ChatWindow({
   const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(
     null
   );
+  const [replyContext, setReplyContext] = useState<{
+    roomId: number;
+    message: ChatReplyPreview;
+  } | null>(null);
   const [showCallMenu, setShowCallMenu] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const callMenuRef = useRef<HTMLDivElement>(null);
@@ -141,6 +154,37 @@ export default function ChatWindow({
       onStartCall?.(type);
     }
   };
+
+  const handleReplyMessage = useCallback((message: ChatMessage) => {
+    if (!room?.id) return;
+    const nextReply: ChatReplyPreview = {
+      id: message.id,
+      senderId: message.senderId,
+      senderName: message.sender?.username || "Unknown user",
+      content: message.content,
+      createdAt: message.createdAt,
+    };
+    setReplyContext({ roomId: room.id, message: nextReply });
+  }, [room]);
+
+  const activeReplyToMessage = useMemo(() => {
+    if (!room?.id || !replyContext) return null;
+    return replyContext.roomId === room.id ? replyContext.message : null;
+  }, [replyContext, room]);
+
+  const handleCancelReply = useCallback(() => {
+    setReplyContext(null);
+  }, []);
+
+  const handleSendMessage = useCallback(
+    (content: string, files?: File[], replyToMessageId?: number) => {
+      onSendMessage(content, files, replyToMessageId);
+      setReplyContext(null);
+    },
+    [onSendMessage]
+  );
+
+  
 
   if (!room) {
     return (
@@ -342,14 +386,17 @@ export default function ChatWindow({
         isAdmin={isAdmin}
         onDeleteMessage={onDeleteMessage}
         onEditMessage={onEditMessage}
+        onReplyMessage={handleReplyMessage}
         onReactionUpdated={onReactionUpdated}
       />
 
       <ChatComposer
         roomId={room?.id}
-        onSendMessage={onSendMessage}
+        onSendMessage={handleSendMessage}
         onTyping={onTyping}
         onOpenLightbox={(url, name) => setLightbox({ url, name })}
+        replyToMessage={activeReplyToMessage}
+        onCancelReply={handleCancelReply}
       />
       <ChatLightbox lightbox={lightbox} onClose={() => setLightbox(null)} />
     </section>

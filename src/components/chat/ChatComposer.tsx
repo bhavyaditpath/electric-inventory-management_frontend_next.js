@@ -12,14 +12,22 @@ import {
   FaceSmileIcon,
   PaperAirplaneIcon,
   PaperClipIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
+import type { ChatReplyPreview } from "@/types/chat.types";
 
 interface ChatComposerProps {
   roomId?: number | null;
-  onSendMessage: (content: string, files?: File[]) => void;
+  onSendMessage: (
+    content: string,
+    files?: File[],
+    replyToMessageId?: number
+  ) => void;
   onTyping: (isTyping: boolean) => void;
   onOpenLightbox: (url: string, name: string) => void;
+  replyToMessage?: ChatReplyPreview | null;
+  onCancelReply?: () => void;
   maxFiles?: number;
   maxFileSizeBytes?: number;
 }
@@ -29,6 +37,8 @@ export default function ChatComposer({
   onSendMessage,
   onTyping,
   onOpenLightbox,
+  replyToMessage,
+  onCancelReply,
   maxFiles = 10,
   maxFileSizeBytes = 10 * 1024 * 1024,
 }: ChatComposerProps) {
@@ -95,12 +105,12 @@ export default function ChatComposer({
     const trimmed = messageInput.trim();
     if (!roomId) return;
     if (!trimmed && selectedFiles.length === 0) return;
-    onSendMessage(trimmed, selectedFiles);
+    onSendMessage(trimmed, selectedFiles, replyToMessage?.id);
     setMessageInput("");
     setSelectedFiles([]);
     setFileWarning(null);
     setShowEmojiPicker(false);
-  }, [messageInput, onSendMessage, roomId, selectedFiles]);
+  }, [messageInput, onSendMessage, replyToMessage?.id, roomId, selectedFiles]);
 
   const handlePickFiles = useCallback(() => {
     fileInputRef.current?.click();
@@ -197,6 +207,29 @@ export default function ChatComposer({
 
   return (
     <div className="sticky bottom-0 z-10 px-4 sm:px-6 py-3 sm:py-4 border-t border-[var(--theme-border)] bg-[var(--theme-surface)]">
+      {replyToMessage && (
+        <div className="mb-3 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface-muted)] px-3 py-2">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold text-[var(--theme-text-muted)]">
+                Replying to {replyToMessage.senderName || "Unknown user"}
+              </p>
+              <p className="text-xs text-[var(--theme-text)] truncate">
+                {replyToMessage.isRemoved
+                  ? "This message was deleted"
+                  : (replyToMessage.content || "(no text)")}
+              </p>
+            </div>
+            <button
+              onClick={onCancelReply}
+              className="p-1 rounded-full text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface)] cursor-pointer"
+              aria-label="Cancel reply"
+            >
+              <XMarkIcon className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
       {previewFiles.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-2">
           {previewFiles.map((file, index) => (

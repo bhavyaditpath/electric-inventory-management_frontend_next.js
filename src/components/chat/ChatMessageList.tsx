@@ -11,6 +11,7 @@ import {
 import { ChatAttachment, ChatMessage, ChatUser } from "@/types/chat.types";
 import { showError } from "@/Services/toast.service";
 import {
+  ArrowUturnLeftIcon,
   EllipsisHorizontalIcon,
   PencilSquareIcon,
   PlusIcon,
@@ -31,6 +32,7 @@ interface ChatMessageListProps {
   isAdmin?: boolean;
   onDeleteMessage?: (messageId: number) => void;
   onEditMessage?: (messageId: number, content: string) => Promise<boolean>;
+  onReplyMessage?: (message: ChatMessage) => void;
   onReactionUpdated?: (message: ChatMessage) => void;
 }
 
@@ -46,6 +48,7 @@ export default function ChatMessageList({
   isAdmin,
   onDeleteMessage,
   onEditMessage,
+  onReplyMessage,
   onReactionUpdated,
 }: ChatMessageListProps) {
 
@@ -148,6 +151,12 @@ export default function ChatMessageList({
   const isEdited = (message: ChatMessage) =>
     !!message.updatedAt &&
     new Date(message.updatedAt).getTime() > new Date(message.createdAt).getTime();
+  const getReplyPreviewText = (message: ChatMessage) => {
+    if (!message.replyTo) return null;
+    if (message.replyTo.isRemoved) return "This message was deleted";
+    const value = message.replyTo.content?.trim();
+    return value && value.length > 0 ? value : "(no text)";
+  };
 
   const isImageAttachment = (mimeType: string) => mimeType.startsWith("image/");
 
@@ -419,9 +428,11 @@ export default function ChatMessageList({
           const isMe = message.senderId === currentUserId;
           const canEdit = !!onEditMessage && isMe;
           const canDelete = !!onDeleteMessage && (isMe || isAdmin);
+          const canReply = !!onReplyMessage && typeof currentUserId === "number";
           const senderName = message.sender?.username || "Unknown";
           const reactions = getMessageReactions(message);
           const editingThisMessage = editingMessageId === message.id;
+          const replyPreviewText = getReplyPreviewText(message);
           return (
             <div key={message.id}>
               {showDayHeader && (
@@ -477,6 +488,21 @@ export default function ChatMessageList({
                     >
                       {senderName}
                     </p>
+                  )}
+                  {!!message.replyTo && !editingThisMessage && (
+                    <div
+                      className={`mb-2 rounded-md border-l-2 px-2.5 py-1.5 ${isMe
+                        ? "border-white/80 bg-white/10"
+                        : "border-blue-500 bg-[var(--theme-surface-muted)]"
+                        }`}
+                    >
+                      <p className={`text-[11px] font-semibold ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"}`}>
+                        {message.replyTo.senderName || "Unknown user"}
+                      </p>
+                      <p className={`text-xs truncate ${isMe ? "text-blue-50" : "text-[var(--theme-text)]"}`}>
+                        {replyPreviewText}
+                      </p>
+                    </div>
                   )}
                   {editingThisMessage ? (
                     <div className="space-y-2">
@@ -658,7 +684,7 @@ export default function ChatMessageList({
                       })}
                       {isEdited(message) ? " (edited)" : ""}
                     </p>
-                    {(canDelete || canEdit) && !editingThisMessage && (
+                    {(canDelete || canEdit || canReply) && !editingThisMessage && (
                       <div className="flex justify-end relative">
                         <button
                           onClick={() =>
@@ -675,7 +701,19 @@ export default function ChatMessageList({
                           <EllipsisHorizontalIcon className="w-4 h-4" />
                         </button>
                         {openMenuMessageId === message.id && (
-                          <div className="absolute right-0 top-6 w-32 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20">
+                          <div className="absolute right-0 top-6 w-36 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20">
+                            {canReply && (
+                              <button
+                                onClick={() => {
+                                  onReplyMessage?.(message);
+                                  setOpenMenuMessageId(null);
+                                }}
+                                className="w-full px-3 py-2 text-left text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] flex items-center gap-2 cursor-pointer"
+                              >
+                                <ArrowUturnLeftIcon className="w-4 h-4" />
+                                Reply
+                              </button>
+                            )}
                             {canEdit && (
                               <button
                                 onClick={() => startEditing(message)}
