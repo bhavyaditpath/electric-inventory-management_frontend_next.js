@@ -44,6 +44,13 @@ export default function ChatMessageList({
   onDeleteMessage,
   onReactionUpdated,
 }: ChatMessageListProps) {
+
+  type MessageWithDayMeta = {
+    message: ChatMessage;
+    dayLabel: string;
+    showDayHeader: boolean;
+  };
+
   type MessageReactionView = {
     emoji: string;
     count: number;
@@ -92,6 +99,43 @@ export default function ChatMessageList({
     () => typingUsers.filter((user) => user.id !== currentUserId),
     [typingUsers, currentUserId]
   );
+  const dayFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+    []
+  );
+  const messagesWithDayMeta = useMemo<MessageWithDayMeta[]>(() => {
+    const getDayStart = (date: Date) =>
+      new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    const todayStart = getDayStart(new Date());
+    const yesterdayStart = todayStart - 24 * 60 * 60 * 1000;
+
+    return messages.map((message, index) => {
+      const currentDate = new Date(message.createdAt);
+      const currentDay = getDayStart(currentDate);
+      const previousMessage = index > 0 ? messages[index - 1] : null;
+      const previousDay = previousMessage
+        ? getDayStart(new Date(previousMessage.createdAt))
+        : null;
+
+      let dayLabel = dayFormatter.format(currentDate);
+      if (currentDay === todayStart) {
+        dayLabel = "Today";
+      } else if (currentDay === yesterdayStart) {
+        dayLabel = "Yesterday";
+      }
+
+      return {
+        message,
+        dayLabel,
+        showDayHeader: previousDay !== currentDay,
+      };
+    });
+  }, [dayFormatter, messages]);
 
   const hasText = (value?: string) => !!value && value.trim().length > 0;
 
@@ -328,244 +372,250 @@ export default function ChatMessageList({
           No messages yet. Say hello.
         </div>
       ) : (
-        messages.map((message) => {
+        messagesWithDayMeta.map(({ message, dayLabel, showDayHeader }) => {
           const isMe = message.senderId === currentUserId;
           const canDelete = !!onDeleteMessage && (isMe || isAdmin);
           const senderName = message.sender?.username || "Unknown";
           const reactions = getMessageReactions(message);
           return (
-            <div
-              key={message.id}
-              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`max-w-[88%] sm:max-w-[75%] md:max-w-[60%] w-fit min-w-0 rounded-2xl px-3 sm:px-4 py-2 text-sm shadow-sm ${isMe
-                  ? "bg-blue-600 text-white border border-blue-600 rounded-br-md"
-                  : "bg-[var(--theme-surface)] text-[var(--theme-text)] border border-[var(--theme-border)] rounded-bl-md"
-                  } relative group`}
-              >
-                <div
-                  className={`absolute -top-5 z-30 hidden sm:flex items-center ${isMe ? "right-0" : "left-0"}`}
-                  ref={
-                    fullReactionPickerMessageId === message.id
-                      ? reactionActionRef
-                      : null
-                  }
-                >
-                  <div className="inline-flex max-w-[min(20rem,calc(100vw-2rem))] items-center gap-1 px-1.5 py-1 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-md opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                    {QUICK_REACTIONS.map((emoji) => (
-                      <button
-                        key={`${message.id}-quick-${emoji}`}
-                        onClick={() => {
-                          void handleToggleReaction(message.id, emoji);
-                          setFullReactionPickerMessageId(null);
-                        }}
-                        className="h-6 w-6 rounded-full hover:bg-[var(--theme-surface-muted)] text-sm"
-                        aria-label={`React with ${emoji}`}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                    <button
-                      onClick={(event) => handleOpenMoreReactions(event, message.id)}
-                      className="h-6 w-6 rounded-full hover:bg-[var(--theme-surface-muted)] text-[var(--theme-text-muted)] inline-flex items-center justify-center"
-                      aria-label="More emojis"
-                    >
-                      <PlusIcon className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+            <div key={message.id}>
+              {showDayHeader && (
+                <div className="flex items-center justify-center py-2">
+                  <span className="rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] px-3 py-1 text-[11px] font-medium text-[var(--theme-text-muted)]">
+                    {dayLabel}
+                  </span>
                 </div>
-
-                {isGroupChat && (
-                  <p
-                    className={`text-[11px] font-semibold mb-1 ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"
-                      }`}
+              )}
+              <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`max-w-[88%] sm:max-w-[75%] md:max-w-[60%] w-fit min-w-0 rounded-2xl px-3 sm:px-4 py-2 text-sm shadow-sm ${isMe
+                    ? "bg-blue-600 text-white border border-blue-600 rounded-br-md"
+                    : "bg-[var(--theme-surface)] text-[var(--theme-text)] border border-[var(--theme-border)] rounded-bl-md"
+                    } relative group`}
+                >
+                  <div
+                    className={`absolute -top-5 z-30 hidden sm:flex items-center ${isMe ? "right-0" : "left-0"}`}
+                    ref={
+                      fullReactionPickerMessageId === message.id
+                        ? reactionActionRef
+                        : null
+                    }
                   >
-                    {senderName}
-                  </p>
-                )}
-                {hasText(message.content) && (
-                  <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
-                    {message.content}
-                  </p>
-                )}
-                {message.attachments && message.attachments.length > 0 && (
-                  <div className="mt-2 space-y-2">
-                    {message.attachments.map((attachment) => {
-                      const fileUrl = resolveAttachmentUrl(attachment.url);
-                      const extension = getFileExtension(attachment.fileName);
-                      const isImage = isImageAttachment(attachment.mimeType);
+                    <div className="inline-flex max-w-[min(20rem,calc(100vw-2rem))] items-center gap-1 px-1.5 py-1 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-md opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                      {QUICK_REACTIONS.map((emoji) => (
+                        <button
+                          key={`${message.id}-quick-${emoji}`}
+                          onClick={() => {
+                            void handleToggleReaction(message.id, emoji);
+                            setFullReactionPickerMessageId(null);
+                          }}
+                          className="h-6 w-6 rounded-full hover:bg-[var(--theme-surface-muted)] text-sm"
+                          aria-label={`React with ${emoji}`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                      <button
+                        onClick={(event) => handleOpenMoreReactions(event, message.id)}
+                        className="h-6 w-6 rounded-full hover:bg-[var(--theme-surface-muted)] text-[var(--theme-text-muted)] inline-flex items-center justify-center"
+                        aria-label="More emojis"
+                      >
+                        <PlusIcon className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
 
-                      if (isImage) {
+                  {isGroupChat && (
+                    <p
+                      className={`text-[11px] font-semibold mb-1 ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"
+                        }`}
+                    >
+                      {senderName}
+                    </p>
+                  )}
+                  {hasText(message.content) && (
+                    <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
+                      {message.content}
+                    </p>
+                  )}
+                  {message.attachments && message.attachments.length > 0 && (
+                    <div className="mt-2 space-y-2">
+                      {message.attachments.map((attachment) => {
+                        const fileUrl = resolveAttachmentUrl(attachment.url);
+                        const extension = getFileExtension(attachment.fileName);
+                        const isImage = isImageAttachment(attachment.mimeType);
+
+                        if (isImage) {
+                          return (
+                            <button
+                              key={attachment.id}
+                              onClick={() =>
+                                onOpenLightbox(fileUrl, attachment.fileName)
+                              }
+                              className={`w-full overflow-hidden rounded-lg border cursor-pointer ${isMe
+                                ? "border-white/20"
+                                : "border-[var(--theme-border)]"
+                                }`}
+                              aria-label={`Open ${attachment.fileName}`}
+                            >
+                              <img
+                                src={fileUrl}
+                                alt={attachment.fileName}
+                                className="w-full max-h-56 object-cover"
+                              />
+                            </button>
+                          );
+                        }
+
+                        const isPdf = extension === "PDF";
+
+                        if (isPdf) {
+                          return (
+                            <div
+                              key={attachment.id}
+                              className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${isMe
+                                ? "bg-white/10 border-white/20 text-white"
+                                : "bg-[var(--theme-surface-muted)] border-[var(--theme-border)] text-[var(--theme-text)]"
+                                }`}
+                            >
+                              <a
+                                href={fileUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+                              >
+                                <span
+                                  className={`inline-flex items-center justify-center rounded-full border px-2 py-1 text-[10px] font-semibold ${getFileAccent(
+                                    extension
+                                  )}`}
+                                >
+                                  {extension}
+                                </span>
+                                <span className="truncate flex-1">
+                                  {attachment.fileName}
+                                </span>
+                              </a>
+                              <div className="relative">
+                                <button
+                                  onClick={() =>
+                                    setOpenAttachmentMenuId((prev) =>
+                                      prev === attachment.id ? null : attachment.id
+                                    )
+                                  }
+                                  className={`p-1 rounded-full cursor-pointer ${isMe
+                                    ? "text-blue-100 hover:text-white"
+                                    : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                                    }`}
+                                  aria-label="Attachment actions"
+                                >
+                                  <EllipsisHorizontalIcon className="w-4 h-4" />
+                                </button>
+                                {openAttachmentMenuId === attachment.id && (
+                                  <div className="absolute right-0 top-6 w-32 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20">
+                                    <button
+                                      onClick={() => {
+                                        handleDownloadAttachment(attachment);
+                                        setOpenAttachmentMenuId(null);
+                                      }}
+                                      className="w-full px-3 py-2 text-left text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] cursor-pointer"
+                                    >
+                                      Download
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }
+
                         return (
-                          <button
+                          <a
                             key={attachment.id}
-                            onClick={() =>
-                              onOpenLightbox(fileUrl, attachment.fileName)
-                            }
-                            className={`w-full overflow-hidden rounded-lg border cursor-pointer ${isMe
-                              ? "border-white/20"
-                              : "border-[var(--theme-border)]"
-                              }`}
-                            aria-label={`Open ${attachment.fileName}`}
-                          >
-                            <img
-                              src={fileUrl}
-                              alt={attachment.fileName}
-                              className="w-full max-h-56 object-cover"
-                            />
-                          </button>
-                        );
-                      }
-
-                      const isPdf = extension === "PDF";
-
-                      if (isPdf) {
-                        return (
-                          <div
-                            key={attachment.id}
-                            className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${isMe
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-xs cursor-pointer ${isMe
                               ? "bg-white/10 border-white/20 text-white"
                               : "bg-[var(--theme-surface-muted)] border-[var(--theme-border)] text-[var(--theme-text)]"
                               }`}
                           >
-                            <a
-                              href={fileUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+                            <span
+                              className={`inline-flex items-center justify-center rounded-full border px-2 py-1 text-[10px] font-semibold ${getFileAccent(
+                                extension
+                              )}`}
                             >
-                              <span
-                                className={`inline-flex items-center justify-center rounded-full border px-2 py-1 text-[10px] font-semibold ${getFileAccent(
-                                  extension
-                                )}`}
-                              >
-                                {extension}
-                              </span>
-                              <span className="truncate flex-1">
-                                {attachment.fileName}
-                              </span>
-                            </a>
-                            <div className="relative">
-                              <button
-                                onClick={() =>
-                                  setOpenAttachmentMenuId((prev) =>
-                                    prev === attachment.id ? null : attachment.id
-                                  )
-                                }
-                                className={`p-1 rounded-full cursor-pointer ${isMe
-                                  ? "text-blue-100 hover:text-white"
-                                  : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
-                                  }`}
-                                aria-label="Attachment actions"
-                              >
-                                <EllipsisHorizontalIcon className="w-4 h-4" />
-                              </button>
-                              {openAttachmentMenuId === attachment.id && (
-                                <div className="absolute right-0 top-6 w-32 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20">
-                                  <button
-                                    onClick={() => {
-                                      handleDownloadAttachment(attachment);
-                                      setOpenAttachmentMenuId(null);
-                                    }}
-                                    className="w-full px-3 py-2 text-left text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] cursor-pointer"
-                                  >
-                                    Download
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                              {extension}
+                            </span>
+                            <span className="truncate flex-1">
+                              {attachment.fileName}
+                            </span>
+                          </a>
                         );
-                      }
-
-                      return (
-                        <a
-                          key={attachment.id}
-                          href={fileUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-xs cursor-pointer ${isMe
-                            ? "bg-white/10 border-white/20 text-white"
-                            : "bg-[var(--theme-surface-muted)] border-[var(--theme-border)] text-[var(--theme-text)]"
-                            }`}
-                        >
-                          <span
-                            className={`inline-flex items-center justify-center rounded-full border px-2 py-1 text-[10px] font-semibold ${getFileAccent(
-                              extension
-                            )}`}
-                          >
-                            {extension}
-                          </span>
-                          <span className="truncate flex-1">
-                            {attachment.fileName}
-                          </span>
-                        </a>
-                      );
-                    })}
-                  </div>
-                )}
-                <div className="flex items-center justify-between gap-2">
-                  <p
-                    className={`text-[10px] mt-0 ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"
-                      }`}
-                  >
-                    {new Date(message.createdAt).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                  {canDelete && (
-                    <div className="flex justify-end relative">
-                    <button
-                      onClick={() =>
-                        setOpenMenuMessageId((prev) =>
-                          prev === message.id ? null : message.id
-                        )
-                      }
-                      className={`p-1 rounded-full cursor-pointer ${isMe
-                        ? "text-blue-100 hover:text-white"
-                        : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                      })}
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between gap-2">
+                    <p
+                      className={`text-[10px] mt-0 ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"
                         }`}
-                      aria-label="Message actions"
                     >
-                      <EllipsisHorizontalIcon className="w-4 h-4" />
-                    </button>
-                      {openMenuMessageId === message.id && (
-                        <div className="absolute right-0 top-6 w-32 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20">
-                          <button
-                            onClick={() => {
-                              onDeleteMessage?.(message.id);
-                              setOpenMenuMessageId(null);
-                            }}
-                            className="w-full px-3 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer"
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                            Delete
-                          </button>
-                        </div>
-                      )}
+                      {new Date(message.createdAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                    {canDelete && (
+                      <div className="flex justify-end relative">
+                        <button
+                          onClick={() =>
+                            setOpenMenuMessageId((prev) =>
+                              prev === message.id ? null : message.id
+                            )
+                          }
+                          className={`p-1 rounded-full cursor-pointer ${isMe
+                            ? "text-blue-100 hover:text-white"
+                            : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                            }`}
+                          aria-label="Message actions"
+                        >
+                          <EllipsisHorizontalIcon className="w-4 h-4" />
+                        </button>
+                        {openMenuMessageId === message.id && (
+                          <div className="absolute right-0 top-6 w-32 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20">
+                            <button
+                              onClick={() => {
+                                onDeleteMessage?.(message.id);
+                                setOpenMenuMessageId(null);
+                              }}
+                              className="w-full px-3 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer"
+                            >
+                              <TrashIcon className="w-4 h-4" />
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {reactions.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {reactions.map((reaction) => (
+                        <button
+                          key={`${message.id}-${reaction.emoji}`}
+                          onClick={() => void handleToggleReaction(message.id, reaction.emoji)}
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] transition cursor-pointer ${reaction.reactedByMe
+                            ? "bg-sky-100 text-sky-700 border-sky-300"
+                            : "bg-white/80 text-slate-700 border-slate-300 hover:bg-slate-100"
+                            }`}
+                          aria-label={`React with ${reaction.emoji}`}
+                        >
+                          <span>{reaction.emoji}</span>
+                          <span className="font-semibold">{reaction.count}</span>
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
-                {reactions.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {reactions.map((reaction) => (
-                      <button
-                        key={`${message.id}-${reaction.emoji}`}
-                        onClick={() => void handleToggleReaction(message.id, reaction.emoji)}
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] transition cursor-pointer ${reaction.reactedByMe
-                          ? "bg-sky-100 text-sky-700 border-sky-300"
-                          : "bg-white/80 text-slate-700 border-slate-300 hover:bg-slate-100"
-                          }`}
-                        aria-label={`React with ${reaction.emoji}`}
-                      >
-                        <span>{reaction.emoji}</span>
-                        <span className="font-semibold">{reaction.count}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           );
