@@ -30,6 +30,7 @@ export interface ChatMessage {
   senderId: number;
   content: string;
   createdAt: string;
+  updatedAt?: string;
   sender?: ChatUser;
   attachments?: ChatAttachment[];
   reactions?: ChatReaction[];

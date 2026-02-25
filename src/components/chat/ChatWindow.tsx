@@ -26,6 +26,7 @@ interface ChatWindowProps {
   onSendMessage: (content: string, files?: File[]) => void;
   onTyping: (isTyping: boolean) => void;
   onDeleteMessage?: (messageId: number) => void;
+  onEditMessage?: (messageId: number, content: string) => Promise<boolean>;
   onReactionUpdated?: (message: ChatMessage) => void;
 
   onStartCall?: (kind: CallType, userId?: number) => void;
@@ -53,6 +54,7 @@ export default function ChatWindow({
   onSendMessage,
   onTyping,
   onDeleteMessage,
+  onEditMessage,
   onReactionUpdated,
   onStartCall,
   onOpenCallLogs,
@@ -339,6 +341,7 @@ export default function ChatWindow({
         onOpenLightbox={(url, name) => setLightbox({ url, name })}
         isAdmin={isAdmin}
         onDeleteMessage={onDeleteMessage}
+        onEditMessage={onEditMessage}
         onReactionUpdated={onReactionUpdated}
       />
 

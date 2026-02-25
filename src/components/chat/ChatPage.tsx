@@ -187,6 +187,30 @@ export default function ChatPage() {
     );
   }, []);
 
+  const handleMessageUpdated = useCallback((updatedMessage: ChatMessage) => {
+    const currentRoomId = activeRoomIdRef.current;
+    if (currentRoomId === updatedMessage.chatRoomId) {
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.id === updatedMessage.id
+            ? { ...message, ...updatedMessage }
+            : message
+        )
+      );
+    }
+
+    setRooms((prev) =>
+      prev.map((room) => {
+        if (room.id !== updatedMessage.chatRoomId) return room;
+        if (!room.lastMessage || room.lastMessage.id !== updatedMessage.id) return room;
+        return {
+          ...room,
+          lastMessage: { ...room.lastMessage, ...updatedMessage },
+        };
+      })
+    );
+  }, []);
+
   const handleTyping = useCallback((payload: { userId: number; isTyping: boolean }) => {
     if (!activeRoomIdRef.current) return;
     setTypingUserIds((prev) => {
@@ -236,6 +260,7 @@ export default function ChatPage() {
     markAsRead,
   } = useChatWebSocket({
     onMessage: handleIncomingMessage,
+    onMessageUpdated: handleMessageUpdated,
     onMessageReactionUpdated: handleMessageReactionUpdated,
     onRoomUpdated: (payload) => {
       setRooms((prev) =>
@@ -513,6 +538,28 @@ export default function ChatPage() {
       }
     },
     [fetchRooms]
+  );
+
+  const handleEditMessage = useCallback(
+    async (messageId: number, content: string) => {
+      try {
+        const response = await chatApi.editMessage(messageId, { content });
+        if (!response.success) {
+          if (response.message) showError(response.message);
+          return false;
+        }
+
+        if (response.data) {
+          handleMessageUpdated(response.data);
+        }
+        return true;
+      } catch (error) {
+        console.error("Failed to edit message:", error);
+        showError("Failed to edit message");
+        return false;
+      }
+    },
+    [handleMessageUpdated]
   );
 
   const requestDeleteRoom = useCallback((roomId: number) => {
@@ -899,6 +946,7 @@ export default function ChatPage() {
                 onBack={handleBackToList}
                 onOpenMembers={openMembers}
                 onDeleteMessage={requestDeleteMessage}
+                onEditMessage={handleEditMessage}
                 onReactionUpdated={handleMessageReactionUpdated}
                 onStartCall={handleStartCall}
                 callState={callState}
@@ -973,6 +1021,7 @@ export default function ChatPage() {
               onTyping={handleTypingStatus}
               onOpenMembers={openMembers}
               onDeleteMessage={requestDeleteMessage}
+              onEditMessage={handleEditMessage}
               onReactionUpdated={handleMessageReactionUpdated}
               onStartCall={handleStartCall}
               callState={callState}

@@ -28,6 +28,7 @@ interface RoomUpdatedPayload {
 
 interface UseChatWebSocketOptions {
   onMessage?: (message: ChatMessage) => void;
+  onMessageUpdated?: (message: ChatMessage) => void;
   onMessageNotification?: (payload: ChatMessageNotification) => void;
   onMessageDeleted?: (payload: { id: number; chatRoomId: number }) => void;
   onMessageReactionUpdated?: (message: ChatMessage) => void;
@@ -65,6 +66,9 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions = {}) => {
     socket.on("disconnect", () => setIsConnected(false));
     socket.on("newMessage", (message: ChatMessage) => {
       handlersRef.current.onMessage?.(message);
+    });
+    socket.on("messageUpdated", (message: ChatMessage) => {
+      handlersRef.current.onMessageUpdated?.(message);
     });
     socket.on("messageNotification", (payload: ChatMessageNotification) => {
       handlersRef.current.onMessageNotification?.(payload);

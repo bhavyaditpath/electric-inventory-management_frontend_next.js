@@ -9,8 +9,10 @@ import {
   useState,
 } from "react";
 import { ChatAttachment, ChatMessage, ChatUser } from "@/types/chat.types";
+import { showError } from "@/Services/toast.service";
 import {
   EllipsisHorizontalIcon,
+  PencilSquareIcon,
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
@@ -28,6 +30,7 @@ interface ChatMessageListProps {
   onOpenLightbox: (url: string, name: string) => void;
   isAdmin?: boolean;
   onDeleteMessage?: (messageId: number) => void;
+  onEditMessage?: (messageId: number, content: string) => Promise<boolean>;
   onReactionUpdated?: (message: ChatMessage) => void;
 }
 
@@ -42,6 +45,7 @@ export default function ChatMessageList({
   onOpenLightbox,
   isAdmin,
   onDeleteMessage,
+  onEditMessage,
   onReactionUpdated,
 }: ChatMessageListProps) {
 
@@ -60,6 +64,9 @@ export default function ChatMessageList({
   const [openMenuMessageId, setOpenMenuMessageId] = useState<number | null>(
     null
   );
+  const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
+  const [editInput, setEditInput] = useState("");
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [openAttachmentMenuId, setOpenAttachmentMenuId] = useState<number | null>(
     null
   );
@@ -138,6 +145,9 @@ export default function ChatMessageList({
   }, [dayFormatter, messages]);
 
   const hasText = (value?: string) => !!value && value.trim().length > 0;
+  const isEdited = (message: ChatMessage) =>
+    !!message.updatedAt &&
+    new Date(message.updatedAt).getTime() > new Date(message.createdAt).getTime();
 
   const isImageAttachment = (mimeType: string) => mimeType.startsWith("image/");
 
@@ -358,6 +368,39 @@ export default function ChatMessageList({
     }
   };
 
+  const startEditing = useCallback((message: ChatMessage) => {
+    setEditingMessageId(message.id);
+    setEditInput(message.content || "");
+    setOpenMenuMessageId(null);
+  }, []);
+
+  const cancelEditing = useCallback(() => {
+    if (isSavingEdit) return;
+    setEditingMessageId(null);
+    setEditInput("");
+  }, [isSavingEdit]);
+
+  const saveEdit = useCallback(async () => {
+    if (!onEditMessage || editingMessageId == null) return;
+
+    const trimmed = editInput.trim();
+    if (!trimmed) {
+      showError("Message content is required");
+      return;
+    }
+
+    setIsSavingEdit(true);
+    try {
+      const success = await onEditMessage(editingMessageId, trimmed);
+      if (success) {
+        setEditingMessageId(null);
+        setEditInput("");
+      }
+    } finally {
+      setIsSavingEdit(false);
+    }
+  }, [editInput, editingMessageId, onEditMessage]);
+
   return (
     <div
       ref={listRef}
@@ -374,9 +417,11 @@ export default function ChatMessageList({
       ) : (
         messagesWithDayMeta.map(({ message, dayLabel, showDayHeader }) => {
           const isMe = message.senderId === currentUserId;
+          const canEdit = !!onEditMessage && isMe;
           const canDelete = !!onDeleteMessage && (isMe || isAdmin);
           const senderName = message.sender?.username || "Unknown";
           const reactions = getMessageReactions(message);
+          const editingThisMessage = editingMessageId === message.id;
           return (
             <div key={message.id}>
               {showDayHeader && (
@@ -433,10 +478,58 @@ export default function ChatMessageList({
                       {senderName}
                     </p>
                   )}
-                  {hasText(message.content) && (
-                    <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
-                      {message.content}
-                    </p>
+                  {editingThisMessage ? (
+                    <div className="space-y-2">
+                      <textarea
+                        value={editInput}
+                        onChange={(event) => setEditInput(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" && !event.shiftKey) {
+                            event.preventDefault();
+                            void saveEdit();
+                          }
+                          if (event.key === "Escape") {
+                            event.preventDefault();
+                            cancelEditing();
+                          }
+                        }}
+                        rows={2}
+                        autoFocus
+                        className={`w-full rounded-lg border px-2.5 py-2 text-sm leading-relaxed resize-none ${isMe
+                          ? "border-white/30 bg-white/10 text-white placeholder:text-blue-100"
+                          : "border-[var(--theme-border)] bg-[var(--theme-surface-muted)] text-[var(--theme-text)]"
+                          }`}
+                        placeholder="Edit message..."
+                      />
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={cancelEditing}
+                          disabled={isSavingEdit}
+                          className={`px-2.5 py-1 text-xs rounded-md border cursor-pointer ${isMe
+                            ? "border-white/30 text-blue-100 hover:text-white"
+                            : "border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
+                            }`}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => void saveEdit()}
+                          disabled={isSavingEdit}
+                          className={`px-2.5 py-1 text-xs rounded-md font-medium cursor-pointer ${isMe
+                            ? "bg-white text-blue-700 hover:bg-blue-50"
+                            : "bg-blue-600 text-white hover:bg-blue-700"
+                            }`}
+                        >
+                          {isSavingEdit ? "Saving..." : "Save"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    hasText(message.content) && (
+                      <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
+                        {message.content}
+                      </p>
+                    )
                   )}
                   {message.attachments && message.attachments.length > 0 && (
                     <div className="mt-2 space-y-2">
@@ -563,8 +656,9 @@ export default function ChatMessageList({
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
+                      {isEdited(message) ? " (edited)" : ""}
                     </p>
-                    {canDelete && (
+                    {(canDelete || canEdit) && !editingThisMessage && (
                       <div className="flex justify-end relative">
                         <button
                           onClick={() =>
@@ -582,6 +676,15 @@ export default function ChatMessageList({
                         </button>
                         {openMenuMessageId === message.id && (
                           <div className="absolute right-0 top-6 w-32 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20">
+                            {canEdit && (
+                              <button
+                                onClick={() => startEditing(message)}
+                                className="w-full px-3 py-2 text-left text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] flex items-center gap-2 cursor-pointer"
+                              >
+                                <PencilSquareIcon className="w-4 h-4" />
+                                Edit
+                              </button>
+                            )}
                             <button
                               onClick={() => {
                                 onDeleteMessage?.(message.id);

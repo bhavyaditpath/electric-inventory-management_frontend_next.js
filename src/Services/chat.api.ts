@@ -34,6 +34,10 @@ export interface RemoveParticipantPayload {
   newAdminId?: number;
 }
 
+export interface EditMessagePayload {
+  content: string;
+}
+
 export const chatApi = {
   createRoom: (payload: CreateChatRoomPayload) =>
     apiClient.post<ChatRoom>("/chat/rooms", payload),
@@ -92,6 +96,9 @@ export const chatApi = {
 
   deleteMessage: (messageId: number) =>
     apiClient.delete<null>(`/chat/messages/${messageId}`),
+
+  editMessage: (messageId: number, payload: EditMessagePayload) =>
+    apiClient.patch<ChatMessage>(`/chat/messages/${messageId}`, payload),
 
   toggleMessageReaction: (messageId: number, emoji: string) =>
     apiClient.post<ChatMessage>(`/chat/messages/${messageId}/reactions`, {
