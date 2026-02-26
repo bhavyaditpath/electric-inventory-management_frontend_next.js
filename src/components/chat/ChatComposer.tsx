@@ -9,20 +9,31 @@ import {
   type ChangeEvent,
 } from "react";
 import {
+  ChevronDownIcon,
   FaceSmileIcon,
   PaperAirplaneIcon,
   PaperClipIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
-import type { ChatReplyPreview } from "@/types/chat.types";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import { common, createLowlight } from "lowlight";
+import type {
+  ChatLanguage,
+  ChatMessageKind,
+  ChatReplyPreview,
+} from "@/types/chat.types";
 
 interface ChatComposerProps {
   roomId?: number | null;
   onSendMessage: (
     content: string,
     files?: File[],
-    replyToMessageId?: number
+    replyToMessageId?: number,
+    kind?: ChatMessageKind,
+    language?: ChatLanguage
   ) => void;
   onTyping: (isTyping: boolean) => void;
   onOpenLightbox: (url: string, name: string) => void;
@@ -31,6 +42,94 @@ interface ChatComposerProps {
   maxFiles?: number;
   maxFileSizeBytes?: number;
 }
+
+type TiptapNode = {
+  type?: string;
+  text?: string;
+  attrs?: Record<string, unknown>;
+  content?: TiptapNode[];
+};
+
+const LANGUAGE_OPTIONS: Array<{ label: string; value: ChatLanguage }> = [
+  { label: "Plain Text", value: "plaintext" },
+  { label: "Bash", value: "bash" },
+  { label: "C++", value: "cpp" },
+  { label: "C#", value: "csharp" },
+  { label: "CSS", value: "css" },
+  { label: "HTML", value: "html" },
+  { label: "Java", value: "java" },
+  { label: "JavaScript", value: "javascript" },
+  { label: "JSON", value: "json" },
+  { label: "Python", value: "python" },
+  { label: "SQL", value: "sql" },
+  { label: "TypeScript", value: "typescript" },
+];
+
+const LANGUAGE_SET = new Set<ChatLanguage>(
+  LANGUAGE_OPTIONS.map((item) => item.value)
+);
+const lowlight = createLowlight(common);
+
+const normalizeLanguage = (value: unknown): ChatLanguage => {
+  if (typeof value !== "string") return "plaintext";
+  return LANGUAGE_SET.has(value as ChatLanguage)
+    ? (value as ChatLanguage)
+    : "plaintext";
+};
+
+const extractText = (node?: TiptapNode | null): string => {
+  if (!node) return "";
+  const own = typeof node.text === "string" ? node.text : "";
+  const nested = (node.content || []).map((child) => extractText(child)).join("");
+  return `${own}${nested}`;
+};
+
+const collectMeaningfulNodes = (nodes: TiptapNode[] = []): TiptapNode[] => {
+  const result: TiptapNode[] = [];
+
+  const visit = (node: TiptapNode) => {
+    if (node.type === "codeBlock") {
+      if (extractText(node).trim()) result.push(node);
+      return;
+    }
+
+    if (typeof node.text === "string" && node.text.trim()) {
+      result.push(node);
+      return;
+    }
+
+    (node.content || []).forEach(visit);
+  };
+
+  nodes.forEach(visit);
+  return result;
+};
+
+const getPayloadFromDoc = (doc: TiptapNode): {
+  content: string;
+  kind: ChatMessageKind;
+  language: ChatLanguage;
+} => {
+  const contentNodes = doc.content || [];
+  const meaningful = collectMeaningfulNodes(contentNodes);
+
+  if (meaningful.length === 1 && meaningful[0].type === "codeBlock") {
+    const codeNode = meaningful[0];
+    const codeText = extractText(codeNode).trim();
+    const language = normalizeLanguage(codeNode.attrs?.language);
+
+    if (language === "json") {
+      return { content: codeText, kind: "json", language };
+    }
+    if (language === "html") {
+      return { content: codeText, kind: "html", language };
+    }
+    return { content: codeText, kind: "code", language };
+  }
+
+  const plainText = extractText(doc).trim();
+  return { content: plainText, kind: "text", language: "plaintext" };
+};
 
 export default function ChatComposer({
   roomId,
@@ -43,74 +142,94 @@ export default function ChatComposer({
   maxFileSizeBytes = 10 * 1024 * 1024,
 }: ChatComposerProps) {
   const totalLimitMb = Math.floor(maxFileSizeBytes / (1024 * 1024));
-  const [messageInput, setMessageInput] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [fileWarning, setFileWarning] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<ChatLanguage>("plaintext");
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const messageInputRef = useRef<HTMLTextAreaElement | null>(null);
   const emojiButtonRef = useRef<HTMLButtonElement | null>(null);
   const emojiPickerRef = useRef<HTMLDivElement | null>(null);
+  const languageButtonRef = useRef<HTMLButtonElement | null>(null);
+  const languageMenuRef = useRef<HTMLDivElement | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isComposingRef = useRef(false);
+  const handleSendRef = useRef<() => void>(() => undefined);
 
-  useEffect(() => {
-    setMessageInput("");
-    setSelectedFiles([]);
-    setFileWarning(null);
-    setShowEmojiPicker(false);
-  }, [roomId]);
-
-  useEffect(() => {
-    return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const handleTypingChange = useCallback(
-    (value: string) => {
-      setMessageInput(value);
-      onTyping(true);
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        codeBlock: false,
+      }),
+      CodeBlockLowlight.configure({
+        lowlight,
+      }),
+    ],
+    content: "",
+    editorProps: {
+      attributes: {
+        class:
+          "min-h-[20px] max-h-[120px] overflow-y-auto text-sm leading-relaxed text-[var(--theme-text)] focus:outline-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+      },
+      handleKeyDown: (_view, event) => {
+        if (event.key === "Enter" && !event.shiftKey && !isComposingRef.current) {
+          event.preventDefault();
+          handleSendRef.current();
+          return true;
+        }
+        return false;
+      },
+    },
+    onUpdate: ({ editor: instance }) => {
+      const text = instance.getText().trim();
+      onTyping(text.length > 0);
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       typingTimeoutRef.current = setTimeout(() => onTyping(false), 800);
     },
-    [onTyping]
-  );
+  });
 
-  useEffect(() => {
-    if (!showEmojiPicker) return;
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node | null;
-      if (!target) return;
-      if (emojiPickerRef.current?.contains(target)) return;
-      if (emojiButtonRef.current?.contains(target)) return;
-      setShowEmojiPicker(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showEmojiPicker]);
-
-  useEffect(() => {
-    const el = messageInputRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
-  }, [messageInput]);
+  const activeLanguageLabel = useMemo(() => {
+    const found = LANGUAGE_OPTIONS.find((item) => item.value === selectedLanguage);
+    return found?.label || "Plain Text";
+  }, [selectedLanguage]);
 
   const handleSend = useCallback(() => {
-    const trimmed = messageInput.trim();
-    if (!roomId) return;
-    if (!trimmed && selectedFiles.length === 0) return;
-    onSendMessage(trimmed, selectedFiles, replyToMessage?.id);
-    setMessageInput("");
-    setSelectedFiles([]);
+    if (!roomId || !editor) return;
+
+    const payload = getPayloadFromDoc(editor.getJSON() as TiptapNode);
+    const hasFiles = selectedFiles.length > 0;
+
+    if (!payload.content && !hasFiles) return;
+
+    if (payload.kind === "json" && payload.content) {
+      try {
+        JSON.parse(payload.content);
+      } catch {
+        setFileWarning("Invalid JSON format.");
+        return;
+      }
+    }
+
     setFileWarning(null);
+    onSendMessage(
+      payload.content,
+      selectedFiles,
+      replyToMessage?.id,
+      payload.kind,
+      payload.language
+    );
+
+    editor.commands.clearContent(true);
+    editor.commands.focus();
+    setSelectedFiles([]);
     setShowEmojiPicker(false);
-  }, [messageInput, onSendMessage, replyToMessage?.id, roomId, selectedFiles]);
+    setShowLanguageMenu(false);
+    setSelectedLanguage("plaintext");
+    onTyping(false);
+  }, [editor, onSendMessage, onTyping, replyToMessage?.id, roomId, selectedFiles]);
+
+  handleSendRef.current = handleSend;
 
   const handlePickFiles = useCallback(() => {
     fileInputRef.current?.click();
@@ -153,7 +272,7 @@ export default function ChatComposer({
       if (skippedForTotalSize) {
         warning = `Total attachment size cannot exceed ${totalLimitMb} MB.`;
       } else if (skippedForCount) {
-        warning = "You can attach up to 10 files per message.";
+        warning = `You can attach up to ${maxFiles} files per message.`;
       } else if (skippedForType) {
         warning = "Only images and PDFs are allowed.";
       }
@@ -171,21 +290,33 @@ export default function ChatComposer({
 
   const handleEmojiClick = useCallback(
     (emojiData: EmojiClickData) => {
-      const textarea = messageInputRef.current;
-      const start = textarea?.selectionStart ?? messageInput.length;
-      const end = textarea?.selectionEnd ?? messageInput.length;
-      const nextValue = `${messageInput.slice(0, start)}${emojiData.emoji}${messageInput.slice(end)}`;
-      handleTypingChange(nextValue);
-
-      requestAnimationFrame(() => {
-        const input = messageInputRef.current;
-        if (!input) return;
-        const cursor = start + emojiData.emoji.length;
-        input.focus();
-        input.setSelectionRange(cursor, cursor);
-      });
+      if (!editor) return;
+      editor.chain().focus().insertContent(emojiData.emoji).run();
     },
-    [handleTypingChange, messageInput]
+    [editor]
+  );
+
+  const applyLanguage = useCallback(
+    (language: ChatLanguage) => {
+      if (!editor) return;
+
+      setSelectedLanguage(language);
+      setShowLanguageMenu(false);
+
+      if (language === "plaintext") {
+        if (editor.isActive("codeBlock")) {
+          editor.chain().focus().toggleCodeBlock().run();
+        }
+        return;
+      }
+
+      if (!editor.isActive("codeBlock")) {
+        editor.chain().focus().toggleCodeBlock().run();
+      }
+
+      editor.chain().focus().updateAttributes("codeBlock", { language }).run();
+    },
+    [editor]
   );
 
   const previewFiles = useMemo(
@@ -201,9 +332,62 @@ export default function ChatComposer({
 
   useEffect(() => {
     return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
       previewFiles.forEach((file) => URL.revokeObjectURL(file.url));
     };
   }, [previewFiles]);
+
+  useEffect(() => {
+    if (!showEmojiPicker) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (emojiPickerRef.current?.contains(target)) return;
+      if (emojiButtonRef.current?.contains(target)) return;
+      setShowEmojiPicker(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
+  useEffect(() => {
+    if (!showLanguageMenu) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (languageMenuRef.current?.contains(target)) return;
+      if (languageButtonRef.current?.contains(target)) return;
+      setShowLanguageMenu(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showLanguageMenu]);
+
+  useEffect(() => {
+    if (!editor) return;
+    editor.commands.clearContent(true);
+    setSelectedFiles([]);
+    setFileWarning(null);
+    setShowEmojiPicker(false);
+    setShowLanguageMenu(false);
+    setSelectedLanguage("plaintext");
+  }, [editor, roomId]);
+
+  useEffect(() => {
+    if (!editor) return;
+    if (!editor.isActive("codeBlock")) {
+      setSelectedLanguage("plaintext");
+      return;
+    }
+    const language = normalizeLanguage(editor.getAttributes("codeBlock").language);
+    setSelectedLanguage(language);
+  }, [editor, editor?.state]);
 
   return (
     <div className="sticky bottom-0 z-10 px-4 sm:px-6 py-3 sm:py-4 border-t border-[var(--theme-border)] bg-[var(--theme-surface)]">
@@ -217,7 +401,7 @@ export default function ChatComposer({
               <p className="text-xs text-[var(--theme-text)] truncate">
                 {replyToMessage.isRemoved
                   ? "This message was deleted"
-                  : (replyToMessage.content)}
+                  : replyToMessage.content}
               </p>
             </div>
             <button
@@ -260,7 +444,7 @@ export default function ChatComposer({
           ))}
         </div>
       )}
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      <div className="flex items-end gap-2 sm:gap-3 min-w-0">
         <input
           ref={fileInputRef}
           type="file"
@@ -276,6 +460,43 @@ export default function ChatComposer({
         >
           <PaperClipIcon className="w-4 h-4" />
         </button>
+
+        <div className="relative shrink-0">
+          <button
+            ref={languageButtonRef}
+            onClick={() => setShowLanguageMenu((prev) => !prev)}
+            className="h-10 px-3 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-muted)] cursor-pointer inline-flex items-center gap-2"
+            aria-label="Code language"
+          >
+            <span className="text-xs truncate max-w-24">{activeLanguageLabel}</span>
+            <ChevronDownIcon className="w-3.5 h-3.5 shrink-0" />
+          </button>
+          {showLanguageMenu && (
+            <div
+              ref={languageMenuRef}
+              className="absolute bottom-12 left-0 z-20 w-48 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-xl max-h-64 overflow-y-auto"
+            >
+              <div className="px-2 py-1">
+                {LANGUAGE_OPTIONS.map((option) => {
+                  const isActive = option.value === selectedLanguage;
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => applyLanguage(option.value)}
+                      className={`w-full text-left px-2.5 py-2 text-xs rounded-lg cursor-pointer ${isActive
+                          ? "bg-blue-50 text-blue-700"
+                          : "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
+                        }`}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="relative shrink-0">
           <button
             ref={emojiButtonRef}
@@ -299,26 +520,11 @@ export default function ChatComposer({
             </div>
           )}
         </div>
-        <textarea
-          ref={messageInputRef}
-          value={messageInput}
-          onChange={(e) => handleTypingChange(e.target.value)}
-          onCompositionStart={() => {
-            isComposingRef.current = true;
-          }}
-          onCompositionEnd={() => {
-            isComposingRef.current = false;
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey && !isComposingRef.current) {
-              e.preventDefault();
-              handleSend();
-            }
-          }}
-          placeholder="Type a message..."
-          rows={1}
-          className="flex-1 min-w-0 border border-[var(--theme-border)] rounded-2xl px-4 py-2 text-sm bg-[var(--theme-surface-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500 text-[var(--theme-text)] resize-none overflow-y-auto max-h-[120px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-        />
+
+        <div className="flex-1 min-w-0 border border-[var(--theme-border)] rounded-2xl px-4 py-2 bg-[var(--theme-surface-muted)] focus-within:ring-2 focus-within:ring-blue-500">
+          <EditorContent editor={editor} />
+        </div>
+
         <button
           onClick={handleSend}
           className="p-2.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm cursor-pointer"
@@ -327,8 +533,9 @@ export default function ChatComposer({
           <PaperAirplaneIcon className="w-4 h-4" />
         </button>
       </div>
+
       <div className="mt-2 text-[11px] text-[var(--theme-text-muted)] flex flex-wrap items-center gap-2">
-        <span>Max 10 files per message.</span>
+        <span>Max {maxFiles} files per message.</span>
         <span>Total attachment size up to {totalLimitMb} MB.</span>
         <span>Images and PDFs only.</span>
         {fileWarning && <span className="text-amber-600">{fileWarning}</span>}

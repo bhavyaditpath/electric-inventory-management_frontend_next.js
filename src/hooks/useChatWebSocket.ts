@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import {
+  ChatLanguage,
   ChatMessage,
+  ChatMessageKind,
   ChatMessageNotification,
   ChatReactionNotification,
 } from "@/types/chat.types";
@@ -109,9 +111,22 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions = {}) => {
     socketRef.current?.emit("leaveRoom", { roomId });
   }, []);
 
-  const sendMessage = useCallback((roomId: number, content: string) => {
-    socketRef.current?.emit("sendMessage", { roomId, content });
-  }, []);
+  const sendMessage = useCallback(
+    (
+      roomId: number,
+      content: string,
+      kind?: ChatMessageKind,
+      language?: ChatLanguage
+    ) => {
+      socketRef.current?.emit("sendMessage", {
+        roomId,
+        content,
+        ...(kind ? { kind } : {}),
+        ...(language ? { language } : {}),
+      });
+    },
+    []
+  );
 
   const sendTyping = useCallback((roomId: number, isTyping: boolean) => {
     socketRef.current?.emit("typing", { roomId, isTyping });

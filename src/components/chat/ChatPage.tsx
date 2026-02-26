@@ -5,7 +5,13 @@ import { chatApi } from "@/Services/chat.api";
 import { showError, showSuccess } from "@/Services/toast.service";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/types/enums";
-import { ChatMessage, ChatRoom, ChatUser } from "@/types/chat.types";
+import {
+  ChatLanguage,
+  ChatMessage,
+  ChatMessageKind,
+  ChatRoom,
+  ChatUser,
+} from "@/types/chat.types";
 import { useChatWebSocket } from "@/hooks/useChatWebSocket";
 import ChatSidebar from "./ChatSidebar";
 import ChatWindow from "./ChatWindow";
@@ -426,20 +432,48 @@ export default function ChatPage() {
   );
 
   const handleSendMessage = useCallback(
-    async (content: string, files?: File[], replyToMessageId?: number) => {
+    async (
+      content: string,
+      files?: File[],
+      replyToMessageId?: number,
+      kind?: ChatMessageKind,
+      language?: ChatLanguage
+    ) => {
       if (!activeRoomId) return;
       const trimmed = content.trim();
       const hasFiles = !!files && files.length > 0;
       if (!trimmed && !hasFiles) return;
+      const normalizedKind: ChatMessageKind = kind || "text";
+      const normalizedLanguage: ChatLanguage =
+        language ||
+        (normalizedKind === "code"
+          ? "plaintext"
+          : normalizedKind === "json"
+            ? "json"
+            : normalizedKind === "html"
+              ? "html"
+              : "plaintext");
 
-      if (isConnected && !hasFiles && typeof replyToMessageId !== "number") {
-        sendMessage(activeRoomId, trimmed);
+      if (
+        isConnected &&
+        !hasFiles &&
+        typeof replyToMessageId !== "number" &&
+        normalizedKind === "text" &&
+        normalizedLanguage === "plaintext"
+      ) {
+        sendMessage(activeRoomId, trimmed, normalizedKind, normalizedLanguage);
         return;
       }
 
       try {
         const response = await chatApi.sendMessage(
-          { chatRoomId: activeRoomId, content: trimmed, replyToMessageId },
+          {
+            chatRoomId: activeRoomId,
+            content: trimmed,
+            replyToMessageId,
+            kind: normalizedKind,
+            language: normalizedLanguage,
+          },
           files
         );
         if (response.success && response.data) {

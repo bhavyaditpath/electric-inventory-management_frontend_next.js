@@ -24,11 +24,29 @@ export interface ChatRoom {
   pinned?: boolean;
 }
 
+export type ChatMessageKind = "text" | "code" | "html" | "json" | "markdown";
+
+export type ChatLanguage =
+  | "plaintext"
+  | "javascript"
+  | "typescript"
+  | "json"
+  | "html"
+  | "css"
+  | "sql"
+  | "bash"
+  | "python"
+  | "java"
+  | "csharp"
+  | "cpp";
+
 export interface ChatReplyPreview {
   id: number;
   senderId: number;
   senderName?: string;
   content?: string;
+  kind?: ChatMessageKind;
+  language?: ChatLanguage;
   createdAt: string;
   isRemoved?: boolean;
 }
@@ -39,6 +57,8 @@ export interface ChatForwardedPreview {
   senderName?: string;
   createdAt?: string | null;
   contentPreview?: string;
+  kind?: ChatMessageKind;
+  language?: ChatLanguage;
   isRemoved?: boolean;
 }
 
@@ -50,6 +70,8 @@ export interface ChatMessage {
   isForwarded?: boolean;
   forwardedFromMessageId?: number | null;
   content: string;
+  kind?: ChatMessageKind;
+  language?: ChatLanguage;
   createdAt: string;
   updatedAt?: string;
   replyTo?: ChatReplyPreview | null;
@@ -84,6 +106,8 @@ export interface ChatMessageNotification {
   senderId: number;
   senderName: string;
   content?: string;
+  kind?: ChatMessageKind;
+  language?: ChatLanguage;
   replyTo?: ChatReplyPreview | null;
   isForwarded?: boolean;
   forwardedFrom?: ChatForwardedPreview | null;

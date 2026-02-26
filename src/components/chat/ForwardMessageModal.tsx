@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ChatMessage, ChatRoom } from "@/types/chat.types";
+import { getFormatPreviewPrefix } from "@/utils/chatMessageFormat";
 
 interface ForwardMessageModalProps {
   isOpen: boolean;
@@ -36,14 +37,19 @@ export default function ForwardMessageModal({
 
   const sourcePreview = useMemo(() => {
     if (!sourceMessage) return "";
+    const prefix = getFormatPreviewPrefix(sourceMessage.kind, sourceMessage.language);
     const text = sourceMessage.content?.trim();
-    if (text) return text;
+    if (text) return `${prefix}${text}`;
     const attachmentCount = sourceMessage.attachments?.length || 0;
     if (attachmentCount > 0) {
       return attachmentCount === 1 ? "Attachment" : `${attachmentCount} attachments`;
     }
     if (sourceMessage.forwardedFrom?.contentPreview) {
-      return sourceMessage.forwardedFrom.contentPreview;
+      const forwardedPrefix = getFormatPreviewPrefix(
+        sourceMessage.forwardedFrom.kind,
+        sourceMessage.forwardedFrom.language
+      );
+      return `${forwardedPrefix}${sourceMessage.forwardedFrom.contentPreview}`;
     }
     return "";
   }, [sourceMessage]);

@@ -10,6 +10,7 @@ import {
   TrashIcon,
   PencilSquareIcon,
 } from "@heroicons/react/24/outline";
+import { getFormatPreviewPrefix } from "@/utils/chatMessageFormat";
 
 interface ChatSidebarProps {
   rooms: ChatRoom[];
@@ -112,9 +113,14 @@ const ChatSidebar = ({
                 const lastMessageLabel = (() => {
                   const last = room.lastMessage;
                   if (!last) return "No messages yet";
-                  if (last.content && last.content.trim()) return last.content;
+                  const prefix = getFormatPreviewPrefix(last.kind, last.language);
+                  if (last.content && last.content.trim()) return `${prefix}${last.content}`;
                   if (last.isForwarded && last.forwardedFrom?.contentPreview) {
-                    return `Forwarded: ${last.forwardedFrom.contentPreview}`;
+                    const forwardedPrefix = getFormatPreviewPrefix(
+                      last.forwardedFrom.kind,
+                      last.forwardedFrom.language
+                    );
+                    return `Forwarded: ${forwardedPrefix}${last.forwardedFrom.contentPreview}`;
                   }
                   if (last.attachments && last.attachments.length > 0) {
                     const count = last.attachments.length;

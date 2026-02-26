@@ -1,6 +1,8 @@
 import { apiClient } from "./api";
 import {
+  ChatLanguage,
   ChatMessage,
+  ChatMessageKind,
   ChatMessagesResponse,
   ChatRoom,
   ChatUser,
@@ -15,6 +17,8 @@ export interface CreateChatRoomPayload {
 export interface SendMessagePayload {
   chatRoomId: number;
   content?: string;
+  kind?: ChatMessageKind;
+  language?: ChatLanguage;
   replyToMessageId?: number;
 }
 
@@ -36,7 +40,9 @@ export interface RemoveParticipantPayload {
 }
 
 export interface EditMessagePayload {
-  content: string;
+  content?: string;
+  kind?: ChatMessageKind;
+  language?: ChatLanguage;
 }
 
 export interface ForwardMessagePayload {
@@ -86,6 +92,12 @@ export const chatApi = {
       formData.append("chatRoomId", String(payload.chatRoomId));
       if (payload.content) {
         formData.append("content", payload.content);
+      }
+      if (payload.kind) {
+        formData.append("kind", payload.kind);
+      }
+      if (payload.language) {
+        formData.append("language", payload.language);
       }
       if (typeof payload.replyToMessageId === "number") {
         formData.append("replyToMessageId", String(payload.replyToMessageId));

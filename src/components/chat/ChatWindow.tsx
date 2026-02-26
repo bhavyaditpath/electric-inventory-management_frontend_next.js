@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
+  ChatLanguage,
   ChatMessage,
+  ChatMessageKind,
   ChatReplyPreview,
   ChatRoom,
   ChatUser,
@@ -31,7 +33,9 @@ interface ChatWindowProps {
   onSendMessage: (
     content: string,
     files?: File[],
-    replyToMessageId?: number
+    replyToMessageId?: number,
+    kind?: ChatMessageKind,
+    language?: ChatLanguage
   ) => void;
   onTyping: (isTyping: boolean) => void;
   onDeleteMessage?: (messageId: number) => void;
@@ -164,6 +168,8 @@ export default function ChatWindow({
       senderId: message.senderId,
       senderName: message.sender?.username || "Unknown user",
       content: message.content,
+      kind: message.kind,
+      language: message.language,
       createdAt: message.createdAt,
     };
     setReplyContext({ roomId: room.id, message: nextReply });
@@ -179,8 +185,14 @@ export default function ChatWindow({
   }, []);
 
   const handleSendMessage = useCallback(
-    (content: string, files?: File[], replyToMessageId?: number) => {
-      onSendMessage(content, files, replyToMessageId);
+    (
+      content: string,
+      files?: File[],
+      replyToMessageId?: number,
+      kind?: ChatMessageKind,
+      language?: ChatLanguage
+    ) => {
+      onSendMessage(content, files, replyToMessageId, kind, language);
       setReplyContext(null);
     },
     [onSendMessage]

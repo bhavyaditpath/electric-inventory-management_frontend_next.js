@@ -8,7 +8,13 @@ import {
   useRef,
   useState,
 } from "react";
-import { ChatAttachment, ChatMessage, ChatUser } from "@/types/chat.types";
+import {
+  ChatAttachment,
+  ChatLanguage,
+  ChatMessage,
+  ChatMessageKind,
+  ChatUser,
+} from "@/types/chat.types";
 import { showError } from "@/Services/toast.service";
 import {
   ArrowPathRoundedSquareIcon,
@@ -20,6 +26,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { chatApi } from "@/Services/chat.api";
 import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
+import ChatMessageContent from "./ChatMessageContent";
+import { getFormatPreviewPrefix } from "@/utils/chatMessageFormat";
 
 interface ChatMessageListProps {
   messages: ChatMessage[];
@@ -158,13 +166,21 @@ export default function ChatMessageList({
     if (!message.replyTo) return null;
     if (message.replyTo.isRemoved) return "This message was deleted";
     const value = message.replyTo.content?.trim();
-    return value && value.length > 0 ? value : "";
+    if (!value || value.length === 0) return "";
+    return `${getFormatPreviewPrefix(
+      message.replyTo.kind as ChatMessageKind | undefined,
+      message.replyTo.language as ChatLanguage | undefined
+    )}${value}`;
   };
   const getForwardedPreviewText = (message: ChatMessage) => {
     if (!message.forwardedFrom) return null;
     if (message.forwardedFrom.isRemoved) return "This message was deleted";
     const value = message.forwardedFrom.contentPreview?.trim();
-    return value && value.length > 0 ? value : "";
+    if (!value || value.length === 0) return "";
+    return `${getFormatPreviewPrefix(
+      message.forwardedFrom.kind as ChatMessageKind | undefined,
+      message.forwardedFrom.language as ChatLanguage | undefined
+    )}${value}`;
   };
 
   const isImageAttachment = (mimeType: string) => mimeType.startsWith("image/");
@@ -578,9 +594,7 @@ export default function ChatMessageList({
                     </div>
                   ) : (
                     hasText(message.content) && (
-                      <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
-                        {message.content}
-                      </p>
+                      <ChatMessageContent message={message} isMe={isMe} />
                     )
                   )}
                   {message.attachments && message.attachments.length > 0 && (
