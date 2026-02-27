@@ -68,16 +68,16 @@ const ChatSidebar = ({
 
   return (
     <aside className="w-full lg:w-80 flex-1 lg:flex-none border-r border-[var(--theme-border)] bg-[var(--theme-surface)] flex flex-col min-h-0">
-      <div className="px-4 py-4 border-b border-[var(--theme-border)] bg-[var(--theme-surface)]">
-        <h2 className="text-lg font-semibold text-[var(--theme-text)]">Chat</h2>
-        <p className="text-sm text-[var(--theme-text-muted)]">Message Admin and Branches</p>
+      <div className="px-3 sm:px-4 py-2.5 sm:py-3 lg:py-4 border-b border-[var(--theme-border)] bg-[var(--theme-surface)]">
+        <h2 className="text-base sm:text-lg font-semibold text-[var(--theme-text)]">Chat</h2>
+        <p className="text-xs sm:text-sm text-[var(--theme-text-muted)]">Message Admin and Branches</p>
       </div>
 
-      <div className="px-3 pt-3">
-        <div className="flex gap-2 bg-[var(--theme-surface-muted)] rounded-xl p-1.5 border border-[var(--theme-border)]">
+      <div className="px-2 sm:px-3 pt-2 sm:pt-3">
+        <div className="flex gap-1.5 sm:gap-2 bg-[var(--theme-surface-muted)] rounded-lg sm:rounded-xl p-1 sm:p-1.5 border border-[var(--theme-border)]">
           <button
             onClick={() => onTabChange("rooms")}
-            className={`flex-1 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${activeTab === "rooms"
+            className={`flex-1 text-xs sm:text-sm font-medium px-2 sm:px-3 py-1.5 sm:py-2 rounded-md sm:rounded-lg transition-colors ${activeTab === "rooms"
               ? "bg-[var(--theme-surface)] text-blue-700 shadow-sm ring-1 ring-[var(--theme-border)]"
               : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
               } cursor-pointer`}
@@ -86,7 +86,7 @@ const ChatSidebar = ({
           </button>
           <button
             onClick={() => onTabChange("users")}
-            className={`flex-1 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${activeTab === "users"
+            className={`flex-1 text-xs sm:text-sm font-medium px-2 sm:px-3 py-1.5 sm:py-2 rounded-md sm:rounded-lg transition-colors ${activeTab === "users"
               ? "bg-[var(--theme-surface)] text-blue-700 shadow-sm ring-1 ring-[var(--theme-border)]"
               : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
               } cursor-pointer`}
@@ -96,9 +96,9 @@ const ChatSidebar = ({
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 px-3 py-3">
+      <div className="flex-1 min-h-0 px-2 sm:px-3 py-2 sm:py-3">
         {activeTab === "rooms" ? (
-          <div className="h-full min-h-0 overflow-y-auto space-y-2 pr-1 scrollbar-hide">
+          <div className="h-full min-h-0 overflow-y-auto space-y-1 sm:space-y-2 pr-1 scrollbar-hide">
             {loadingRooms ? (
               <div className="text-sm text-[var(--theme-text-muted)] px-3 py-6 text-center">
                 Loading chats...
@@ -140,7 +140,7 @@ const ChatSidebar = ({
                         onSelectRoom(room.id);
                       }
                     }}
-                    className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer shadow-sm ${isActive
+                    className={`w-full text-left p-2 sm:p-3 rounded-lg sm:rounded-xl border transition-all cursor-pointer shadow-sm ${isActive
                       ? "border-blue-200 bg-blue-50/70"
                       : "border-[var(--theme-border)] bg-[var(--theme-surface)] hover:border-blue-200 hover:bg-blue-50/20 hover:shadow-md"
                       }`}
@@ -148,18 +148,18 @@ const ChatSidebar = ({
                     <div className="flex items-center justify-between gap-2 min-w-0 text-[var(--theme-text)]">
                       <div className="flex flex-1 items-center gap-2 min-w-0 overflow-hidden">
                         <div
-                          className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center ${isActive
+                          className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 shrink-0 rounded-full flex items-center justify-center ${isActive
                             ? "bg-blue-600 text-white"
                             : "bg-[var(--theme-surface-muted)] text-[var(--theme-text-muted)]"
                             }`}
                         >
-                          <ChatBubbleLeftRightIcon className="w-4 h-4" />
+                          <ChatBubbleLeftRightIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4" />
                         </div>
                         <div className="w-0 min-w-0 flex-1 overflow-hidden">
-                          <p className="block w-full text-sm font-semibold text-[var(--theme-text)] truncate">
+                          <p className="block w-full text-xs sm:text-sm font-semibold text-[var(--theme-text)] truncate">
                             {room.name}
                           </p>
-                          <p className="block w-full text-xs text-[var(--theme-text-muted)] truncate">
+                          <p className="block w-full text-[10px] sm:text-xs text-[var(--theme-text-muted)] truncate">
                             {lastMessageLabel}
                           </p>
                         </div>
@@ -177,13 +177,13 @@ const ChatSidebar = ({
                                   prev === room.id ? null : room.id
                                 );
                               }}
-                              className="p-1 rounded-full border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] cursor-pointer"
+                              className="p-0.5 sm:p-1 rounded-full border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] cursor-pointer flex-shrink-0"
                               aria-label="Room actions"
                             >
-                              <EllipsisVerticalIcon className="w-4 h-4" />
+                              <EllipsisVerticalIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </button>
                             {openMenuRoomId === room.id && (
-                              <div className="absolute right-0 mt-2 w-36 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20">
+                              <div className="absolute right-0 mt-2 w-32 sm:w-36 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20 text-xs sm:text-sm">
                                 {onRenameRoom && room.isGroupChat && (
                                   <button
                                     onClick={(event) => {

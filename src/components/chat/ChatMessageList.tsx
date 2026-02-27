@@ -463,15 +463,15 @@ export default function ChatMessageList({
           return (
             <div key={message.id}>
               {showDayHeader && (
-                <div className="flex items-center justify-center py-2">
-                  <span className="rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] px-3 py-1 text-[11px] font-medium text-[var(--theme-text-muted)]">
+                <div className="flex items-center justify-center py-1 sm:py-2">
+                  <span className="rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-medium text-[var(--theme-text-muted)]">
                     {dayLabel}
                   </span>
                 </div>
               )}
               <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                 <div
-                  className={`max-w-[88%] sm:max-w-[75%] md:max-w-[60%] w-fit min-w-0 rounded-2xl px-3 sm:px-4 py-2 text-sm shadow-sm ${isMe
+                  className={`max-w-[90%] sm:max-w-[85%] md:max-w-[75%] lg:max-w-[60%] w-fit min-w-0 rounded-xl sm:rounded-2xl px-2.5 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm shadow-sm ${isMe
                     ? "bg-blue-600 text-white border border-blue-600 rounded-br-md"
                     : "bg-[var(--theme-surface)] text-[var(--theme-text)] border border-[var(--theme-border)] rounded-bl-md"
                     } relative group`}
@@ -484,7 +484,7 @@ export default function ChatMessageList({
                         : null
                     }
                   >
-                    <div className="inline-flex max-w-[min(20rem,calc(100vw-2rem))] items-center gap-1 px-1.5 py-1 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-md opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                    <div className="inline-flex max-w-[min(16rem,calc(100vw-3rem))] items-center gap-0.5 px-1 py-0.5 sm:px-1.5 sm:py-1 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-md opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                       {QUICK_REACTIONS.map((emoji) => (
                         <button
                           key={`${message.id}-quick-${emoji}`}
@@ -492,7 +492,7 @@ export default function ChatMessageList({
                             void handleToggleReaction(message.id, emoji);
                             setFullReactionPickerMessageId(null);
                           }}
-                          className="h-6 w-6 rounded-full hover:bg-[var(--theme-surface-muted)] text-sm"
+                          className="h-5 w-5 sm:h-6 sm:w-6 rounded-full hover:bg-[var(--theme-surface-muted)] text-xs sm:text-sm"
                           aria-label={`React with ${emoji}`}
                         >
                           {emoji}
@@ -510,7 +510,7 @@ export default function ChatMessageList({
 
                   {isGroupChat && (
                     <p
-                      className={`text-[11px] font-semibold mb-1 ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"
+                      className={`text-[10px] sm:text-[11px] font-semibold mb-0.5 sm:mb-1 ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"
                         }`}
                     >
                       {senderName}
@@ -518,30 +518,30 @@ export default function ChatMessageList({
                   )}
                   {!!message.replyTo && !editingThisMessage && (
                     <div
-                      className={`mb-2 rounded-md border-l-2 px-2.5 py-1.5 ${isMe
+                      className={`mb-1.5 sm:mb-2 rounded-md border-l-2 px-2 sm:px-2.5 py-1 sm:py-1.5 ${isMe
                         ? "border-white/80 bg-white/10"
                         : "border-blue-500 bg-[var(--theme-surface-muted)]"
                         }`}
                     >
-                      <p className={`text-[11px] font-semibold ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"}`}>
+                      <p className={`text-[10px] sm:text-[11px] font-semibold ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"}`}>
                         {message.replyTo.senderName || "Unknown user"}
                       </p>
-                      <p className={`text-xs truncate ${isMe ? "text-blue-50" : "text-[var(--theme-text)]"}`}>
+                      <p className={`text-[11px] sm:text-xs truncate ${isMe ? "text-blue-50" : "text-[var(--theme-text)]"}`}>
                         {replyPreviewText}
                       </p>
                     </div>
                   )}
                   {!!message.isForwarded && !!message.forwardedFrom && !editingThisMessage && (
                     <div
-                      className={`mb-2 rounded-md border-l-2 px-2.5 py-1.5 ${isMe
+                      className={`mb-1.5 sm:mb-2 rounded-md border-l-2 px-2 sm:px-2.5 py-1 sm:py-1.5 ${isMe
                         ? "border-white/80 bg-white/10"
                         : "border-emerald-500 bg-[var(--theme-surface-muted)]"
                         }`}
                     >
-                      <p className={`text-[11px] font-semibold ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"}`}>
+                      <p className={`text-[10px] sm:text-[11px] font-semibold ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"}`}>
                         Forwarded from {message.forwardedFrom.senderName || "Unknown user"}
                       </p>
-                      <p className={`text-xs truncate ${isMe ? "text-blue-50" : "text-[var(--theme-text)]"}`}>
+                      <p className={`text-[11px] sm:text-xs truncate ${isMe ? "text-blue-50" : "text-[var(--theme-text)]"}`}>
                         {forwardedPreviewText}
                       </p>
                     </div>
@@ -670,13 +670,13 @@ export default function ChatMessageList({
                                   <EllipsisHorizontalIcon className="w-4 h-4" />
                                 </button>
                                 {openAttachmentMenuId === attachment.id && (
-                                  <div className="absolute right-0 top-6 w-32 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20">
+                                  <div className="absolute right-0 top-6 w-30 sm:w-32 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20 text-xs sm:text-sm">
                                     <button
                                       onClick={() => {
                                         handleDownloadAttachment(attachment);
                                         setOpenAttachmentMenuId(null);
                                       }}
-                                      className="w-full px-3 py-2 text-left text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] cursor-pointer"
+                                      className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-left text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] cursor-pointer"
                                     >
                                       Download
                                     </button>

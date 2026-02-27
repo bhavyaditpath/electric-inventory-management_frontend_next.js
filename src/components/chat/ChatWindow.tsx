@@ -203,11 +203,11 @@ export default function ChatWindow({
   if (!room) {
     return (
       <section className="flex-1 flex items-center justify-center bg-[var(--theme-bg)]">
-        <div className="text-center max-w-md px-6">
-          <h3 className="text-xl font-semibold text-[var(--theme-text)]">
+        <div className="text-center max-w-sm px-4 sm:px-6">
+          <h3 className="text-base sm:text-xl font-semibold text-[var(--theme-text)]">
             Select a conversation
           </h3>
-          <p className="text-sm text-[var(--theme-text-muted)] mt-2">
+          <p className="text-xs sm:text-sm text-[var(--theme-text-muted)] mt-2">
             Choose a chat or start a new one from the Users tab.
           </p>
         </div>
@@ -217,33 +217,33 @@ export default function ChatWindow({
 
   return (
     <section className="flex-1 flex flex-col min-h-0 min-w-0 bg-[var(--theme-bg)]">
-      <div className="sticky top-0 z-10 px-4 sm:px-6 py-2 sm:py-3 border-b border-[var(--theme-border)] bg-[var(--theme-surface)]">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+      <div className="sticky top-0 z-10 px-2 sm:px-4 lg:px-6 py-1.5 sm:py-2.5 lg:py-3 border-b border-[var(--theme-border)] bg-[var(--theme-surface)]">
+        <div className="flex items-center justify-between gap-1.5 sm:gap-2.5 lg:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 lg:gap-3 min-w-0">
             {isMobile && onBack && (
               <button
                 onClick={onBack}
-                className="p-2 rounded-full hover:bg-blue-50/30 text-[var(--theme-text-muted)] cursor-pointer"
+                className="p-1 sm:p-1.5 rounded-full hover:bg-blue-50/30 text-[var(--theme-text-muted)] cursor-pointer flex-shrink-0"
                 aria-label="Back to chats"
               >
                 <span className="sr-only">Back</span>
-                <ArrowLeftIcon className="w-4 h-4" />
+                <ArrowLeftIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
             )}
-            <div>
-              <h3 className="text-base sm:text-lg font-semibold text-[var(--theme-text)]">
+            <div className="min-w-0">
+              <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-[var(--theme-text)] truncate">
                 {room.name}
               </h3>
-              <p className="text-xs text-[var(--theme-text-muted)]">
+              <p className="text-[10px] sm:text-xs text-[var(--theme-text-muted)]">
                 {room.isGroupChat ? "Group chat" : "Direct chat"}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             {room.isGroupChat && (
               <button
                 onClick={onOpenMembers}
-                className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] text-xs font-medium text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-muted)] cursor-pointer"
+                className="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] text-[10px] sm:text-xs font-medium text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-muted)] cursor-pointer"
               >
                 Members
               </button>
@@ -251,13 +251,13 @@ export default function ChatWindow({
             <div className="relative" ref={callMenuRef}>
               <button
                 onClick={() => setShowCallMenu((v) => !v)}
-                className="p-2 rounded-full hover:bg-[var(--theme-surface-muted)] text-[var(--theme-text-muted)] cursor-pointer"
+                className="p-1 sm:p-1.5 lg:p-2 rounded-full hover:bg-[var(--theme-surface-muted)] text-[var(--theme-text-muted)] cursor-pointer flex-shrink-0"
               >
-                <EllipsisHorizontalIcon className="w-5 h-5" />
+                <EllipsisHorizontalIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 lg:w-5 lg:h-5" />
               </button>
 
               {showCallMenu && (
-                <div className="absolute right-0 mt-2 w-64 bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-2xl shadow-xl z-50 overflow-hidden">
+                <div className="absolute right-0 mt-2 w-56 sm:w-64 bg-[var(--theme-surface)] border border-[var(--theme-border)] rounded-lg sm:rounded-2xl shadow-lg sm:shadow-xl z-50 overflow-hidden">
                   <div className="px-4 pt-3 pb-2">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--theme-text-muted)]">
                       Call Actions

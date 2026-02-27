@@ -390,10 +390,10 @@ export default function ChatComposer({
   }, [editor, editor?.state]);
 
   return (
-    <div className="sticky bottom-0 z-10 px-4 sm:px-6 py-3 sm:py-4 border-t border-[var(--theme-border)] bg-[var(--theme-surface)]">
+    <div className="sticky bottom-0 z-10 px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 border-t border-[var(--theme-border)] bg-[var(--theme-surface)]">
       {replyToMessage && (
-        <div className="mb-3 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface-muted)] px-3 py-2">
-          <div className="flex items-start justify-between gap-3">
+        <div className="mb-2 sm:mb-3 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface-muted)] px-2 sm:px-3 py-1.5 sm:py-2">
+          <div className="flex items-start justify-between gap-2 sm:gap-3">
             <div className="min-w-0">
               <p className="text-[11px] font-semibold text-[var(--theme-text-muted)]">
                 Replying to {replyToMessage.senderName || "Unknown user"}
@@ -406,10 +406,10 @@ export default function ChatComposer({
             </div>
             <button
               onClick={onCancelReply}
-              className="p-1 rounded-full text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface)] cursor-pointer"
+              className="p-1 rounded-full text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface)] cursor-pointer flex-shrink-0"
               aria-label="Cancel reply"
             >
-              <XMarkIcon className="w-4 h-4" />
+              <XMarkIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
         </div>
@@ -444,7 +444,7 @@ export default function ChatComposer({
           ))}
         </div>
       )}
-      <div className="flex items-end gap-2 sm:gap-3 min-w-0">
+      <div className="flex items-end gap-1 sm:gap-2 md:gap-3 min-w-0">
         <input
           ref={fileInputRef}
           type="file"
@@ -455,35 +455,35 @@ export default function ChatComposer({
         />
         <button
           onClick={handlePickFiles}
-          className="p-2.5 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-muted)] cursor-pointer"
+          className="p-1.5 sm:p-2 lg:p-2.5 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-muted)] cursor-pointer flex-shrink-0"
           aria-label="Attach files"
         >
-          <PaperClipIcon className="w-4 h-4" />
+          <PaperClipIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
-        <div className="relative shrink-0">
+        <div className="relative shrink-0 hidden sm:block">
           <button
             ref={languageButtonRef}
             onClick={() => setShowLanguageMenu((prev) => !prev)}
-            className="h-10 px-3 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-muted)] cursor-pointer inline-flex items-center gap-2"
+            className="h-9 sm:h-10 px-2 sm:px-3 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-muted)] cursor-pointer inline-flex items-center gap-1.5 text-xs sm:text-sm"
             aria-label="Code language"
           >
-            <span className="text-xs truncate max-w-24">{activeLanguageLabel}</span>
-            <ChevronDownIcon className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate max-w-16 sm:max-w-24">{activeLanguageLabel}</span>
+            <ChevronDownIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
           </button>
           {showLanguageMenu && (
             <div
               ref={languageMenuRef}
-              className="absolute bottom-12 left-0 z-20 w-48 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-xl max-h-64 overflow-y-auto"
+              className="absolute bottom-11 sm:bottom-12 left-0 z-20 w-40 sm:w-48 rounded-lg sm:rounded-xl border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg sm:shadow-xl max-h-64 overflow-y-auto"
             >
-              <div className="px-2 py-1">
+              <div className="px-1 sm:px-2 py-1">
                 {LANGUAGE_OPTIONS.map((option) => {
                   const isActive = option.value === selectedLanguage;
                   return (
                     <button
                       key={option.value}
                       onClick={() => applyLanguage(option.value)}
-                      className={`w-full text-left px-2.5 py-2 text-xs rounded-lg cursor-pointer ${isActive
+                      className={`w-full text-left px-2 sm:px-2.5 py-1.5 sm:py-2 text-xs rounded-md sm:rounded-lg cursor-pointer ${isActive
                           ? "bg-blue-50 text-blue-700"
                           : "text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
                         }`}
@@ -501,44 +501,46 @@ export default function ChatComposer({
           <button
             ref={emojiButtonRef}
             onClick={() => setShowEmojiPicker((prev) => !prev)}
-            className="p-2.5 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-muted)] cursor-pointer"
+            className="p-1.5 sm:p-2 lg:p-2.5 rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-muted)] cursor-pointer flex-shrink-0"
             aria-label="Open emoji picker"
           >
-            <FaceSmileIcon className="w-4 h-4" />
+            <FaceSmileIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
           {showEmojiPicker && (
             <div
               ref={emojiPickerRef}
-              className="absolute bottom-12 left-0 z-20 shadow-xl rounded-xl overflow-hidden w-[min(18rem,calc(100vw-2rem))] sm:w-auto"
+              className="absolute bottom-11 sm:bottom-12 left-0 z-20 shadow-lg sm:shadow-xl rounded-lg sm:rounded-xl overflow-hidden w-[min(16rem,calc(100vw-2rem))] sm:w-80"
             >
               <EmojiPicker
                 onEmojiClick={handleEmojiClick}
                 lazyLoadEmojis
                 width="100%"
-                height={360}
+                height={320}
               />
             </div>
           )}
         </div>
 
-        <div className="flex-1 min-w-0 border border-[var(--theme-border)] rounded-2xl px-4 py-2 bg-[var(--theme-surface-muted)] focus-within:ring-2 focus-within:ring-blue-500">
+        <div className="flex-1 min-w-0 border border-[var(--theme-border)] rounded-2xl px-3 sm:px-4 py-1.5 sm:py-2 bg-[var(--theme-surface-muted)] focus-within:ring-2 focus-within:ring-blue-500">
           <EditorContent editor={editor} />
         </div>
 
         <button
           onClick={handleSend}
-          className="p-2.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm cursor-pointer"
+          className="p-1.5 sm:p-2 lg:p-2.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm cursor-pointer flex-shrink-0"
           aria-label="Send message"
         >
-          <PaperAirplaneIcon className="w-4 h-4" />
+          <PaperAirplaneIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
       </div>
 
-      <div className="mt-2 text-[11px] text-[var(--theme-text-muted)] flex flex-wrap items-center gap-2">
-        <span>Max {maxFiles} files per message.</span>
-        <span>Total attachment size up to {totalLimitMb} MB.</span>
-        <span>Images and PDFs only.</span>
-        {fileWarning && <span className="text-amber-600">{fileWarning}</span>}
+      <div className="mt-1.5 sm:mt-2 text-[10px] sm:text-[11px] text-[var(--theme-text-muted)] flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-1 sm:gap-2">
+        <span className="whitespace-nowrap">Max {maxFiles} files</span>
+        <span className="hidden sm:inline">•</span>
+        <span className="whitespace-nowrap">Up to {totalLimitMb} MB</span>
+        <span className="hidden sm:inline">•</span>
+        <span className="whitespace-nowrap">Images & PDFs only</span>
+        {fileWarning && <span className="text-amber-600 w-full">{fileWarning}</span>}
       </div>
     </div>
   );

@@ -105,8 +105,8 @@ body {
 
 /* Code Message Styling - Light Theme */
 .code-message-wrapper {
-  margin-top: 4px;
-  border-radius: 8px;
+  margin-top: 2px;
+  border-radius: 6px;
   overflow: hidden;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   border: 1px solid var(--theme-border);
@@ -114,31 +114,33 @@ body {
 }
 
 .code-message-header {
-  padding: 8px 12px;
+  padding: 6px 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
   background: var(--theme-surface-muted);
   border-bottom: 1px solid var(--theme-border);
+  flex-wrap: wrap;
 }
 
 .code-message-language {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--theme-text);
 }
 
 .code-message-copy-btn {
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 11px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
   background: var(--theme-surface);
   color: var(--theme-text);
   border: 1px solid var(--theme-border);
+  white-space: nowrap;
 }
 
 .code-message-copy-btn:hover {
@@ -176,8 +178,10 @@ html[data-theme="dark"] .code-message-copy-btn:hover {
 /* Syntax Highlighter Container */
 .syntax-highlighter-wrapper {
   position: relative;
-  overflow: hidden;
+  overflow: auto;
   background: #ffffff;
+  max-height: 400px;
+  font-size: 13px;
 }
 
 html[data-theme="dark"] .syntax-highlighter-wrapper {
@@ -186,13 +190,18 @@ html[data-theme="dark"] .syntax-highlighter-wrapper {
 
 .syntax-highlighter-wrapper pre {
   margin: 0 !important;
+  padding: 10px 12px !important;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
   background: transparent !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+  overflow-x: auto !important;
 }
 
 .syntax-highlighter-wrapper code {
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
   text-shadow: none !important;
+  font-size: 12px !important;
 }
 
 /* Custom scrollbar for code blocks */
