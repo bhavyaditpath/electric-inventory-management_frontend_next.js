@@ -98,6 +98,7 @@ export default function ChatMessageList({
   const listRef = useRef<HTMLDivElement | null>(null);
   const reactionActionRef = useRef<HTMLDivElement | null>(null);
   const reactionPickerRef = useRef<HTMLDivElement | null>(null);
+  const editTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👏", "😮"];
 
   const getFileExtension = (name: string) => {
@@ -351,6 +352,17 @@ export default function ChatMessageList({
     };
   }, [fullReactionPickerMessageId]);
 
+  useEffect(() => {
+    const textarea = editTextareaRef.current;
+    if (!textarea) return;
+
+    // Reset height to auto to get scrollHeight
+    textarea.style.height = "auto";
+    // Set height to scrollHeight with min/max constraints
+    const newHeight = Math.min(Math.max(textarea.scrollHeight, 80), 400);
+    textarea.style.height = `${newHeight}px`;
+  }, [editInput]);
+
   const handleOpenMoreReactions = useCallback(
     (event: ReactMouseEvent<HTMLButtonElement>, messageId: number) => {
       const nextId = fullReactionPickerMessageId === messageId ? null : messageId;
@@ -471,7 +483,7 @@ export default function ChatMessageList({
               )}
               <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                 <div
-                  className={`max-w-[90%] sm:max-w-[85%] md:max-w-[75%] lg:max-w-[60%] w-fit min-w-0 rounded-xl sm:rounded-2xl px-2.5 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm shadow-sm ${isMe
+                  className={`${editingThisMessage ? "w-full sm:w-11/12 md:w-3/4 lg:w-1/2" : "max-w-[90%] sm:max-w-[85%] md:max-w-[75%] lg:max-w-[60%] w-fit"} min-w-0 rounded-xl sm:rounded-2xl px-2.5 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm shadow-sm ${isMe
                     ? "bg-blue-600 text-white border border-blue-600 rounded-br-md"
                     : "bg-[var(--theme-surface)] text-[var(--theme-text)] border border-[var(--theme-border)] rounded-bl-md"
                     } relative group`}
@@ -549,6 +561,7 @@ export default function ChatMessageList({
                   {editingThisMessage ? (
                     <div className="space-y-2">
                       <textarea
+                        ref={editTextareaRef}
                         value={editInput}
                         onChange={(event) => setEditInput(event.target.value)}
                         onKeyDown={(event) => {
@@ -561,9 +574,9 @@ export default function ChatMessageList({
                             cancelEditing();
                           }
                         }}
-                        rows={2}
                         autoFocus
-                        className={`w-full rounded-lg border px-2.5 py-2 text-sm leading-relaxed resize-none ${isMe
+                        style={{ minHeight: "80px", maxHeight: "400px", height: "auto" }}
+                        className={`w-full rounded-lg border px-2.5 py-2 text-sm leading-relaxed resize-none overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${isMe
                           ? "border-white/30 bg-white/10 text-white placeholder:text-blue-100"
                           : "border-[var(--theme-border)] bg-[var(--theme-surface-muted)] text-[var(--theme-text)]"
                           } focus:outline-none focus:ring-0 focus:border-current`}
