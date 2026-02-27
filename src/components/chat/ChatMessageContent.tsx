@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus, vs } from "react-syntax-highlighter/dist/esm/styles/prism";
 import type { ChatMessage } from "@/types/chat.types";
 import { getFormatLabel, resolveFormat } from "@/utils/chatMessageFormat";
 
@@ -9,11 +11,47 @@ interface ChatMessageContentProps {
   isMe: boolean;
 }
 
+// Language mapping for react-syntax-highlighter
+const LANGUAGE_MAP: Record<string, string> = {
+  plaintext: "text",
+  javascript: "javascript",
+  typescript: "typescript",
+  json: "json",
+  html: "markup",
+  css: "css",
+  sql: "sql",
+  bash: "bash",
+  python: "python",
+  java: "java",
+  csharp: "csharp",
+  cpp: "cpp",
+};
+
 export default function ChatMessageContent({
   message,
-  isMe,
-}: ChatMessageContentProps) {
+  }: ChatMessageContentProps) {
   const [copied, setCopied] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  
+  useEffect(() => {
+    // Check initial theme
+    const checkTheme = () => {
+      const theme = document.documentElement.getAttribute('data-theme');
+      setIsDarkMode(theme === 'dark');
+    };
+    
+    checkTheme();
+    
+    // Watch for theme changes
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+    
+    return () => observer.disconnect();
+  }, []);
+  
   const rawContent = message.content || "";
   const normalized = resolveFormat(message.kind, message.language);
   const isCodeLike =
@@ -32,6 +70,8 @@ export default function ChatMessageContent({
     return rawContent;
   }, [normalized.kind, rawContent]);
 
+  const syntaxLanguage = LANGUAGE_MAP[normalized.language] || "text";
+
   if (!rawContent.trim()) return null;
 
   if (!isCodeLike) {
@@ -43,21 +83,11 @@ export default function ChatMessageContent({
   }
 
   return (
-    <div
-      className={`rounded-lg border mt-1 ${
-        isMe
-          ? "border-white/20 bg-black/20"
-          : "border-[var(--theme-border)] bg-[var(--theme-surface-muted)]"
-      }`}
-    >
-      <div
-        className={`px-2.5 py-1.5 border-b text-[11px] flex items-center justify-between gap-2 ${
-          isMe
-            ? "border-white/20 text-blue-100"
-            : "border-[var(--theme-border)] text-[var(--theme-text-muted)]"
-        }`}
-      >
-        <span className="font-medium">{getFormatLabel(message.kind, message.language)}</span>
+    <div className="code-message-wrapper">
+      <div className="code-message-header">
+        <span className="code-message-language">
+          {getFormatLabel(message.kind, message.language)}
+        </span>
         <button
           onClick={async () => {
             try {
@@ -68,19 +98,32 @@ export default function ChatMessageContent({
               setCopied(false);
             }
           }}
-          className={`px-2 py-0.5 rounded text-[10px] cursor-pointer ${
-            isMe
-              ? "bg-white/10 hover:bg-white/20 text-blue-50"
-              : "bg-[var(--theme-surface)] hover:bg-[var(--theme-surface-muted)] text-[var(--theme-text-muted)]"
-          }`}
+          className="code-message-copy-btn"
           aria-label="Copy message content"
         >
-          {copied ? "Copied" : "Copy"}
+          {copied ? "✓ Copied" : "Copy"}
         </button>
       </div>
-      <pre className="p-3 text-xs leading-relaxed overflow-x-auto whitespace-pre">
-        <code>{displayContent}</code>
-      </pre>
+      <div className="syntax-highlighter-wrapper">
+        <SyntaxHighlighter
+          language={syntaxLanguage}
+          style={isDarkMode ? vscDarkPlus : vs}
+          customStyle={{
+            margin: 0,
+            padding: "12px",
+            fontSize: "13px",
+            lineHeight: "1.5",
+            borderRadius: 0,
+          }}
+          codeTagProps={{
+            style: {
+              fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace",
+            },
+          }}
+        >
+          {displayContent}
+        </SyntaxHighlighter>
+      </div>
     </div>
   );
 }
