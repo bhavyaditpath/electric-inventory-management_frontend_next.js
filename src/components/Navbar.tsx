@@ -117,8 +117,18 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
                   placeholder="Search items..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="w-full pl-10 pr-10 py-2 border border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] p-1 rounded transition-all duration-200 cursor-pointer"
+                    aria-label="Clear search"
+                    title="Clear search"
+                  >
+                    <XMarkIcon className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -222,8 +232,18 @@ export default function Navbar({ sidebarOpen, isMobile, onMobileToggle }: Navbar
               placeholder="Search items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-[var(--theme-border)] rounded-lg bg-[var(--theme-surface)] text-[var(--theme-text)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="w-full pl-10 pr-10 py-2 border border-[var(--theme-border)] rounded-lg bg-[var(--theme-surface)] text-[var(--theme-text)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] p-1 rounded transition-all duration-200 cursor-pointer"
+                aria-label="Clear search"
+                title="Clear search"
+              >
+                <XMarkIcon className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
       )}
