@@ -36,11 +36,11 @@ export default function ChatLightbox({ lightbox, onClose }: ChatLightboxProps) {
             x
           </button>
         </div>
-        <div className="bg-black/40 rounded-xl overflow-hidden border border-white/10 shadow-2xl">
+        <div className="">
           <img
             src={lightbox.url}
             alt={lightbox.name}
-            className="w-full max-h-[75vh] object-contain"
+            className="w-full object-contain"
           />
         </div>
       </div>
