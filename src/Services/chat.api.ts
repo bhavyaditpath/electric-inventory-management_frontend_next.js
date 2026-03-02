@@ -130,6 +130,15 @@ export const chatApi = {
       emoji,
     }),
 
+  getMessageDeliveryStatus: (messageId: number) =>
+    apiClient.get<Array<{
+      userId: number;
+      username: string;
+      status: string;
+      deliveredAt?: string | null;
+      readAt?: string | null;
+    }>>(`/chat/messages/${messageId}/delivery-status`),
+
   deleteRoom: (roomId: number) =>
     apiClient.delete<null>(`/chat/rooms/${roomId}`),
 

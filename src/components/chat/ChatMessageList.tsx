@@ -23,6 +23,8 @@ import {
   PencilSquareIcon,
   PlusIcon,
   TrashIcon,
+  CheckIcon,
+  ClockIcon,
 } from "@heroicons/react/24/outline";
 import { chatApi } from "@/Services/chat.api";
 import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
@@ -447,6 +449,31 @@ export default function ChatMessageList({
     }
   }, [editInput, editingMessageId, onEditMessage]);
 
+  const renderDeliveryStatus = (message: ChatMessage, isMe: boolean) => {
+    if (!isMe || !message.deliveredCount && !message.readCount) return null;
+
+    const readCount = message.readCount || 0;
+    const deliveredCount = message.deliveredCount || 0;
+
+    return (
+      <div className="flex items-center gap-0.5 ml-1">
+        {readCount > 0 ? (
+          // Two checkmarks (read)
+          <>
+            <CheckIcon className="w-3 h-3 text-blue-400" />
+            <CheckIcon className="w-3 h-3 text-blue-400 -ml-1.5" />
+          </>
+        ) : deliveredCount > 0 ? (
+          // One checkmark (delivered)
+          <CheckIcon className="w-3 h-3 text-gray-400" />
+        ) : (
+          // Clock icon (sent)
+          <ClockIcon className="w-3 h-3 text-gray-400" />
+        )}
+      </div>
+    );
+  };
+
   return (
     <div
       ref={listRef}
@@ -727,16 +754,19 @@ export default function ChatMessageList({
                     </div>
                   )}
                   <div className="flex items-center justify-between gap-2">
-                    <p
-                      className={`text-[10px] mt-0 ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"
-                        }`}
-                    >
-                      {new Date(message.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                      {isEdited(message) ? " (edited)" : ""}
-                    </p>
+                    <div className="flex items-center gap-1">
+                      <p
+                        className={`text-[10px] mt-0 ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"
+                          }`}
+                      >
+                        {new Date(message.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                        {isEdited(message) ? " (edited)" : ""}
+                      </p>
+                      {renderDeliveryStatus(message, isMe)}
+                    </div>
                     {(canDelete || canEdit || canReply || canForward) && !editingThisMessage && (
                       <div className="flex justify-end relative">
                         <button

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { chatApi } from "@/Services/chat.api";
 import { showError, showSuccess } from "@/Services/toast.service";
 import { useAuth } from "@/contexts/AuthContext";
-import { UserRole } from "@/types/enums";
+import { MessageReceiptStatus, UserRole } from "@/types/enums";
 import {
   ChatLanguage,
   ChatMessage,
@@ -260,6 +260,92 @@ export default function ChatPage() {
     );
   }, []);
 
+  const handleMessageDelivered = useCallback((payload: {
+    messageId: number;
+    userId: number;
+    deliveredAt: string;
+  }) => {
+    setMessages((prev) =>
+      prev.map((message) =>
+        message.id === payload.messageId
+          ? {
+              ...message,
+              deliveredCount: (message.deliveredCount || 0) + 1,
+              receipts: message.receipts
+                ? message.receipts.map((r) =>
+                    r.userId === payload.userId
+                      ? { 
+                          ...r, 
+                          status: MessageReceiptStatus.DELIVERED as any, 
+                          deliveredAt: payload.deliveredAt 
+                        }
+                      : r
+                  )
+                : undefined,
+            }
+          : message
+      )
+    );
+  }, []);
+
+  const handleMessageRead = useCallback((payload: {
+    messageId: number;
+    userId: number;
+    readAt: string;
+  }) => {
+    setMessages((prev) =>
+      prev.map((message) =>
+        message.id === payload.messageId
+          ? {
+              ...message,
+              readCount: (message.readCount || 0) + 1,
+              receipts: message.receipts
+                ? message.receipts.map((r) =>
+                    r.userId === payload.userId
+                      ? {
+                          ...r,
+                          status: MessageReceiptStatus.READ as any,
+                          deliveredAt: r.deliveredAt || payload.readAt,
+                          readAt: payload.readAt,
+                        }
+                      : r
+                  )
+                : undefined,
+            }
+          : message
+      )
+    );
+  }, []);
+
+  const handleRoomMessagesDelivered = useCallback((payload: {
+    roomId: number;
+    userId: number;
+    messageIds: number[];
+    deliveredAt: string;
+  }) => {
+    setMessages((prev) =>
+      prev.map((message) =>
+        payload.messageIds.includes(message.id)
+          ? {
+              ...message,
+              deliveredCount: (message.deliveredCount || 0) + 1,
+              receipts: message.receipts
+                ? message.receipts.map((r) =>
+                    r.userId === payload.userId
+                      ? { 
+                          ...r, 
+                          status: MessageReceiptStatus.DELIVERED as any, 
+                          deliveredAt: payload.deliveredAt 
+                        }
+                      : r
+                  )
+                : undefined,
+            }
+          : message
+      )
+    );
+  }, []);
+
   const {
     isConnected,
     joinRoom,
@@ -267,6 +353,9 @@ export default function ChatPage() {
     sendMessage,
     sendTyping,
     markAsRead,
+    markMessageDelivered,
+    markMessageRead,
+    markRoomMessagesDelivered,
   } = useChatWebSocket({
     onMessage: handleIncomingMessage,
     onMessageUpdated: handleMessageUpdated,
@@ -295,6 +384,9 @@ export default function ChatPage() {
     onTyping: handleTyping,
     onUserOnline: handleUserOnline,
     onUserOffline: handleUserOffline,
+    onMessageDelivered: handleMessageDelivered,
+    onMessageRead: handleMessageRead,
+    onRoomMessagesDelivered: handleRoomMessagesDelivered,
   });
 
   const {
@@ -349,6 +441,7 @@ export default function ChatPage() {
 
         await chatApi.markAsRead(activeRoomId);
         markAsRead(activeRoomId);
+        markRoomMessagesDelivered(activeRoomId);
         setRooms((prev) =>
           prev.map((room) =>
             room.id === activeRoomId ? { ...room, unreadCount: 0 } : room
@@ -364,7 +457,7 @@ export default function ChatPage() {
     };
 
     loadMessages();
-  }, [activeRoomId, joinRoom, leaveRoom, markAsRead]);
+  }, [activeRoomId, joinRoom, leaveRoom, markAsRead, markRoomMessagesDelivered]);
 
   const handleSelectRoom = useCallback(
     (roomId: number) => {
