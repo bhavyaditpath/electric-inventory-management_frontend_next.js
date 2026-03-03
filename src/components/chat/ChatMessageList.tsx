@@ -32,6 +32,8 @@ import EmojiPicker from "@emoji-mart/react";
 import ChatMessageContent from "./ChatMessageContent";
 import { getFormatPreviewPrefix } from "@/utils/chatMessageFormat";
 import { emojiMartData } from "@/utils/emojiPickerData";
+import { useThemeMode } from "@/hooks/useThemeMode";
+import { ThemeMode } from "@/types/enums";
 
 interface ChatMessageListProps {
   messages: ChatMessage[];
@@ -66,6 +68,7 @@ export default function ChatMessageList({
   onForwardMessage,
   onReactionUpdated,
 }: ChatMessageListProps) {
+  const themeMode = useThemeMode();
 
   type MessageWithDayMeta = {
     message: ChatMessage;
@@ -501,9 +504,9 @@ export default function ChatMessageList({
 
       const triggerRect = event.currentTarget.getBoundingClientRect();
       const listRect = listRef.current?.getBoundingClientRect();
-      const horizontalPadding = 8;
+      const horizontalPadding = 20;
       const pickerHeight = 320;
-      const defaultWidth = 288;
+      const defaultWidth = 316;
       const maxWidthByList = listRect
         ? Math.max(220, listRect.width - horizontalPadding * 2)
         : window.innerWidth - horizontalPadding * 2;
@@ -962,7 +965,7 @@ export default function ChatMessageList({
             searchPosition="sticky"
             previewPosition="bottom"
             skinTonePosition="search"
-            theme="light"
+            theme={themeMode === ThemeMode.Dark ? "dark" : "light"}
             perLine={8}
           />
         </div>

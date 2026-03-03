@@ -26,6 +26,8 @@ import type {
   ChatReplyPreview,
 } from "@/types/chat.types";
 import { emojiMartData } from "@/utils/emojiPickerData";
+import { useThemeMode } from "@/hooks/useThemeMode";
+import { ThemeMode } from "@/types/enums";
 
 interface ChatComposerProps {
   roomId?: number | null;
@@ -170,6 +172,7 @@ export default function ChatComposer({
   maxFiles = 10,
   maxFileSizeBytes = 10 * 1024 * 1024,
 }: ChatComposerProps) {
+  const themeMode = useThemeMode();
   const totalLimitMb = Math.floor(maxFileSizeBytes / (1024 * 1024));
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [fileWarning, setFileWarning] = useState<string | null>(null);
@@ -547,7 +550,7 @@ export default function ChatComposer({
           {showEmojiPicker && (
             <div
               ref={emojiPickerRef}
-              className="absolute bottom-11 sm:bottom-12 left-0 z-20 shadow-lg sm:shadow-xl rounded-lg sm:rounded-xl overflow-hidden w-[min(16rem,calc(100vw-2rem))] sm:w-80"
+              className="absolute bottom-11 sm:bottom-12 left-0 z-20 shadow-lg sm:shadow-xl rounded-lg sm:rounded-xl overflow-hidden"
             >
               <EmojiPicker
                 data={emojiMartData}
@@ -555,7 +558,7 @@ export default function ChatComposer({
                 searchPosition="sticky"
                 previewPosition="bottom"
                 skinTonePosition="search"
-                theme="light"
+                theme={themeMode === ThemeMode.Dark ? "dark" : "light"}
                 perLine={8}
               />
             </div>
