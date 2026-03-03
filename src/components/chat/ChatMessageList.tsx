@@ -28,9 +28,10 @@ import {
   ClockIcon,
 } from "@heroicons/react/24/outline";
 import { chatApi } from "@/Services/chat.api";
-import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
+import EmojiPicker from "@emoji-mart/react";
 import ChatMessageContent from "./ChatMessageContent";
 import { getFormatPreviewPrefix } from "@/utils/chatMessageFormat";
+import { emojiMartData } from "@/utils/emojiPickerData";
 
 interface ChatMessageListProps {
   messages: ChatMessage[];
@@ -951,15 +952,18 @@ export default function ChatMessageList({
           }}
         >
           <EmojiPicker
-            onEmojiClick={(emojiData: EmojiClickData) => {
-              void handleToggleReaction(fullReactionPickerMessageId, emojiData.emoji);
+            data={emojiMartData}
+            onEmojiSelect={(emojiData: { native?: string }) => {
+              if (!emojiData?.native) return;
+              void handleToggleReaction(fullReactionPickerMessageId, emojiData.native);
               setFullReactionPickerMessageId(null);
               setReactionPickerPosition(null);
             }}
-            lazyLoadEmojis
-            width="100%"
-            height={320}
-            skinTonesDisabled
+            searchPosition="sticky"
+            previewPosition="bottom"
+            skinTonePosition="search"
+            theme="light"
+            perLine={8}
           />
         </div>
       )}

@@ -15,7 +15,7 @@ import {
   PaperClipIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
+import EmojiPicker from "@emoji-mart/react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
@@ -25,6 +25,7 @@ import type {
   ChatMessageKind,
   ChatReplyPreview,
 } from "@/types/chat.types";
+import { emojiMartData } from "@/utils/emojiPickerData";
 
 interface ChatComposerProps {
   roomId?: number | null;
@@ -325,9 +326,10 @@ export default function ChatComposer({
   }, []);
 
   const handleEmojiClick = useCallback(
-    (emojiData: EmojiClickData) => {
+    (emojiData: { native?: string }) => {
       if (!editor) return;
-      editor.chain().focus().insertContent(emojiData.emoji).run();
+      if (!emojiData?.native) return;
+      editor.chain().focus().insertContent(emojiData.native).run();
     },
     [editor]
   );
@@ -548,10 +550,13 @@ export default function ChatComposer({
               className="absolute bottom-11 sm:bottom-12 left-0 z-20 shadow-lg sm:shadow-xl rounded-lg sm:rounded-xl overflow-hidden w-[min(16rem,calc(100vw-2rem))] sm:w-80"
             >
               <EmojiPicker
-                onEmojiClick={handleEmojiClick}
-                lazyLoadEmojis
-                width="100%"
-                height={320}
+                data={emojiMartData}
+                onEmojiSelect={handleEmojiClick}
+                searchPosition="sticky"
+                previewPosition="bottom"
+                skinTonePosition="search"
+                theme="light"
+                perLine={8}
               />
             </div>
           )}
