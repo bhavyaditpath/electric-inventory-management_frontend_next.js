@@ -101,6 +101,11 @@ export default function ChatMessageList({
   const reactionActionRef = useRef<HTMLDivElement | null>(null);
   const reactionPickerRef = useRef<HTMLDivElement | null>(null);
   const editTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const messageItemRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<number | null>(
+    null
+  );
   const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👏", "😮"];
 
   const getFileExtension = (name: string) => {
@@ -365,6 +370,46 @@ export default function ChatMessageList({
     textarea.style.height = `${newHeight}px`;
   }, [editInput]);
 
+  useEffect(() => {
+    return () => {
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const setMessageItemRef = useCallback(
+    (messageId: number) => (node: HTMLDivElement | null) => {
+      if (!node) {
+        messageItemRefs.current.delete(messageId);
+        return;
+      }
+      messageItemRefs.current.set(messageId, node);
+    },
+    []
+  );
+
+  const handleReplyPreviewClick = useCallback((message: ChatMessage) => {
+    const targetId = message.replyTo?.id ?? message.replyToMessageId;
+    if (typeof targetId !== "number") return;
+
+    const targetNode = messageItemRefs.current.get(targetId);
+    if (!targetNode) {
+      showError("Original message is not loaded in this view");
+      return;
+    }
+
+    targetNode.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightedMessageId(targetId);
+
+    if (highlightTimeoutRef.current) {
+      clearTimeout(highlightTimeoutRef.current);
+    }
+    highlightTimeoutRef.current = setTimeout(() => {
+      setHighlightedMessageId((prev) => (prev === targetId ? null : prev));
+    }, 2000);
+  }, []);
+
   const handleOpenMoreReactions = useCallback(
     (event: ReactMouseEvent<HTMLButtonElement>, messageId: number) => {
       const nextId = fullReactionPickerMessageId === messageId ? null : messageId;
@@ -500,7 +545,7 @@ export default function ChatMessageList({
           const replyPreviewText = getReplyPreviewText(message);
           const forwardedPreviewText = getForwardedPreviewText(message);
           return (
-            <div key={message.id}>
+            <div key={message.id} ref={setMessageItemRef(message.id)}>
               {showDayHeader && (
                 <div className="flex items-center justify-center py-1 sm:py-2">
                   <span className="rounded-full border border-[var(--theme-border)] bg-[var(--theme-surface)] px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-medium text-[var(--theme-text-muted)]">
@@ -510,9 +555,14 @@ export default function ChatMessageList({
               )}
               <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                 <div
-                  className={`${editingThisMessage ? "w-full sm:w-11/12 md:w-3/4 lg:w-1/2" : "max-w-[90%] sm:max-w-[85%] md:max-w-[75%] lg:max-w-[60%] w-fit"} min-w-0 rounded-xl sm:rounded-2xl px-2.5 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm shadow-sm ${isMe
+                  className={`${editingThisMessage ? "w-full sm:w-11/12 md:w-3/4 lg:w-1/2" : "max-w-[90%] sm:max-w-[85%] md:max-w-[75%] lg:max-w-[60%] w-fit"} min-w-0 rounded-xl sm:rounded-2xl px-2.5 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm shadow-sm transition-colors duration-300 ${isMe
                     ? "bg-blue-600 text-white border border-blue-600 rounded-br-md"
                     : "bg-[var(--theme-surface)] text-[var(--theme-text)] border border-[var(--theme-border)] rounded-bl-md"
+                    } ${highlightedMessageId === message.id
+                      ? isMe
+                        ? "ring-2 ring-amber-200 bg-blue-500"
+                        : "ring-2 ring-amber-400 bg-amber-50"
+                      : ""
                     } relative group`}
                 >
                   <div
@@ -556,11 +606,14 @@ export default function ChatMessageList({
                     </p>
                   )}
                   {!!message.replyTo && !editingThisMessage && (
-                    <div
+                    <button
+                      type="button"
+                      onClick={() => handleReplyPreviewClick(message)}
                       className={`mb-1.5 sm:mb-2 rounded-md border-l-2 px-2 sm:px-2.5 py-1 sm:py-1.5 ${isMe
                         ? "border-white/80 bg-white/10"
                         : "border-blue-500 bg-[var(--theme-surface-muted)]"
-                        }`}
+                        } w-full text-left cursor-pointer hover:opacity-90`}
+                      aria-label="Go to replied message"
                     >
                       <p className={`text-[10px] sm:text-[11px] font-semibold ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"}`}>
                         {message.replyTo.senderName || "Unknown user"}
@@ -568,7 +621,7 @@ export default function ChatMessageList({
                       <p className={`text-[11px] sm:text-xs truncate ${isMe ? "text-blue-50" : "text-[var(--theme-text)]"}`}>
                         {replyPreviewText}
                       </p>
-                    </div>
+                    </button>
                   )}
                   {!!message.isForwarded && !!message.forwardedFrom && !editingThisMessage && (
                     <div
