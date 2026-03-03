@@ -232,9 +232,9 @@ const ChatSidebar = ({
                             )}
                           </div>
                         )}
-                        {room.unreadCount && room.unreadCount > 0 && (
+                        {Number(room.unreadCount) > 0 && (
                           <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center">
-                            {room.unreadCount > 99 ? "99+" : room.unreadCount}
+                            {Number(room.unreadCount) > 99 ? "99+" : Number(room.unreadCount)}
                           </span>
                         )}
                       </div>
