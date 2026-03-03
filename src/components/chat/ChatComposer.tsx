@@ -79,9 +79,37 @@ const normalizeLanguage = (value: unknown): ChatLanguage => {
 
 const extractText = (node?: TiptapNode | null): string => {
   if (!node) return "";
+  if (node.type === "hardBreak") return "\n";
   const own = typeof node.text === "string" ? node.text : "";
   const nested = (node.content || []).map((child) => extractText(child)).join("");
   return `${own}${nested}`;
+};
+
+const BLOCK_NODE_TYPES = new Set([
+  "paragraph",
+  "heading",
+  "blockquote",
+  "listItem",
+  "bulletList",
+  "orderedList",
+]);
+
+const extractPlainText = (node?: TiptapNode | null): string => {
+  if (!node) return "";
+  if (node.type === "hardBreak") return "\n";
+  if (typeof node.text === "string") return node.text;
+
+  const children = node.content || [];
+  if (children.length === 0) return "";
+
+  return children.reduce((acc, child, index) => {
+    let next = acc + extractPlainText(child);
+    const isLast = index === children.length - 1;
+    if (!isLast && BLOCK_NODE_TYPES.has(child.type || "") && !next.endsWith("\n")) {
+      next += "\n";
+    }
+    return next;
+  }, "");
 };
 
 const collectMeaningfulNodes = (nodes: TiptapNode[] = []): TiptapNode[] => {
@@ -127,7 +155,7 @@ const getPayloadFromDoc = (doc: TiptapNode): {
     return { content: codeText, kind: "code", language };
   }
 
-  const plainText = extractText(doc).trim();
+  const plainText = extractPlainText(doc).trim();
   return { content: plainText, kind: "text", language: "plaintext" };
 };
 
@@ -173,7 +201,15 @@ export default function ChatComposer({
           "min-h-[20px] max-h-[120px] overflow-y-auto text-sm leading-relaxed text-[var(--theme-text)] focus:outline-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
       },
       handleKeyDown: (_view, event) => {
-        if (event.key === "Enter" && !event.shiftKey && !isComposingRef.current) {
+        if (event.key !== "Enter" || isComposingRef.current) {
+          return false;
+        }
+
+        if (event.shiftKey) {
+          return false;
+        }
+
+        if (!event.ctrlKey && !event.metaKey && !event.altKey) {
           event.preventDefault();
           handleSendRef.current();
           return true;

@@ -645,9 +645,17 @@ export default function ChatMessageList({
                         value={editInput}
                         onChange={(event) => setEditInput(event.target.value)}
                         onKeyDown={(event) => {
-                          if (event.key === "Enter" && !event.shiftKey) {
+                          if (
+                            event.key === "Enter" &&
+                            !event.shiftKey &&
+                            !event.ctrlKey &&
+                            !event.metaKey &&
+                            !event.altKey &&
+                            !event.nativeEvent.isComposing
+                          ) {
                             event.preventDefault();
                             void saveEdit();
+                            return;
                           }
                           if (event.key === "Escape") {
                             event.preventDefault();
