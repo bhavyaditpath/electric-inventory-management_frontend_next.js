@@ -161,18 +161,6 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions = {}) => {
     socketRef.current?.emit("markAsRead", { roomId });
   }, []);
 
-  const markMessageDelivered = useCallback((messageId: number) => {
-    socketRef.current?.emit("markMessageDelivered", { messageId });
-  }, []);
-
-  const markMessageRead = useCallback((messageId: number) => {
-    socketRef.current?.emit("markMessageRead", { messageId });
-  }, []);
-
-  const markRoomMessagesDelivered = useCallback((roomId: number) => {
-    socketRef.current?.emit("markRoomMessagesDelivered", { roomId });
-  }, []);
-
   return {
     isConnected,
     joinRoom,
@@ -180,8 +168,5 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions = {}) => {
     sendMessage,
     sendTyping,
     markAsRead,
-    markMessageDelivered,
-    markMessageRead,
-    markRoomMessagesDelivered,
   };
 };

@@ -763,7 +763,7 @@ export default function ChatMessageList({
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
-                        {isEdited(message) ? " (edited)" : ""}
+                        {/* {isEdited(message) ? " (edited)" : ""} */}
                       </p>
                       {renderDeliveryStatus(message, isMe)}
                     </div>

@@ -154,6 +154,12 @@ export default function ChatPage() {
       setMessages((prev) =>
         prev.some((m) => m.id === message.id) ? prev : [...prev, message]
       );
+      // Mark message as delivered when received (if it's not from current user)
+      if (message.senderId !== user?.id) {
+        chatApi.markMessageDelivered(message.id).catch(err => {
+          console.error("Failed to mark message as delivered:", err);
+        });
+      }
     }
 
     setRooms((prev) => {
@@ -170,7 +176,7 @@ export default function ChatPage() {
       });
       return sortRooms(next);
     });
-  }, [fetchRooms]);
+  }, [fetchRooms, user?.id]);
 
   const handleMessageReactionUpdated = useCallback((updatedMessage: ChatMessage) => {
     const currentRoomId = activeRoomIdRef.current;
@@ -353,9 +359,6 @@ export default function ChatPage() {
     sendMessage,
     sendTyping,
     markAsRead,
-    markMessageDelivered,
-    markMessageRead,
-    markRoomMessagesDelivered,
   } = useChatWebSocket({
     onMessage: handleIncomingMessage,
     onMessageUpdated: handleMessageUpdated,
@@ -441,7 +444,10 @@ export default function ChatPage() {
 
         await chatApi.markAsRead(activeRoomId);
         markAsRead(activeRoomId);
-        markRoomMessagesDelivered(activeRoomId);
+        // Mark all messages as delivered via HTTP API
+        await chatApi.markRoomMessagesDelivered(activeRoomId).catch(err => {
+          console.error("Failed to mark room messages as delivered:", err);
+        });
         setRooms((prev) =>
           prev.map((room) =>
             room.id === activeRoomId ? { ...room, unreadCount: 0 } : room
@@ -457,7 +463,7 @@ export default function ChatPage() {
     };
 
     loadMessages();
-  }, [activeRoomId, joinRoom, leaveRoom, markAsRead, markRoomMessagesDelivered]);
+  }, [activeRoomId, joinRoom, leaveRoom, markAsRead]);
 
   const handleSelectRoom = useCallback(
     (roomId: number) => {
