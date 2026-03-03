@@ -19,6 +19,7 @@ import EmojiPicker from "@emoji-mart/react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import Placeholder from "@tiptap/extension-placeholder";
 import { common, createLowlight } from "lowlight";
 import type {
   ChatLanguage,
@@ -197,12 +198,15 @@ export default function ChatComposer({
       CodeBlockLowlight.configure({
         lowlight,
       }),
+      Placeholder.configure({
+        placeholder: "Type a message...",
+      }),
     ],
     content: "",
     editorProps: {
       attributes: {
         class:
-          "min-h-[20px] max-h-[120px] overflow-y-auto text-sm leading-relaxed text-[var(--theme-text)] focus:outline-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+          "chat-composer-editor min-h-[20px] max-h-[120px] overflow-y-auto text-sm leading-relaxed text-[var(--theme-text)] focus:outline-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
       },
       handleKeyDown: (_view, event) => {
         if (event.key !== "Enter" || isComposingRef.current) {
@@ -565,7 +569,7 @@ export default function ChatComposer({
           )}
         </div>
 
-        <div className="flex-1 min-w-0 border border-[var(--theme-border)] rounded-2xl px-3 sm:px-4 py-1.5 sm:py-2 bg-[var(--theme-surface-muted)] focus-within:ring-2 focus-within:ring-blue-500">
+        <div className="flex-1 min-w-0 border border-[var(--theme-border)] rounded-2xl px-3 sm:px-4 py-1.5 sm:py-2 focus-within:ring-2 focus-within:ring-blue-500">
           <EditorContent editor={editor} />
         </div>
 
