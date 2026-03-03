@@ -2,6 +2,7 @@
 
 import {
   type MouseEvent as ReactMouseEvent,
+  type MouseEvent as NativeMouseEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -80,6 +81,10 @@ export default function ChatMessageList({
   const [openMenuMessageId, setOpenMenuMessageId] = useState<number | null>(
     null
   );
+  const [messageMenuPosition, setMessageMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [editInput, setEditInput] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
@@ -100,6 +105,7 @@ export default function ChatMessageList({
   const listRef = useRef<HTMLDivElement | null>(null);
   const reactionActionRef = useRef<HTMLDivElement | null>(null);
   const reactionPickerRef = useRef<HTMLDivElement | null>(null);
+  const messageMenuRef = useRef<HTMLDivElement | null>(null);
   const editTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const messageItemRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -256,6 +262,37 @@ export default function ChatMessageList({
     [messages]
   );
 
+  const closeMessageMenu = useCallback(() => {
+    setOpenMenuMessageId(null);
+    setMessageMenuPosition(null);
+  }, []);
+
+  const openMessageMenuAtPointer = useCallback(
+    (event: NativeMouseEvent<HTMLDivElement>, messageId: number) => {
+      event.preventDefault();
+
+      const MENU_WIDTH = 176;
+      const MENU_HEIGHT = 196;
+      const EDGE_PADDING = 8;
+      const left = Math.min(
+        event.clientX,
+        window.innerWidth - MENU_WIDTH - EDGE_PADDING
+      );
+      const top = Math.min(
+        event.clientY,
+        window.innerHeight - MENU_HEIGHT - EDGE_PADDING
+      );
+
+      setOpenAttachmentMenuId(null);
+      setOpenMenuMessageId(messageId);
+      setMessageMenuPosition({
+        left: Math.max(EDGE_PADDING, left),
+        top: Math.max(EDGE_PADDING, top),
+      });
+    },
+    []
+  );
+
   const computeNextReactions = useCallback(
     (base: MessageReactionView[], emoji: string) => {
       const target = base.find((r) => r.emoji === emoji);
@@ -346,16 +383,56 @@ export default function ChatMessageList({
   }, [fullReactionPickerMessageId]);
 
   useEffect(() => {
+    if (openMenuMessageId == null) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (messageMenuRef.current?.contains(target)) return;
+      closeMessageMenu();
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeMessageMenu();
+      }
+    };
+
+    const closeOnViewportChange = () => {
+      closeMessageMenu();
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", closeOnViewportChange);
+    window.addEventListener("scroll", closeOnViewportChange, true);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", closeOnViewportChange);
+      window.removeEventListener("scroll", closeOnViewportChange, true);
+    };
+  }, [closeMessageMenu, openMenuMessageId]);
+
+  useEffect(() => {
     if (fullReactionPickerMessageId == null) return;
     const closePicker = () => {
       setFullReactionPickerMessageId(null);
       setReactionPickerPosition(null);
     };
+    const closePickerOnScroll = (event: Event) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (reactionActionRef.current?.contains(target)) return;
+      if (reactionPickerRef.current?.contains(target)) return;
+      closePicker();
+    };
     window.addEventListener("resize", closePicker);
-    window.addEventListener("scroll", closePicker, true);
+    window.addEventListener("scroll", closePickerOnScroll, true);
     return () => {
       window.removeEventListener("resize", closePicker);
-      window.removeEventListener("scroll", closePicker, true);
+      window.removeEventListener("scroll", closePickerOnScroll, true);
     };
   }, [fullReactionPickerMessageId]);
 
@@ -412,6 +489,8 @@ export default function ChatMessageList({
 
   const handleOpenMoreReactions = useCallback(
     (event: ReactMouseEvent<HTMLButtonElement>, messageId: number) => {
+      event.preventDefault();
+      event.stopPropagation();
       const nextId = fullReactionPickerMessageId === messageId ? null : messageId;
       if (nextId == null) {
         setFullReactionPickerMessageId(null);
@@ -564,6 +643,14 @@ export default function ChatMessageList({
                         : "ring-2 ring-amber-400 bg-amber-50"
                       : ""
                     } relative group`}
+                  onContextMenu={(event) => {
+                    if (
+                      (canDelete || canEdit || canReply || canForward) &&
+                      !editingThisMessage
+                    ) {
+                      openMessageMenuAtPointer(event, message.id);
+                    }
+                  }}
                 >
                   <div
                     className={`absolute -top-5 z-30 hidden sm:items-center ${editingThisMessage ? "sm:hidden" : "sm:flex"} ${isMe ? "right-0" : "left-0"}`}
@@ -771,7 +858,7 @@ export default function ChatMessageList({
                                   <EllipsisHorizontalIcon className="w-4 h-4" />
                                 </button>
                                 {openAttachmentMenuId === attachment.id && (
-                                  <div className="absolute right-0 top-6 w-30 sm:w-32 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20 text-xs sm:text-sm">
+                                  <div className={`absolute top-6 ${isMe ? "right-0" : "left-0"} w-30 sm:w-32 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20 text-xs sm:text-sm`}>
                                     <button
                                       onClick={() => {
                                         handleDownloadAttachment(attachment);
@@ -828,71 +915,6 @@ export default function ChatMessageList({
                       </p>
                       {renderDeliveryStatus(message, isMe)}
                     </div>
-                    {(canDelete || canEdit || canReply || canForward) && !editingThisMessage && (
-                      <div className="flex justify-end relative">
-                        <button
-                          onClick={() =>
-                            setOpenMenuMessageId((prev) =>
-                              prev === message.id ? null : message.id
-                            )
-                          }
-                          className={`p-1 rounded-full cursor-pointer ${isMe
-                            ? "text-blue-100 hover:text-white"
-                            : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)]"
-                            }`}
-                          aria-label="Message actions"
-                        >
-                          <EllipsisHorizontalIcon className="w-4 h-4" />
-                        </button>
-                        {openMenuMessageId === message.id && (
-                          <div className="absolute right-0 top-6 w-40 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-20">
-                            {canForward && (
-                              <button
-                                onClick={() => {
-                                  onForwardMessage?.(message);
-                                  setOpenMenuMessageId(null);
-                                }}
-                                className="w-full px-3 py-2 text-left text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] flex items-center gap-2 cursor-pointer"
-                              >
-                                <ArrowPathRoundedSquareIcon className="w-4 h-4" />
-                                Forward
-                              </button>
-                            )}
-                            {canReply && (
-                              <button
-                                onClick={() => {
-                                  onReplyMessage?.(message);
-                                  setOpenMenuMessageId(null);
-                                }}
-                                className="w-full px-3 py-2 text-left text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] flex items-center gap-2 cursor-pointer"
-                              >
-                                <ArrowUturnLeftIcon className="w-4 h-4" />
-                                Reply
-                              </button>
-                            )}
-                            {canEdit && (
-                              <button
-                                onClick={() => startEditing(message)}
-                                className="w-full px-3 py-2 text-left text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] flex items-center gap-2 cursor-pointer"
-                              >
-                                <PencilSquareIcon className="w-4 h-4" />
-                                Edit
-                              </button>
-                            )}
-                            <button
-                              onClick={() => {
-                                onDeleteMessage?.(message.id);
-                                setOpenMenuMessageId(null);
-                              }}
-                              className="w-full px-3 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer"
-                            >
-                              <TrashIcon className="w-4 h-4" />
-                              Delete
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
                   {reactions.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
@@ -939,6 +961,79 @@ export default function ChatMessageList({
             height={320}
             skinTonesDisabled
           />
+        </div>
+      )}
+      {openMenuMessageId != null && messageMenuPosition && (
+        <div
+          ref={messageMenuRef}
+          className="fixed z-50 w-44 rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg"
+          style={{
+            top: `${messageMenuPosition.top}px`,
+            left: `${messageMenuPosition.left}px`,
+          }}
+        >
+          {(() => {
+            const message = getMessageFromCollection(openMenuMessageId);
+            if (!message) return null;
+            const isMe = message.senderId === currentUserId;
+            const canEdit = !!onEditMessage && isMe;
+            const canDelete = !!onDeleteMessage && (isMe || isAdmin);
+            const canReply = !!onReplyMessage && typeof currentUserId === "number";
+            const canForward = !!onForwardMessage && typeof currentUserId === "number";
+
+            return (
+              <>
+                {canForward && (
+                  <button
+                    onClick={() => {
+                      onForwardMessage?.(message);
+                      closeMessageMenu();
+                    }}
+                    className="w-full px-3 py-2 text-left text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] flex items-center gap-2 cursor-pointer"
+                  >
+                    <ArrowPathRoundedSquareIcon className="w-4 h-4" />
+                    Forward
+                  </button>
+                )}
+                {canReply && (
+                  <button
+                    onClick={() => {
+                      onReplyMessage?.(message);
+                      closeMessageMenu();
+                    }}
+                    className="w-full px-3 py-2 text-left text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] flex items-center gap-2 cursor-pointer"
+                  >
+                    <ArrowUturnLeftIcon className="w-4 h-4" />
+                    Reply
+                  </button>
+                )}
+                {canEdit && (
+                  <button
+                    onClick={() => {
+                      startEditing(message);
+                      closeMessageMenu();
+                    }}
+                    className="w-full px-3 py-2 text-left text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] flex items-center gap-2 cursor-pointer"
+                  >
+                    <PencilSquareIcon className="w-4 h-4" />
+                    Edit
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    onClick={() => {
+                      onDeleteMessage?.(message.id);
+                      closeMessageMenu();
+                    }}
+                    className="w-full px-3 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer"
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                    Delete
+                  </button>
+                )}
+              </>
+            );
+          })()}
         </div>
       )}
       {visibleTypingUsers.length > 0 && (
