@@ -83,6 +83,7 @@ export interface ChatMessage {
   deliveredAt?: string | null;
   isRead?: boolean;
   readAt?: string | null;
+  editedAt?: string | null;
 }
 
 export interface ChatReaction {

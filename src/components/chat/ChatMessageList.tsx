@@ -177,8 +177,8 @@ export default function ChatMessageList({
 
   const hasText = (value?: string) => !!value && value.trim().length > 0;
   const isEdited = (message: ChatMessage) =>
-    !!message.updatedAt &&
-    new Date(message.updatedAt).getTime() > new Date(message.createdAt).getTime();
+    !!message.editedAt &&
+    new Date(message.editedAt).getTime() > new Date(message.createdAt).getTime();
   const getReplyPreviewText = (message: ChatMessage) => {
     if (!message.replyTo) return null;
     if (message.replyTo.isRemoved) return "This message was deleted";
