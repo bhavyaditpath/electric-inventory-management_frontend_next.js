@@ -189,6 +189,7 @@ export default function ChatComposer({
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isComposingRef = useRef(false);
   const handleSendRef = useRef<() => void>(() => undefined);
+  const addFilesRef = useRef<(files: File[]) => void>(() => undefined);
 
   const editor = useEditor({
     extensions: [
@@ -223,6 +224,17 @@ export default function ChatComposer({
           return true;
         }
         return false;
+      },
+      handlePaste: (_view, event) => {
+        const clipboardFiles = Array.from(event.clipboardData?.files || []);
+        const imageFiles = clipboardFiles.filter((file) =>
+          file.type.startsWith("image/")
+        );
+        if (imageFiles.length === 0) return false;
+
+        event.preventDefault();
+        addFilesRef.current(imageFiles);
+        return true;
       },
     },
     onUpdate: ({ editor: instance }) => {
@@ -279,9 +291,8 @@ export default function ChatComposer({
     fileInputRef.current?.click();
   }, []);
 
-  const handleFilesSelected = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(event.target.files || []);
+  const addFiles = useCallback(
+    (files: File[]) => {
       if (files.length === 0) return;
       let warning: string | null = null;
       let skippedForType = false;
@@ -323,9 +334,20 @@ export default function ChatComposer({
 
       setFileWarning(warning);
       setSelectedFiles(nextFiles);
-      event.target.value = "";
     },
     [maxFileSizeBytes, maxFiles, selectedFiles, totalLimitMb]
+  );
+
+  addFilesRef.current = addFiles;
+
+  const handleFilesSelected = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(event.target.files || []);
+      if (files.length === 0) return;
+      addFiles(files);
+      event.target.value = "";
+    },
+    [addFiles]
   );
 
   const handleRemoveFile = useCallback((index: number) => {
