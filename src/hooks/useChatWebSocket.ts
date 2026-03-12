@@ -28,9 +28,23 @@ interface RoomUpdatedPayload {
   isGroupChat: boolean;
 }
 
+interface MessagesDeliveredPayload {
+  roomId: number;
+  userId: number;
+  deliveredAt: string;
+}
+
+interface MessagesReadPayload {
+  roomId: number;
+  userId: number;
+  readAt: string;
+}
+
 interface UseChatWebSocketOptions {
   onMessage?: (message: ChatMessage) => void;
   onMessageUpdated?: (message: ChatMessage) => void;
+  onMessagesDelivered?: (payload: MessagesDeliveredPayload) => void;
+  onMessagesRead?: (payload: MessagesReadPayload) => void;
   onMessageNotification?: (payload: ChatMessageNotification) => void;
   onMessageDeleted?: (payload: { id: number; chatRoomId: number }) => void;
   onMessageReactionUpdated?: (message: ChatMessage) => void;
@@ -71,6 +85,12 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions = {}) => {
     });
     socket.on("messageUpdated", (message: ChatMessage) => {
       handlersRef.current.onMessageUpdated?.(message);
+    });
+    socket.on("messagesDelivered", (payload: MessagesDeliveredPayload) => {
+      handlersRef.current.onMessagesDelivered?.(payload);
+    });
+    socket.on("messagesRead", (payload: MessagesReadPayload) => {
+      handlersRef.current.onMessagesRead?.(payload);
     });
     socket.on("messageNotification", (payload: ChatMessageNotification) => {
       handlersRef.current.onMessageNotification?.(payload);

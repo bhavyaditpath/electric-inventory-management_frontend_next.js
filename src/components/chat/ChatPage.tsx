@@ -220,6 +220,86 @@ export default function ChatPage() {
     );
   }, []);
 
+  const handleMessagesDelivered = useCallback(
+    (payload: { roomId: number; userId: number; deliveredAt: string }) => {
+      setMessages((prev) =>
+        prev.map((message) => {
+          if (message.chatRoomId !== payload.roomId) return message;
+          if (message.senderId === payload.userId) return message;
+          if (message.isDelivered) return message;
+
+          return {
+            ...message,
+            messageStatus: "delivered",
+            isDelivered: true,
+            deliveredAt: payload.deliveredAt,
+          };
+        })
+      );
+
+      setRooms((prev) =>
+        prev.map((room) => {
+          if (room.id !== payload.roomId || !room.lastMessage) return room;
+          if (room.lastMessage.senderId === payload.userId) return room;
+          if (room.lastMessage.isDelivered) return room;
+
+          return {
+            ...room,
+            lastMessage: {
+              ...room.lastMessage,
+              messageStatus: "delivered",
+              isDelivered: true,
+              deliveredAt: payload.deliveredAt,
+            },
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const handleMessagesRead = useCallback(
+    (payload: { roomId: number; userId: number; readAt: string }) => {
+      setMessages((prev) =>
+        prev.map((message) => {
+          if (message.chatRoomId !== payload.roomId) return message;
+          if (message.senderId === payload.userId) return message;
+          if (message.isRead) return message;
+
+          return {
+            ...message,
+            messageStatus: "read",
+            isDelivered: true,
+            deliveredAt: message.deliveredAt || payload.readAt,
+            isRead: true,
+            readAt: payload.readAt,
+          };
+        })
+      );
+
+      setRooms((prev) =>
+        prev.map((room) => {
+          if (room.id !== payload.roomId || !room.lastMessage) return room;
+          if (room.lastMessage.senderId === payload.userId) return room;
+          if (room.lastMessage.isRead) return room;
+
+          return {
+            ...room,
+            lastMessage: {
+              ...room.lastMessage,
+              messageStatus: "read",
+              isDelivered: true,
+              deliveredAt: room.lastMessage.deliveredAt || payload.readAt,
+              isRead: true,
+              readAt: payload.readAt,
+            },
+          };
+        })
+      );
+    },
+    []
+  );
+
   const handleTyping = useCallback((payload: { userId: number; isTyping: boolean }) => {
     if (!activeRoomIdRef.current) return;
     setTypingUserIds((prev) => {
@@ -270,6 +350,8 @@ export default function ChatPage() {
   } = useChatWebSocket({
     onMessage: handleIncomingMessage,
     onMessageUpdated: handleMessageUpdated,
+    onMessagesDelivered: handleMessagesDelivered,
+    onMessagesRead: handleMessagesRead,
     onMessageReactionUpdated: handleMessageReactionUpdated,
     onRoomUpdated: (payload) => {
       setRooms((prev) =>

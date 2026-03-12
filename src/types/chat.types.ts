@@ -78,6 +78,9 @@ export interface ChatMessage {
   sender?: ChatUser;
   attachments?: ChatAttachment[];
   reactions?: ChatReaction[];
+  messageStatus?: "sent" | "delivered" | "read";
+  isDelivered?: boolean;
+  deliveredAt?: string | null;
   isRead?: boolean;
   readAt?: string | null;
 }

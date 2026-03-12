@@ -25,6 +25,7 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import { CheckIcon } from "@heroicons/react/24/solid";
 import { chatApi } from "@/Services/chat.api";
 import EmojiPicker from "@emoji-mart/react";
 import ChatMessageContent from "./ChatMessageContent";
@@ -200,6 +201,11 @@ export default function ChatMessageList({
   };
 
   const isImageAttachment = (mimeType: string) => mimeType.startsWith("image/");
+  const getMessageStatus = (message: ChatMessage): "sent" | "delivered" | "read" => {
+    if (message.messageStatus === "read" || message.isRead) return "read";
+    if (message.messageStatus === "delivered" || message.isDelivered) return "delivered";
+    return "sent";
+  };
 
   const normalizeReactions = useCallback(
     (input: unknown): MessageReactionView[] => {
@@ -891,6 +897,32 @@ export default function ChatMessageList({
                         {isEdited(message) ? " (edited)" : ""}
                       </p>
                     </div>
+                    {isMe && (
+                      <span
+                        className="inline-flex items-center justify-end"
+                        aria-label={`Message ${getMessageStatus(message)}`}
+                        title={getMessageStatus(message)}
+                      >
+                        {getMessageStatus(message) === "sent" ? (
+                          <CheckIcon className="w-3 h-3 text-blue-100" />
+                        ) : (
+                          <span className="relative inline-flex w-4 h-3">
+                            <CheckIcon
+                              className={`absolute left-0 top-0 w-3 h-3 ${getMessageStatus(message) === "read"
+                                ? "text-sky-200"
+                                : "text-blue-100"
+                                }`}
+                            />
+                            <CheckIcon
+                              className={`absolute left-1 top-0 w-3 h-3 ${getMessageStatus(message) === "read"
+                                ? "text-sky-200"
+                                : "text-blue-100"
+                                }`}
+                            />
+                          </span>
+                        )}
+                      </span>
+                    )}
                   </div>
                   {reactions.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
