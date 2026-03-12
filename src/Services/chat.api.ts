@@ -130,25 +130,6 @@ export const chatApi = {
       emoji,
     }),
 
-  // Message delivery status APIs
-  markMessageDelivered: (messageId: number) =>
-    apiClient.post<null>(`/chat/messages/${messageId}/delivered`, {}),
-
-  markMessageRead: (messageId: number) =>
-    apiClient.post<null>(`/chat/messages/${messageId}/read`, {}),
-
-  markRoomMessagesDelivered: (roomId: number) =>
-    apiClient.post<{ count: number }>(`/chat/rooms/${roomId}/delivered`, {}),
-
-  getMessageDeliveryStatus: (messageId: number) =>
-    apiClient.get<Array<{
-      userId: number;
-      username: string;
-      status: string;
-      deliveredAt?: string | null;
-      readAt?: string | null;
-    }>>(`/chat/messages/${messageId}/delivery-status`),
-
   deleteRoom: (roomId: number) =>
     apiClient.delete<null>(`/chat/rooms/${roomId}`),
 

@@ -39,22 +39,6 @@ interface UseChatWebSocketOptions {
   onTyping?: (payload: TypingPayload) => void;
   onUserOnline?: (userId: number) => void;
   onUserOffline?: (userId: number) => void;
-  onMessageDelivered?: (payload: {
-    messageId: number;
-    userId: number;
-    deliveredAt: string;
-  }) => void;
-  onMessageRead?: (payload: {
-    messageId: number;
-    userId: number;
-    readAt: string;
-  }) => void;
-  onRoomMessagesDelivered?: (payload: {
-    roomId: number;
-    userId: number;
-    messageIds: number[];
-    deliveredAt: string;
-  }) => void;
 }
 
 export const useChatWebSocket = (options: UseChatWebSocketOptions = {}) => {
@@ -111,15 +95,6 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions = {}) => {
     });
     socket.on("userOffline", (payload: UserStatusPayload) => {
       handlersRef.current.onUserOffline?.(payload.userId);
-    });
-    socket.on("messageDelivered", (payload: { messageId: number; userId: number; deliveredAt: string }) => {
-      handlersRef.current.onMessageDelivered?.(payload);
-    });
-    socket.on("messageRead", (payload: { messageId: number; userId: number; readAt: string }) => {
-      handlersRef.current.onMessageRead?.(payload);
-    });
-    socket.on("roomMessagesDelivered", (payload: { roomId: number; userId: number; messageIds: number[]; deliveredAt: string }) => {
-      handlersRef.current.onRoomMessagesDelivered?.(payload);
     });
 
     return () => {

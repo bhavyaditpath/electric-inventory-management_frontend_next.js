@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { chatApi } from "@/Services/chat.api";
 import { showError, showSuccess } from "@/Services/toast.service";
 import { useAuth } from "@/contexts/AuthContext";
-import { MessageReceiptStatus, UserRole } from "@/types/enums";
+import { UserRole } from "@/types/enums";
 import {
   ChatLanguage,
   ChatMessage,
@@ -154,12 +154,6 @@ export default function ChatPage() {
       setMessages((prev) =>
         prev.some((m) => m.id === message.id) ? prev : [...prev, message]
       );
-      // Mark message as delivered when received (if it's not from current user)
-      if (message.senderId !== user?.id) {
-        chatApi.markMessageDelivered(message.id).catch(err => {
-          console.error("Failed to mark message as delivered:", err);
-        });
-      }
     }
 
     setRooms((prev) => {
@@ -176,7 +170,7 @@ export default function ChatPage() {
       });
       return sortRooms(next);
     });
-  }, [fetchRooms, user?.id]);
+  }, [fetchRooms]);
 
   const handleMessageReactionUpdated = useCallback((updatedMessage: ChatMessage) => {
     const currentRoomId = activeRoomIdRef.current;
@@ -266,92 +260,6 @@ export default function ChatPage() {
     );
   }, []);
 
-  const handleMessageDelivered = useCallback((payload: {
-    messageId: number;
-    userId: number;
-    deliveredAt: string;
-  }) => {
-    setMessages((prev) =>
-      prev.map((message) =>
-        message.id === payload.messageId
-          ? {
-              ...message,
-              deliveredCount: (message.deliveredCount || 0) + 1,
-              receipts: message.receipts
-                ? message.receipts.map((r) =>
-                    r.userId === payload.userId
-                      ? { 
-                          ...r, 
-                          status: MessageReceiptStatus.DELIVERED as any, 
-                          deliveredAt: payload.deliveredAt 
-                        }
-                      : r
-                  )
-                : undefined,
-            }
-          : message
-      )
-    );
-  }, []);
-
-  const handleMessageRead = useCallback((payload: {
-    messageId: number;
-    userId: number;
-    readAt: string;
-  }) => {
-    setMessages((prev) =>
-      prev.map((message) =>
-        message.id === payload.messageId
-          ? {
-              ...message,
-              readCount: (message.readCount || 0) + 1,
-              receipts: message.receipts
-                ? message.receipts.map((r) =>
-                    r.userId === payload.userId
-                      ? {
-                          ...r,
-                          status: MessageReceiptStatus.READ as any,
-                          deliveredAt: r.deliveredAt || payload.readAt,
-                          readAt: payload.readAt,
-                        }
-                      : r
-                  )
-                : undefined,
-            }
-          : message
-      )
-    );
-  }, []);
-
-  const handleRoomMessagesDelivered = useCallback((payload: {
-    roomId: number;
-    userId: number;
-    messageIds: number[];
-    deliveredAt: string;
-  }) => {
-    setMessages((prev) =>
-      prev.map((message) =>
-        payload.messageIds.includes(message.id)
-          ? {
-              ...message,
-              deliveredCount: (message.deliveredCount || 0) + 1,
-              receipts: message.receipts
-                ? message.receipts.map((r) =>
-                    r.userId === payload.userId
-                      ? { 
-                          ...r, 
-                          status: MessageReceiptStatus.DELIVERED as any, 
-                          deliveredAt: payload.deliveredAt 
-                        }
-                      : r
-                  )
-                : undefined,
-            }
-          : message
-      )
-    );
-  }, []);
-
   const {
     isConnected,
     joinRoom,
@@ -387,9 +295,6 @@ export default function ChatPage() {
     onTyping: handleTyping,
     onUserOnline: handleUserOnline,
     onUserOffline: handleUserOffline,
-    onMessageDelivered: handleMessageDelivered,
-    onMessageRead: handleMessageRead,
-    onRoomMessagesDelivered: handleRoomMessagesDelivered,
   });
 
   const {
@@ -444,10 +349,6 @@ export default function ChatPage() {
 
         await chatApi.markAsRead(activeRoomId);
         markAsRead(activeRoomId);
-        // Mark all messages as delivered via HTTP API
-        await chatApi.markRoomMessagesDelivered(activeRoomId).catch(err => {
-          console.error("Failed to mark room messages as delivered:", err);
-        });
         setRooms((prev) =>
           prev.map((room) =>
             room.id === activeRoomId ? { ...room, unreadCount: 0 } : room

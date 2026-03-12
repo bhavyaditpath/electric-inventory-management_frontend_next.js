@@ -24,8 +24,6 @@ import {
   PencilSquareIcon,
   PlusIcon,
   TrashIcon,
-  CheckIcon,
-  ClockIcon,
 } from "@heroicons/react/24/outline";
 import { chatApi } from "@/Services/chat.api";
 import EmojiPicker from "@emoji-mart/react";
@@ -577,31 +575,6 @@ export default function ChatMessageList({
     }
   }, [editInput, editingMessageId, onEditMessage]);
 
-  const renderDeliveryStatus = (message: ChatMessage, isMe: boolean) => {
-    if (!isMe || !message.deliveredCount && !message.readCount) return null;
-
-    const readCount = message.readCount || 0;
-    const deliveredCount = message.deliveredCount || 0;
-
-    return (
-      <div className="flex items-center gap-0.5 ml-1">
-        {readCount > 0 ? (
-          // Two checkmarks (read)
-          <>
-            <CheckIcon className="w-3 h-3 text-blue-400" />
-            <CheckIcon className="w-3 h-3 text-blue-400 -ml-1.5" />
-          </>
-        ) : deliveredCount > 0 ? (
-          // One checkmark (delivered)
-          <CheckIcon className="w-3 h-3 text-gray-400" />
-        ) : (
-          // Clock icon (sent)
-          <ClockIcon className="w-3 h-3 text-gray-400" />
-        )}
-      </div>
-    );
-  };
-
   return (
     <div
       ref={listRef}
@@ -917,7 +890,6 @@ export default function ChatMessageList({
                         })}
                         {isEdited(message) ? " (edited)" : ""}
                       </p>
-                      {renderDeliveryStatus(message, isMe)}
                     </div>
                   </div>
                   {reactions.length > 0 && (

@@ -61,9 +61,3 @@ export enum ThemeMode {
   Light = "light",
   Dark = "dark",
 }
-
-export enum MessageReceiptStatus {
-  SENT = "SENT",
-  DELIVERED = "DELIVERED",
-  READ = "READ",
-}

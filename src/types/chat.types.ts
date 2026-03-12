@@ -1,5 +1,3 @@
-import { MessageReceiptStatus } from "./enums";
-
 export interface ChatUser {
   id: number;
   username: string;
@@ -41,14 +39,6 @@ export type ChatLanguage =
   | "java"
   | "csharp"
   | "cpp";
-export interface ChatMessageReceipt {
-  userId: number;
-  username?: string;
-  status: MessageReceiptStatus;
-  deliveredAt?: string | null;
-  readAt?: string | null;
-}
-
 export interface ChatReplyPreview {
   id: number;
   senderId: number;
@@ -90,9 +80,6 @@ export interface ChatMessage {
   reactions?: ChatReaction[];
   isRead?: boolean;
   readAt?: string | null;
-  deliveredCount?: number;
-  readCount?: number;
-  receipts?: ChatMessageReceipt[];
 }
 
 export interface ChatReaction {
