@@ -1094,26 +1094,6 @@ function ChatPageContent() {
                 >
                   <ArrowPathIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--theme-text-muted)]" />
                 </button>
-                <button
-                  className="p-1.5 sm:p-2 rounded-md sm:rounded-lg border cursor-pointer flex-shrink-0 bg-green-100 border-green-300 text-green-700"
-                  aria-label="Encryption enabled"
-                  title="End-to-end encryption is enabled"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-3.5 h-3.5 sm:w-4 sm:h-4"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
-                    />
-                  </svg>
-                </button>
               </div>
               <ChatSidebar
                 rooms={rooms}
@@ -1212,26 +1192,6 @@ function ChatPageContent() {
                   aria-label="Refresh"
                 >
                   <ArrowPathIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--theme-text-muted)]" />
-                </button>
-                <button
-                  className="p-1.5 sm:p-2 rounded-md sm:rounded-lg border cursor-pointer flex-shrink-0 bg-green-100 border-green-300 text-green-700"
-                  aria-label="Encryption enabled"
-                  title="End-to-end encryption is enabled"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-3.5 h-3.5 sm:w-4 sm:h-4"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
-                    />
-                  </svg>
                 </button>
               </div>
             </div>
