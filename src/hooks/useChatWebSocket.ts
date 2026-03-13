@@ -9,6 +9,7 @@ import {
   ChatMessageNotification,
   ChatReactionNotification,
 } from "@/types/chat.types";
+import { isEncryptedMessage } from "@/utils/chatEncryption";
 
 const SOCKET_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
@@ -53,6 +54,9 @@ interface UseChatWebSocketOptions {
   onTyping?: (payload: TypingPayload) => void;
   onUserOnline?: (userId: number) => void;
   onUserOffline?: (userId: number) => void;
+  encryptMessage?: (plaintext: string, roomId: number) => Promise<string>;
+  decryptMessage?: (encryptedContent: string, roomId: number) => Promise<string>;
+  isEncryptionEnabled?: boolean;
 }
 
 export const useChatWebSocket = (options: UseChatWebSocketOptions = {}) => {
@@ -80,10 +84,27 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions = {}) => {
 
     socket.on("connect", () => setIsConnected(true));
     socket.on("disconnect", () => setIsConnected(false));
-    socket.on("newMessage", (message: ChatMessage) => {
+    socket.on("newMessage", async (message: ChatMessage) => {
+      // Decrypt the message if encryption is enabled and content appears encrypted
+      if (handlersRef.current.isEncryptionEnabled && handlersRef.current.decryptMessage && message.content && isEncryptedMessage(message.content)) {
+        try {
+          message.content = await handlersRef.current.decryptMessage(message.content, message.chatRoomId);
+        } catch (error) {
+          console.error("Failed to decrypt message:", error);
+          // Keep original content if decryption fails
+        }
+      }
       handlersRef.current.onMessage?.(message);
     });
-    socket.on("messageUpdated", (message: ChatMessage) => {
+    socket.on("messageUpdated", async (message: ChatMessage) => {
+      // Decrypt the message if encryption is enabled and content appears encrypted
+      if (handlersRef.current.isEncryptionEnabled && handlersRef.current.decryptMessage && message.content && isEncryptedMessage(message.content)) {
+        try {
+          message.content = await handlersRef.current.decryptMessage(message.content, message.chatRoomId);
+        } catch (error) {
+          console.error("Failed to decrypt updated message:", error);
+        }
+      }
       handlersRef.current.onMessageUpdated?.(message);
     });
     socket.on("messagesDelivered", (payload: MessagesDeliveredPayload) => {
@@ -132,15 +153,27 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions = {}) => {
   }, []);
 
   const sendMessage = useCallback(
-    (
+    async (
       roomId: number,
       content: string,
       kind?: ChatMessageKind,
       language?: ChatLanguage
     ) => {
+      let finalContent = content;
+      
+      // Encrypt the message if encryption is enabled
+      if (handlersRef.current.isEncryptionEnabled && handlersRef.current.encryptMessage) {
+        try {
+          finalContent = await handlersRef.current.encryptMessage(content, roomId);
+        } catch (error) {
+          console.error("Failed to encrypt message:", error);
+          // Send unencrypted if encryption fails
+        }
+      }
+      
       socketRef.current?.emit("sendMessage", {
         roomId,
-        content,
+        content: finalContent,
         ...(kind ? { kind } : {}),
         ...(language ? { language } : {}),
       });

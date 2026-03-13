@@ -13,6 +13,8 @@ import {
   ChatUser,
 } from "@/types/chat.types";
 import { useChatWebSocket } from "@/hooks/useChatWebSocket";
+import { useChatEncryption, ChatEncryptionProvider } from "@/hooks/useChatEncryption";
+import { isEncryptedMessage } from "@/utils/chatEncryption";
 import ChatSidebar from "./ChatSidebar";
 import ChatWindow from "./ChatWindow";
 import { ArrowPathIcon, SignalIcon } from "@heroicons/react/24/outline";
@@ -28,8 +30,9 @@ import { CallType } from "@/types/enums";
 import CallLogsModal from "./CallLogsModal";
 import { useCall } from "@/contexts/CallContext";
 
-export default function ChatPage() {
+function ChatPageContent() {
   const { user } = useAuth();
+  const { isEnabled: isEncryptionEnabled, setEncryptionEnabled, encrypt, decrypt, initializeRoomKey } = useChatEncryption();
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [users, setUsers] = useState<ChatUser[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -377,6 +380,9 @@ export default function ChatPage() {
     onTyping: handleTyping,
     onUserOnline: handleUserOnline,
     onUserOffline: handleUserOffline,
+    isEncryptionEnabled,
+    encryptMessage: encrypt,
+    decryptMessage: decrypt,
   });
 
   const {
@@ -414,7 +420,27 @@ export default function ChatPage() {
 
         const response = await chatApi.getMessages(activeRoomId, 1, 50);
         if (response.success && response.data) {
-          setMessages(response.data.messages || []);
+          let messages = response.data.messages || [];
+          
+          // Decrypt messages if encryption is enabled
+          if (isEncryptionEnabled && decrypt) {
+            messages = await Promise.all(
+              messages.map(async (msg) => {
+                // Only attempt decryption if content appears to be encrypted
+                if (msg.content && isEncryptedMessage(msg.content)) {
+                  try {
+                    const decryptedContent = await decrypt(msg.content, activeRoomId);
+                    return { ...msg, content: decryptedContent };
+                  } catch {
+                    return msg;
+                  }
+                }
+                return msg;
+              })
+            );
+          }
+          
+          setMessages(messages);
         } else {
           setMessages([]);
           if (response.message) showError(response.message);
@@ -1068,6 +1094,31 @@ export default function ChatPage() {
                 >
                   <ArrowPathIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--theme-text-muted)]" />
                 </button>
+                <button
+                  onClick={() => setEncryptionEnabled(!isEncryptionEnabled)}
+                  className={`p-1.5 sm:p-2 rounded-md sm:rounded-lg border cursor-pointer flex-shrink-0 ${
+                    isEncryptionEnabled
+                      ? "bg-green-100 border-green-300 text-green-700"
+                      : "border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)]"
+                  }`}
+                  aria-label={isEncryptionEnabled ? "Encryption enabled" : "Encryption disabled"}
+                  title={isEncryptionEnabled ? "End-to-end encryption is enabled" : "Enable end-to-end encryption"}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+                    />
+                  </svg>
+                </button>
               </div>
               <ChatSidebar
                 rooms={rooms}
@@ -1166,6 +1217,31 @@ export default function ChatPage() {
                   aria-label="Refresh"
                 >
                   <ArrowPathIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--theme-text-muted)]" />
+                </button>
+                <button
+                  onClick={() => setEncryptionEnabled(!isEncryptionEnabled)}
+                  className={`p-1.5 sm:p-2 rounded-md sm:rounded-lg border cursor-pointer flex-shrink-0 ${
+                    isEncryptionEnabled
+                      ? "bg-green-100 border-green-300 text-green-700"
+                      : "border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)]"
+                  }`}
+                  aria-label={isEncryptionEnabled ? "Encryption enabled" : "Encryption disabled"}
+                  title={isEncryptionEnabled ? "End-to-end encryption is enabled" : "Enable end-to-end encryption"}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+                    />
+                  </svg>
                 </button>
               </div>
             </div>
@@ -1308,5 +1384,14 @@ export default function ChatPage() {
       />
 
     </div>
+  );
+}
+
+// Wrapper component with encryption provider
+export default function ChatPage() {
+  return (
+    <ChatEncryptionProvider>
+      <ChatPageContent />
+    </ChatEncryptionProvider>
   );
 }
