@@ -1095,14 +1095,9 @@ function ChatPageContent() {
                   <ArrowPathIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--theme-text-muted)]" />
                 </button>
                 <button
-                  onClick={() => setEncryptionEnabled(!isEncryptionEnabled)}
-                  className={`p-1.5 sm:p-2 rounded-md sm:rounded-lg border cursor-pointer flex-shrink-0 ${
-                    isEncryptionEnabled
-                      ? "bg-green-100 border-green-300 text-green-700"
-                      : "border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)]"
-                  }`}
-                  aria-label={isEncryptionEnabled ? "Encryption enabled" : "Encryption disabled"}
-                  title={isEncryptionEnabled ? "End-to-end encryption is enabled" : "Enable end-to-end encryption"}
+                  className="p-1.5 sm:p-2 rounded-md sm:rounded-lg border cursor-pointer flex-shrink-0 bg-green-100 border-green-300 text-green-700"
+                  aria-label="Encryption enabled"
+                  title="End-to-end encryption is enabled"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -1219,14 +1214,9 @@ function ChatPageContent() {
                   <ArrowPathIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--theme-text-muted)]" />
                 </button>
                 <button
-                  onClick={() => setEncryptionEnabled(!isEncryptionEnabled)}
-                  className={`p-1.5 sm:p-2 rounded-md sm:rounded-lg border cursor-pointer flex-shrink-0 ${
-                    isEncryptionEnabled
-                      ? "bg-green-100 border-green-300 text-green-700"
-                      : "border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)]"
-                  }`}
-                  aria-label={isEncryptionEnabled ? "Encryption enabled" : "Encryption disabled"}
-                  title={isEncryptionEnabled ? "End-to-end encryption is enabled" : "Enable end-to-end encryption"}
+                  className="p-1.5 sm:p-2 rounded-md sm:rounded-lg border cursor-pointer flex-shrink-0 bg-green-100 border-green-300 text-green-700"
+                  aria-label="Encryption enabled"
+                  title="End-to-end encryption is enabled"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

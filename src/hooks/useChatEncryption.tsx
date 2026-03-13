@@ -41,7 +41,7 @@ interface ChatEncryptionProviderProps {
 export function ChatEncryptionProvider({ children }: ChatEncryptionProviderProps) {
   const [masterKey, setMasterKey] = useState<string | null>(null);
   const [roomKeys, setRoomKeys] = useState<Record<number, string>>({});
-  const [isEnabled, setIsEnabled] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Load master key and settings from localStorage on mount
