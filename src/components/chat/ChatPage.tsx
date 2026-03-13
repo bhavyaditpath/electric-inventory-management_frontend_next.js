@@ -32,7 +32,14 @@ import { useCall } from "@/contexts/CallContext";
 
 function ChatPageContent() {
   const { user } = useAuth();
-  const { isEnabled: isEncryptionEnabled, setEncryptionEnabled, encrypt, decrypt, initializeRoomKey } = useChatEncryption();
+  const {
+    isEnabled: isEncryptionEnabled,
+    isInitialized: isEncryptionInitialized,
+    setEncryptionEnabled,
+    encrypt,
+    decrypt,
+    initializeRoomKey,
+  } = useChatEncryption();
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [users, setUsers] = useState<ChatUser[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -407,7 +414,7 @@ function ChatPageContent() {
   }, [fetchRooms, fetchUsers]);
 
   useEffect(() => {
-    if (!activeRoomId) return;
+    if (!activeRoomId || !isEncryptionInitialized) return;
 
     const loadMessages = async () => {
       setLoadingMessages(true);
@@ -472,7 +479,15 @@ function ChatPageContent() {
     };
 
     loadMessages();
-  }, [activeRoomId, joinRoom, leaveRoom, markAsRead]);
+  }, [
+    activeRoomId,
+    decrypt,
+    isEncryptionEnabled,
+    isEncryptionInitialized,
+    joinRoom,
+    leaveRoom,
+    markAsRead,
+  ]);
 
   const handleSelectRoom = useCallback(
     (roomId: number) => {

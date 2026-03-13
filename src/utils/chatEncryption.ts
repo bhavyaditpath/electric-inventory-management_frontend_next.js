@@ -28,6 +28,21 @@ export async function generateEncryptionKey(): Promise<string> {
 }
 
 /**
+ * Derive a deterministic 256-bit key from a shared secret string.
+ * This allows all clients with the same secret to derive identical room keys.
+ */
+export async function deriveMasterKeyFromSecret(secret: string): Promise<string> {
+  if (!secret) {
+    throw new Error("Secret is required to derive master key");
+  }
+
+  const encoder = new TextEncoder();
+  const data = encoder.encode(secret);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest)));
+}
+
+/**
  * Import a base64 encoded key
  * @param keyString Base64 encoded key
  * @returns CryptoKey

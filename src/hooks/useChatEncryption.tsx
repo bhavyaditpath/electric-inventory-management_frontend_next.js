@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import {
   deriveRoomKey,
-  generateEncryptionKey,
+  deriveMasterKeyFromSecret,
   encryptMessage,
   decryptMessage,
   isEncryptedMessage,
@@ -17,7 +17,9 @@ import {
 
 const STORAGE_KEY = "chat_encryption_master_key";
 const ENCRYPTION_ENABLED_KEY = "chat_encryption_enabled";
-const ROOM_KEYS_PREFIX = "chat_room_key_";
+const ROOM_KEYS_PREFIX = "chat_room_key_shared_";
+const LEGACY_ROOM_KEYS_PREFIX = "chat_room_key_";
+const DEFAULT_SHARED_SECRET = "electric-inventory-chat-shared-v1";
 
 interface ChatEncryptionContextType {
   isEnabled: boolean;
@@ -40,40 +42,111 @@ interface ChatEncryptionProviderProps {
 
 export function ChatEncryptionProvider({ children }: ChatEncryptionProviderProps) {
   const [masterKey, setMasterKey] = useState<string | null>(null);
+  const [legacyMasterKey, setLegacyMasterKey] = useState<string | null>(null);
   const [roomKeys, setRoomKeys] = useState<Record<number, string>>({});
+  const [legacyRoomKeys, setLegacyRoomKeys] = useState<Record<number, string>>({});
   const [isEnabled, setIsEnabled] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Load master key and settings from localStorage on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const storedMasterKey = localStorage.getItem(STORAGE_KEY);
-    const storedEnabled = localStorage.getItem(ENCRYPTION_ENABLED_KEY);
+    const initializeKeys = async () => {
+      const storedMasterKey = localStorage.getItem(STORAGE_KEY);
+      const storedEnabled = localStorage.getItem(ENCRYPTION_ENABLED_KEY);
 
-    if (storedMasterKey) {
-      setMasterKey(storedMasterKey);
-      // Load existing room keys
-      const keys: Record<number, string> = {};
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key?.startsWith(ROOM_KEYS_PREFIX)) {
-          const roomId = parseInt(key.replace(ROOM_KEYS_PREFIX, ""), 10);
-          const roomKey = localStorage.getItem(key);
-          if (roomKey && !isNaN(roomId)) {
-            keys[roomId] = roomKey;
-          }
-        }
+      if (storedMasterKey) {
+        // Keep old per-user key for decrypting legacy messages.
+        setLegacyMasterKey(storedMasterKey);
       }
-      setRoomKeys(keys);
-    }
 
-    if (storedEnabled !== null) {
-      setIsEnabled(storedEnabled === "true");
-    }
+      const sharedSecret =
+        process.env.NEXT_PUBLIC_CHAT_ENCRYPTION_SECRET || DEFAULT_SHARED_SECRET;
+      const sharedMasterKey = await deriveMasterKeyFromSecret(sharedSecret);
+      setMasterKey(sharedMasterKey);
 
-    setIsInitialized(true);
+      if (storedEnabled !== null) {
+        setIsEnabled(storedEnabled === "true");
+      }
+
+      setIsInitialized(true);
+    };
+
+    void initializeKeys();
   }, []);
+
+  const deriveAndStoreSharedRoomKey = useCallback(
+    async (roomId: number) => {
+      if (!masterKey) return null;
+      const derived = await deriveRoomKey(masterKey, roomId);
+      setRoomKeys((prev) => ({ ...prev, [roomId]: derived }));
+      if (typeof window !== "undefined") {
+        localStorage.setItem(`${ROOM_KEYS_PREFIX}${roomId}`, derived);
+      }
+      return derived;
+    },
+    [masterKey]
+  );
+
+  const deriveLegacyRoomKey = useCallback(
+    async (roomId: number) => {
+      if (!legacyMasterKey) return null;
+
+      const stored =
+        typeof window !== "undefined"
+          ? localStorage.getItem(`${LEGACY_ROOM_KEYS_PREFIX}${roomId}`)
+          : null;
+      if (stored) {
+        setLegacyRoomKeys((prev) => ({ ...prev, [roomId]: stored }));
+        return stored;
+      }
+
+      const derived = await deriveRoomKey(legacyMasterKey, roomId);
+      setLegacyRoomKeys((prev) => ({ ...prev, [roomId]: derived }));
+      return derived;
+    },
+    [legacyMasterKey]
+  );
+
+  const getSharedRoomKey = useCallback(
+    async (roomId: number) => {
+      const fromState = roomKeys[roomId];
+      if (fromState) return fromState;
+
+      const fromStorage =
+        typeof window !== "undefined"
+          ? localStorage.getItem(`${ROOM_KEYS_PREFIX}${roomId}`)
+          : null;
+      if (fromStorage) {
+        setRoomKeys((prev) => ({ ...prev, [roomId]: fromStorage }));
+        return fromStorage;
+      }
+
+      return deriveAndStoreSharedRoomKey(roomId);
+    },
+    [deriveAndStoreSharedRoomKey, roomKeys]
+  );
+
+  const getLegacyRoomKey = useCallback(
+    async (roomId: number) => {
+      const fromState = legacyRoomKeys[roomId];
+      if (fromState) return fromState;
+      return deriveLegacyRoomKey(roomId);
+    },
+    [deriveLegacyRoomKey, legacyRoomKeys]
+  );
+
+  const getAllCandidateRoomKeys = useCallback(
+    async (roomId: number) => {
+      const candidates = [
+        await getSharedRoomKey(roomId),
+        await getLegacyRoomKey(roomId),
+      ].filter((value): value is string => !!value);
+
+      return Array.from(new Set(candidates));
+    },
+    [getLegacyRoomKey, getSharedRoomKey]
+  );
 
   const setEncryptionEnabled = useCallback((enabled: boolean) => {
     setIsEnabled(enabled);
@@ -84,27 +157,9 @@ export function ChatEncryptionProvider({ children }: ChatEncryptionProviderProps
 
   const initializeRoomKey = useCallback(
     async (roomId: number) => {
-      let keyToUse = masterKey;
-
-      if (!keyToUse) {
-        // Generate new master key if none exists
-        const newMasterKey = await generateEncryptionKey();
-        setMasterKey(newMasterKey);
-        keyToUse = newMasterKey;
-        if (typeof window !== "undefined") {
-          localStorage.setItem(STORAGE_KEY, newMasterKey);
-        }
-      }
-
-      // Derive room-specific key
-      const roomKey = await deriveRoomKey(keyToUse, roomId);
-
-      setRoomKeys((prev) => ({ ...prev, [roomId]: roomKey }));
-      if (typeof window !== "undefined") {
-        localStorage.setItem(`${ROOM_KEYS_PREFIX}${roomId}`, roomKey);
-      }
+      await getSharedRoomKey(roomId);
     },
-    [masterKey]
+    [getSharedRoomKey]
   );
 
   const getRoomKey = useCallback(
@@ -116,9 +171,9 @@ export function ChatEncryptionProvider({ children }: ChatEncryptionProviderProps
 
   const isRoomEncrypted = useCallback(
     (roomId: number): boolean => {
-      return !!roomKeys[roomId];
+      return !!roomKeys[roomId] || !!legacyRoomKeys[roomId];
     },
-    [roomKeys]
+    [legacyRoomKeys, roomKeys]
   );
 
   const encrypt = useCallback(
@@ -127,21 +182,7 @@ export function ChatEncryptionProvider({ children }: ChatEncryptionProviderProps
         return plaintext;
       }
 
-      let roomKey = roomKeys[roomId];
-
-      if (!roomKey) {
-        await initializeRoomKey(roomId);
-        // Get the newly created key from state
-        roomKey = roomKeys[roomId];
-
-        // If still not available, try localStorage
-        if (!roomKey && typeof window !== "undefined") {
-          const stored = localStorage.getItem(`${ROOM_KEYS_PREFIX}${roomId}`);
-          if (stored) {
-            roomKey = stored;
-          }
-        }
-      }
+      const roomKey = await getSharedRoomKey(roomId);
 
       if (!roomKey) {
         console.error("No encryption key available for room", roomId);
@@ -155,7 +196,7 @@ export function ChatEncryptionProvider({ children }: ChatEncryptionProviderProps
         return plaintext;
       }
     },
-    [isEnabled, roomKeys, initializeRoomKey]
+    [getSharedRoomKey, isEnabled]
   );
 
   const decrypt = useCallback(
@@ -169,31 +210,22 @@ export function ChatEncryptionProvider({ children }: ChatEncryptionProviderProps
         return encryptedContent;
       }
 
-      let roomKey = roomKeys[roomId];
+      const candidateKeys = await getAllCandidateRoomKeys(roomId);
+      if (candidateKeys.length === 0) {
+        return encryptedContent;
+      }
 
-      if (!roomKey && typeof window !== "undefined") {
-        // Try to get from localStorage
-        const stored = localStorage.getItem(`${ROOM_KEYS_PREFIX}${roomId}`);
-        if (stored) {
-          roomKey = stored;
-          setRoomKeys((prev) => ({ ...prev, [roomId]: stored }));
+      for (const roomKey of candidateKeys) {
+        try {
+          return await decryptMessage(encryptedContent, roomKey);
+        } catch {
+          // Try next candidate key.
         }
       }
 
-      if (!roomKey) {
-        // Key not found, return as-is (might not be encrypted)
-        return encryptedContent;
-      }
-
-      try {
-        return await decryptMessage(encryptedContent, roomKey);
-      } catch {
-        // Return original content if decryption fails
-        // (might not be encrypted message)
-        return encryptedContent;
-      }
+      return encryptedContent;
     },
-    [isEnabled, roomKeys]
+    [getAllCandidateRoomKeys, isEnabled]
   );
 
   const value: ChatEncryptionContextType = {
