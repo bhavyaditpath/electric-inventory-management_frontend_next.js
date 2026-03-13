@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { ChatRoom, ChatUser } from "@/types/chat.types";
 import {
   ChatBubbleLeftRightIcon,
@@ -11,6 +11,8 @@ import {
   PencilSquareIcon,
 } from "@heroicons/react/24/outline";
 import { getFormatPreviewPrefix } from "@/utils/chatMessageFormat";
+import { useChatEncryption } from "@/hooks/useChatEncryption";
+import { isEncryptedMessage } from "@/utils/chatEncryption";
 
 interface ChatSidebarProps {
   rooms: ChatRoom[];
@@ -51,6 +53,36 @@ const ChatSidebar = ({
 }: ChatSidebarProps) => {
   const [openMenuRoomId, setOpenMenuRoomId] = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const { isEnabled: isEncryptionEnabled, decrypt } = useChatEncryption();
+  const [decryptedRooms, setDecryptedRooms] = useState<Map<number, string>>(new Map());
+  const displayRooms = rooms;
+
+  // Decrypt lastMessage content when rooms change
+  useEffect(() => {
+    if (!isEncryptionEnabled || !decrypt) {
+      setDecryptedRooms(new Map());
+      return;
+    }
+
+    const decryptLastMessages = async () => {
+      const decrypted = new Map<number, string>();
+      
+      for (const room of rooms) {
+        if (room.lastMessage?.content && isEncryptedMessage(room.lastMessage.content)) {
+          try {
+            const decryptedContent = await decrypt(room.lastMessage.content, room.id);
+            decrypted.set(room.id, decryptedContent);
+          } catch {
+            // Keep original
+          }
+        }
+      }
+      
+      setDecryptedRooms(decrypted);
+    };
+
+    decryptLastMessages();
+  }, [rooms, isEncryptionEnabled, decrypt]);
 
   const closeMenu = useCallback(() => setOpenMenuRoomId(null), []);
 
@@ -108,13 +140,18 @@ const ChatSidebar = ({
                 No chats yet. Start a new conversation.
               </div>
             ) : (
-              rooms.map((room) => {
+              displayRooms.map((room) => {
                 const isActive = room.id === activeRoomId;
                 const lastMessageLabel = (() => {
                   const last = room.lastMessage;
                   if (!last) return "No messages yet";
+                  
+                  // Use decrypted content if available from our async decryption
+                  const decryptedContent = decryptedRooms.get(room.id);
+                  const content = decryptedContent ?? last.content;
+                  
                   const prefix = getFormatPreviewPrefix(last.kind, last.language);
-                  if (last.content && last.content.trim()) return `${prefix}${last.content}`;
+                  if (content && content.trim()) return `${prefix}${content}`;
                   if (last.isForwarded && last.forwardedFrom?.contentPreview) {
                     const forwardedPrefix = getFormatPreviewPrefix(
                       last.forwardedFrom.kind,
