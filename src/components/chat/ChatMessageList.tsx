@@ -20,6 +20,8 @@ import { showError } from "@/Services/toast.service";
 import {
   ArrowPathRoundedSquareIcon,
   ArrowUturnLeftIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   EllipsisHorizontalIcon,
   PencilSquareIcon,
   PlusIcon,
@@ -121,6 +123,8 @@ export default function ChatMessageList({
   const [highlightedMessageId, setHighlightedMessageId] = useState<number | null>(
     null
   );
+  const [pinnedPreviewIndex, setPinnedPreviewIndex] = useState(0);
+  const HIGHLIGHT_DURATION_MS = 2000;
   const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👏", "😮"];
 
   const getFileExtension = (name: string) => {
@@ -498,8 +502,36 @@ export default function ChatMessageList({
     }
     highlightTimeoutRef.current = setTimeout(() => {
       setHighlightedMessageId((prev) => (prev === targetId ? null : prev));
-    }, 2000);
-  }, []);
+    }, HIGHLIGHT_DURATION_MS);
+  }, [HIGHLIGHT_DURATION_MS]);
+
+  const jumpToMessageById = useCallback((messageId: number) => {
+    const targetNode = messageItemRefs.current.get(messageId);
+    if (!targetNode) {
+      showError("Original message is not loaded in this view");
+      return;
+    }
+
+    targetNode.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightedMessageId(messageId);
+
+    if (highlightTimeoutRef.current) {
+      clearTimeout(highlightTimeoutRef.current);
+    }
+    highlightTimeoutRef.current = setTimeout(() => {
+      setHighlightedMessageId((prev) => (prev === messageId ? null : prev));
+    }, HIGHLIGHT_DURATION_MS);
+  }, [HIGHLIGHT_DURATION_MS]);
+
+  useEffect(() => {
+    const count = pinnedMessages?.length ?? 0;
+    if (count === 0) {
+      setPinnedPreviewIndex(0);
+      return;
+    }
+
+    setPinnedPreviewIndex((prev) => Math.min(prev, count - 1));
+  }, [pinnedMessages]);
 
   const handleOpenMoreReactions = useCallback(
     (event: ReactMouseEvent<HTMLButtonElement>, messageId: number) => {
@@ -603,44 +635,72 @@ export default function ChatMessageList({
       ) : (
         <>
           {pinnedMessages && pinnedMessages.length > 0 && (
-            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div className="flex items-center gap-2 mb-2">
-                <BookmarkIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
-                  Pinned Message{pinnedMessages.length > 1 ? "s" : ""}
-                </span>
-              </div>
-              <div className="space-y-2 max-h-32 overflow-y-auto">
-                {(pinnedMessages || []).slice(0, 3).map((msg) => (
-                  <div
-                    key={msg.id}
-                    className="text-xs text-[var(--theme-text)] bg-white dark:bg-blue-950/30 p-2 rounded cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/40"
-                    onClick={() => {
-                      const targetNode = messageItemRefs.current.get(msg.id);
-                      if (targetNode) {
-                        targetNode.scrollIntoView({ behavior: "smooth", block: "center" });
-                        setHighlightedMessageId(msg.id);
-                        if (highlightTimeoutRef.current) {
-                          clearTimeout(highlightTimeoutRef.current);
-                        }
-                        highlightTimeoutRef.current = setTimeout(() => {
-                          setHighlightedMessageId((prev) => (prev === msg.id ? null : prev));
-                        }, 2000);
-                      }
-                    }}
-                  >
-                    <div className="truncate">
-                      {msg.content || (msg.attachments && msg.attachments.length > 0 ? "[Attachment]" : "")}
-                    </div>
+            (() => {
+              const activePinned = pinnedMessages[pinnedPreviewIndex] ?? pinnedMessages[0];
+              const contentPreview =
+                activePinned.content?.trim() ||
+                (activePinned.attachments && activePinned.attachments.length > 0
+                  ? "[Attachment]"
+                  : "");
+
+              return (
+                <div className="mb-3 overflow-hidden rounded-lg border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-sm">
+                  <div className="flex items-stretch">
+                    <div className="w-1.5 bg-[var(--color-primary)]" />
+                    <button
+                      type="button"
+                      onClick={() => jumpToMessageById(activePinned.id)}
+                      className="min-w-0 flex-1 px-3 py-2 text-left transition-colors hover:bg-[var(--theme-surface-muted)]"
+                    >
+                      <div className="mb-0.5 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[var(--color-primary)]">
+                          <BookmarkIcon className="h-3.5 w-3.5" />
+                          <span>Pinned message</span>
+                        </div>
+                        <span className="shrink-0 text-[10px] text-[var(--theme-text-muted)]">
+                          {pinnedPreviewIndex + 1}/{pinnedMessages.length}
+                        </span>
+                      </div>
+                      <p className="truncate text-xs text-[var(--theme-text)]">{contentPreview}</p>
+                      <p className="truncate text-[10px] text-[var(--theme-text-muted)]">
+                        {activePinned.sender?.username || "Unknown"} • {new Date(activePinned.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </button>
+                    {pinnedMessages.length > 1 && (
+                      <div className="flex items-center gap-1 border-l border-[var(--theme-border)] px-1.5">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPinnedPreviewIndex((prev) =>
+                              prev === 0 ? pinnedMessages.length - 1 : prev - 1
+                            )
+                          }
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-surface-muted)] hover:text-[var(--theme-text)]"
+                          aria-label="Previous pinned message"
+                        >
+                          <ChevronLeftIcon className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPinnedPreviewIndex((prev) =>
+                              prev === pinnedMessages.length - 1 ? 0 : prev + 1
+                            )
+                          }
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[var(--theme-text-muted)] transition-colors hover:bg-[var(--theme-surface-muted)] hover:text-[var(--theme-text)]"
+                          aria-label="Next pinned message"
+                        >
+                          <ChevronRightIcon className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
-                ))}
-                {pinnedMessages.length > 3 && (
-                  <div className="text-xs text-blue-500 cursor-pointer hover:underline">
-                    +{pinnedMessages.length - 3} more pinned messages
-                  </div>
-                )}
-              </div>
-            </div>
+                </div>
+              );
+            })()
           )}
           {messagesWithDayMeta.map(({ message, dayLabel, showDayHeader }) => {
           const isMe = message.senderId === currentUserId;
@@ -668,9 +728,7 @@ export default function ChatMessageList({
                     ? "bg-blue-600 text-white border border-blue-600 rounded-br-md"
                     : "bg-[var(--theme-surface)] text-[var(--theme-text)] border border-[var(--theme-border)] rounded-bl-md"
                     } ${highlightedMessageId === message.id
-                      ? isMe
-                        ? "ring-2 ring-amber-200 bg-blue-500"
-                        : "ring-2 ring-amber-400 bg-amber-50"
+                      ? "ring-2 ring-[var(--color-warning)] shadow-md"
                       : ""
                     } relative group`}
                   onContextMenu={(event) => {
