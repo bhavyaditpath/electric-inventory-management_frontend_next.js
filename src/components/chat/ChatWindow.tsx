@@ -23,6 +23,7 @@ import { PhoneIcon, VideoCameraIcon } from "@heroicons/react/24/outline";
 interface ChatWindowProps {
   room: ChatRoom | null;
   messages: ChatMessage[];
+  pinnedMessages?: ChatMessage[];
   currentUserId?: number;
   typingUsers: ChatUser[];
   isLoading?: boolean;
@@ -42,6 +43,8 @@ interface ChatWindowProps {
   onEditMessage?: (messageId: number, content: string) => Promise<boolean>;
   onForwardMessage?: (message: ChatMessage) => void;
   onReactionUpdated?: (message: ChatMessage) => void;
+  onPinMessage?: (messageId: number, pinned: boolean) => void;
+  onMessagePinned?: (payload: { messageId: number; pinned: boolean; message: ChatMessage }) => void;
 
   onStartCall?: (kind: CallType, userId?: number) => void;
   onEndCall?: () => void;
@@ -58,6 +61,7 @@ interface ChatWindowProps {
 export default function ChatWindow({
   room,
   messages,
+  pinnedMessages,
   currentUserId,
   typingUsers,
   isLoading,
@@ -71,6 +75,8 @@ export default function ChatWindow({
   onEditMessage,
   onForwardMessage,
   onReactionUpdated,
+  onPinMessage,
+  onMessagePinned,
   onStartCall,
   onOpenCallLogs,
 }: ChatWindowProps) {
@@ -390,6 +396,7 @@ export default function ChatWindow({
 
       <ChatMessageList
         messages={messages}
+        pinnedMessages={pinnedMessages}
         currentUserId={currentUserId}
         typingUsers={typingUsers}
         isLoading={isLoading}
@@ -403,6 +410,8 @@ export default function ChatWindow({
         onReplyMessage={handleReplyMessage}
         onForwardMessage={onForwardMessage}
         onReactionUpdated={onReactionUpdated}
+        onPinMessage={onPinMessage}
+        onMessagePinned={onMessagePinned}
       />
 
       <ChatComposer

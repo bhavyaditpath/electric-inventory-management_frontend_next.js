@@ -77,6 +77,7 @@ function ChatPageContent() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [forwardSourceMessage, setForwardSourceMessage] = useState<ChatMessage | null>(null);
   const [forwardLoading, setForwardLoading] = useState(false);
+  const [pinnedMessages, setPinnedMessages] = useState<ChatMessage[]>([]);
   // ===== CALL STATE =====
   const [showCallLogs, setShowCallLogs] = useState(false);
   const [callLogsTab, setCallLogsTab] = useState<"history" | "missed" | "room">("history");
@@ -204,6 +205,78 @@ function ChatPageContent() {
         };
       })
     );
+  }, []);
+
+  const fetchPinnedMessages = useCallback(async (roomId: number) => {
+    try {
+      const response = await chatApi.getPinnedMessages(roomId);
+      if (response.success && response.data) {
+        setPinnedMessages(response.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch pinned messages:", error);
+    }
+  }, []);
+
+  const handlePinMessage = useCallback(async (messageId: number, pinned: boolean) => {
+    const roomId = activeRoomIdRef.current;
+    if (!roomId) return;
+
+    try {
+      const response = await chatApi.pinMessage(roomId, messageId, pinned);
+      if (response.success && response.data) {
+        // Update the pinned messages state based on the response
+        if (pinned) {
+          const newPinnedMessage = { ...response.data, isPinned: true } as ChatMessage;
+          setPinnedMessages((prev) => {
+            // Avoid duplicates
+            if (prev.some((m) => m.id === newPinnedMessage.id)) return prev;
+            return [...prev, newPinnedMessage];
+          });
+          // Also update the message in the messages list
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === messageId ? { ...m, isPinned: true } : m
+            )
+          );
+        } else {
+          setPinnedMessages((prev) => prev.filter((m) => m.id !== messageId));
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === messageId ? { ...m, isPinned: false } : m
+            )
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Failed to pin message:", error);
+      showError("Failed to pin message");
+    }
+  }, []);
+
+  const handleMessagePinned = useCallback((payload: { messageId: number; pinned: boolean; message: ChatMessage }) => {
+    const currentRoomId = activeRoomIdRef.current;
+    if (currentRoomId !== payload.message.chatRoomId) return;
+
+    if (payload.pinned) {
+      const newPinnedMessage = { ...payload.message, isPinned: true } as ChatMessage;
+      setPinnedMessages((prev) => {
+        if (prev.some((m) => m.id === payload.messageId)) return prev;
+        return [...prev, newPinnedMessage];
+      });
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === payload.messageId ? { ...m, isPinned: true } : m
+        )
+      );
+    } else {
+      setPinnedMessages((prev) => prev.filter((m) => m.id !== payload.messageId));
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === payload.messageId ? { ...m, isPinned: false } : m
+        )
+      );
+    }
   }, []);
 
   const handleMessageUpdated = useCallback((updatedMessage: ChatMessage) => {
@@ -357,12 +430,14 @@ function ChatPageContent() {
     sendMessage,
     sendTyping,
     markAsRead,
+    pinMessage,
   } = useChatWebSocket({
     onMessage: handleIncomingMessage,
     onMessageUpdated: handleMessageUpdated,
     onMessagesDelivered: handleMessagesDelivered,
     onMessagesRead: handleMessagesRead,
     onMessageReactionUpdated: handleMessageReactionUpdated,
+    onMessagePinned: handleMessagePinned,
     onRoomUpdated: (payload) => {
       setRooms((prev) =>
         prev.map((room) =>
@@ -475,6 +550,32 @@ function ChatPageContent() {
         showError("Failed to fetch messages");
       } finally {
         setLoadingMessages(false);
+      }
+
+      // Fetch pinned messages
+      try {
+        const pinnedResponse = await chatApi.getPinnedMessages(activeRoomId);
+        if (pinnedResponse.success && pinnedResponse.data) {
+          // Decrypt pinned messages if needed
+          let pinned = pinnedResponse.data;
+          if (isEncryptionEnabled && decrypt) {
+            pinned = await Promise.all(
+              pinned.map(async (msg) => {
+                if (msg.content && isEncryptedMessage(msg.content)) {
+                  try {
+                    return { ...msg, content: await decrypt(msg.content, activeRoomId) };
+                  } catch {
+                    return msg;
+                  }
+                }
+                return msg;
+              })
+            );
+          }
+          setPinnedMessages(pinned);
+        }
+      } catch (error) {
+        console.error("Failed to fetch pinned messages:", error);
       }
     };
 
@@ -1214,6 +1315,7 @@ function ChatPageContent() {
             <ChatWindow
               room={activeRoom}
               messages={messages}
+              pinnedMessages={pinnedMessages}
               currentUserId={user?.id}
               typingUsers={typingUsers}
               isLoading={loadingMessages}
@@ -1225,6 +1327,8 @@ function ChatPageContent() {
               onEditMessage={handleEditMessage}
               onForwardMessage={requestForwardMessage}
               onReactionUpdated={handleMessageReactionUpdated}
+              onPinMessage={handlePinMessage}
+              onMessagePinned={handleMessagePinned}
               onStartCall={handleStartCall}
               callState={callState}
               onEndCall={handleEndCall}

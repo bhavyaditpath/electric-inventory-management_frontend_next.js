@@ -84,6 +84,7 @@ export interface ChatMessage {
   isRead?: boolean;
   readAt?: string | null;
   editedAt?: string | null;
+  isPinned?: boolean;
 }
 
 export interface ChatReaction {

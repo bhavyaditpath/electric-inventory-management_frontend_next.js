@@ -54,6 +54,7 @@ interface UseChatWebSocketOptions {
   onTyping?: (payload: TypingPayload) => void;
   onUserOnline?: (userId: number) => void;
   onUserOffline?: (userId: number) => void;
+  onMessagePinned?: (payload: { messageId: number; pinned: boolean; message: ChatMessage }) => void;
   encryptMessage?: (plaintext: string, roomId: number) => Promise<string>;
   decryptMessage?: (encryptedContent: string, roomId: number) => Promise<string>;
   isEncryptionEnabled?: boolean;
@@ -137,6 +138,17 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions = {}) => {
     socket.on("userOffline", (payload: UserStatusPayload) => {
       handlersRef.current.onUserOffline?.(payload.userId);
     });
+    socket.on("messagePinned", async (payload: { messageId: number; pinned: boolean; message: ChatMessage }) => {
+      // Decrypt the message if encryption is enabled and content appears encrypted
+      if (handlersRef.current.isEncryptionEnabled && handlersRef.current.decryptMessage && payload.message?.content && isEncryptedMessage(payload.message.content)) {
+        try {
+          payload.message.content = await handlersRef.current.decryptMessage(payload.message.content, payload.message.chatRoomId);
+        } catch (error) {
+          console.error("Failed to decrypt pinned message:", error);
+        }
+      }
+      handlersRef.current.onMessagePinned?.(payload);
+    });
 
     return () => {
       socket.removeAllListeners();
@@ -189,6 +201,10 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions = {}) => {
     socketRef.current?.emit("markAsRead", { roomId });
   }, []);
 
+  const pinMessage = useCallback((roomId: number, messageId: number, pinned: boolean) => {
+    socketRef.current?.emit("pinMessage", { roomId, messageId, pinned });
+  }, []);
+
   return {
     isConnected,
     joinRoom,
@@ -196,5 +212,6 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions = {}) => {
     sendMessage,
     sendTyping,
     markAsRead,
+    pinMessage,
   };
 };

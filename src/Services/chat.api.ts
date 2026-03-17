@@ -51,6 +51,10 @@ export interface ForwardMessagePayload {
   note?: string;
 }
 
+export interface PinMessagePayload {
+  pinned: boolean;
+}
+
 export const chatApi = {
   createRoom: (payload: CreateChatRoomPayload) =>
     apiClient.post<ChatRoom>("/chat/rooms", payload),
@@ -164,4 +168,10 @@ export const chatApi = {
 
     return { blob, filename };
   },
+
+  pinMessage: (roomId: number, messageId: number, pinned: boolean) =>
+    apiClient.post<ChatMessage>(`/chat/rooms/${roomId}/messages/${messageId}/pin`, { pinned }),
+
+  getPinnedMessages: (roomId: number) =>
+    apiClient.get<ChatMessage[]>(`/chat/rooms/${roomId}/pinned-messages`),
 };

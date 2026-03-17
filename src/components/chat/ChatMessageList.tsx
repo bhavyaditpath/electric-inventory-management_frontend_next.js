@@ -25,7 +25,7 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { CheckIcon } from "@heroicons/react/24/solid";
+import { BookmarkIcon, CheckIcon, NoSymbolIcon } from "@heroicons/react/24/solid";
 import { chatApi } from "@/Services/chat.api";
 import EmojiPicker from "@emoji-mart/react";
 import ChatMessageContent from "./ChatMessageContent";
@@ -36,6 +36,7 @@ import { ThemeMode } from "@/types/enums";
 
 interface ChatMessageListProps {
   messages: ChatMessage[];
+  pinnedMessages?: ChatMessage[];
   currentUserId?: number;
   typingUsers: ChatUser[];
   isLoading?: boolean;
@@ -49,10 +50,13 @@ interface ChatMessageListProps {
   onReplyMessage?: (message: ChatMessage) => void;
   onForwardMessage?: (message: ChatMessage) => void;
   onReactionUpdated?: (message: ChatMessage) => void;
+  onPinMessage?: (messageId: number, pinned: boolean) => void;
+  onMessagePinned?: (payload: { messageId: number; pinned: boolean; message: ChatMessage }) => void;
 }
 
 export default function ChatMessageList({
   messages,
+  pinnedMessages,
   currentUserId,
   typingUsers,
   isLoading,
@@ -66,6 +70,8 @@ export default function ChatMessageList({
   onReplyMessage,
   onForwardMessage,
   onReactionUpdated,
+  onPinMessage,
+  onMessagePinned,
 }: ChatMessageListProps) {
   const themeMode = useThemeMode();
 
@@ -595,7 +601,48 @@ export default function ChatMessageList({
           No messages yet. Say hello.
         </div>
       ) : (
-        messagesWithDayMeta.map(({ message, dayLabel, showDayHeader }) => {
+        <>
+          {pinnedMessages && pinnedMessages.length > 0 && (
+            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center gap-2 mb-2">
+                <BookmarkIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                  Pinned Message{pinnedMessages.length > 1 ? "s" : ""}
+                </span>
+              </div>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {(pinnedMessages || []).slice(0, 3).map((msg) => (
+                  <div
+                    key={msg.id}
+                    className="text-xs text-[var(--theme-text)] bg-white dark:bg-blue-950/30 p-2 rounded cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/40"
+                    onClick={() => {
+                      const targetNode = messageItemRefs.current.get(msg.id);
+                      if (targetNode) {
+                        targetNode.scrollIntoView({ behavior: "smooth", block: "center" });
+                        setHighlightedMessageId(msg.id);
+                        if (highlightTimeoutRef.current) {
+                          clearTimeout(highlightTimeoutRef.current);
+                        }
+                        highlightTimeoutRef.current = setTimeout(() => {
+                          setHighlightedMessageId((prev) => (prev === msg.id ? null : prev));
+                        }, 2000);
+                      }
+                    }}
+                  >
+                    <div className="truncate">
+                      {msg.content || (msg.attachments && msg.attachments.length > 0 ? "[Attachment]" : "")}
+                    </div>
+                  </div>
+                ))}
+                {pinnedMessages.length > 3 && (
+                  <div className="text-xs text-blue-500 cursor-pointer hover:underline">
+                    +{pinnedMessages.length - 3} more pinned messages
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          {messagesWithDayMeta.map(({ message, dayLabel, showDayHeader }) => {
           const isMe = message.senderId === currentUserId;
           const canEdit = !!onEditMessage && isMe;
           const canDelete = !!onDeleteMessage && (isMe || isAdmin);
@@ -946,7 +993,8 @@ export default function ChatMessageList({
               </div>
             </div>
           );
-        })
+        })}
+      </>
       )}
       {fullReactionPickerMessageId != null && reactionPickerPosition && (
         <div
@@ -991,6 +1039,8 @@ export default function ChatMessageList({
             const canDelete = !!onDeleteMessage && (isMe || isAdmin);
             const canReply = !!onReplyMessage && typeof currentUserId === "number";
             const canForward = !!onForwardMessage && typeof currentUserId === "number";
+            const canPin = !!onPinMessage && typeof currentUserId === "number";
+            const isPinned = message.isPinned === true;
 
             return (
               <>
@@ -1004,6 +1054,22 @@ export default function ChatMessageList({
                   >
                     <ArrowPathRoundedSquareIcon className="w-4 h-4" />
                     Forward
+                  </button>
+                )}
+                {canPin && (
+                  <button
+                    onClick={() => {
+                      onPinMessage?.(message.id, !isPinned);
+                      closeMessageMenu();
+                    }}
+                    className="w-full px-3 py-2 text-left text-xs text-[var(--theme-text)] hover:bg-[var(--theme-surface-muted)] flex items-center gap-2 cursor-pointer"
+                  >
+                    {isPinned ? (
+                      <NoSymbolIcon className="w-4 h-4" />
+                    ) : (
+                      <BookmarkIcon className="w-4 h-4" />
+                    )}
+                    {isPinned ? "Unpin" : "Pin"}
                   </button>
                 )}
                 {canReply && (
