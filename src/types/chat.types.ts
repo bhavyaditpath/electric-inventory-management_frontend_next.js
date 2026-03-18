@@ -124,6 +124,7 @@ export interface ChatAttachment {
   mimeType: string;
   fileName: string;
   size: number;
+  isViewOnce?: boolean;
 }
 
 export interface ChatMessagesResponse {

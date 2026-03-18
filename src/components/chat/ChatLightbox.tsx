@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 interface ChatLightboxProps {
-  lightbox: { url: string; name: string } | null;
+  lightbox: { url: string; name: string; onCloseCleanup?: () => void } | null;
   onClose: () => void;
 }
 

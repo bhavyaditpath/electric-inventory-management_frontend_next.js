@@ -36,7 +36,8 @@ interface ChatWindowProps {
     files?: File[],
     replyToMessageId?: number,
     kind?: ChatMessageKind,
-    language?: ChatLanguage
+    language?: ChatLanguage,
+    viewOnce?: boolean
   ) => void;
   onTyping: (isTyping: boolean) => void;
   onDeleteMessage?: (messageId: number) => void;
@@ -80,7 +81,9 @@ export default function ChatWindow({
   onStartCall,
   onOpenCallLogs,
 }: ChatWindowProps) {
-  const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(
+  const [lightbox, setLightbox] = useState<
+    { url: string; name: string; onCloseCleanup?: () => void } | null
+  >(
     null
   );
   const [replyContext, setReplyContext] = useState<{
@@ -196,9 +199,10 @@ export default function ChatWindow({
       files?: File[],
       replyToMessageId?: number,
       kind?: ChatMessageKind,
-      language?: ChatLanguage
+      language?: ChatLanguage,
+      viewOnce?: boolean
     ) => {
-      onSendMessage(content, files, replyToMessageId, kind, language);
+      onSendMessage(content, files, replyToMessageId, kind, language, viewOnce);
       setReplyContext(null);
     },
     [onSendMessage]
@@ -403,7 +407,9 @@ export default function ChatWindow({
         isGroupChat={room.isGroupChat}
         bottomRef={bottomRef}
         resolveAttachmentUrl={resolveAttachmentUrl}
-        onOpenLightbox={(url, name) => setLightbox({ url, name })}
+        onOpenLightbox={(url, name, onCloseCleanup) =>
+          setLightbox({ url, name, onCloseCleanup })
+        }
         isAdmin={isAdmin}
         onDeleteMessage={onDeleteMessage}
         onEditMessage={onEditMessage}
@@ -418,11 +424,19 @@ export default function ChatWindow({
         roomId={room?.id}
         onSendMessage={handleSendMessage}
         onTyping={onTyping}
-        onOpenLightbox={(url, name) => setLightbox({ url, name })}
+        onOpenLightbox={(url, name, onCloseCleanup) =>
+          setLightbox({ url, name, onCloseCleanup })
+        }
         replyToMessage={activeReplyToMessage}
         onCancelReply={handleCancelReply}
       />
-      <ChatLightbox lightbox={lightbox} onClose={() => setLightbox(null)} />
+      <ChatLightbox
+        lightbox={lightbox}
+        onClose={() => {
+          lightbox?.onCloseCleanup?.();
+          setLightbox(null);
+        }}
+      />
     </section>
   );
 }

@@ -11,6 +11,7 @@ import {
 import {
   ChevronDownIcon,
   FaceSmileIcon,
+  EyeIcon,
   PaperAirplaneIcon,
   PaperClipIcon,
   XMarkIcon,
@@ -37,10 +38,11 @@ interface ChatComposerProps {
     files?: File[],
     replyToMessageId?: number,
     kind?: ChatMessageKind,
-    language?: ChatLanguage
+    language?: ChatLanguage,
+    viewOnce?: boolean
   ) => void;
   onTyping: (isTyping: boolean) => void;
-  onOpenLightbox: (url: string, name: string) => void;
+  onOpenLightbox: (url: string, name: string, onCloseCleanup?: () => void) => void;
   replyToMessage?: ChatReplyPreview | null;
   onCancelReply?: () => void;
   maxFiles?: number;
@@ -180,6 +182,7 @@ export default function ChatComposer({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<ChatLanguage>("plaintext");
+  const [sendAsViewOnce, setSendAsViewOnce] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const emojiButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -258,6 +261,13 @@ export default function ChatComposer({
 
     if (!payload.content && !hasFiles) return;
 
+    if (sendAsViewOnce) {
+      if (selectedFiles.length !== 1 || !selectedFiles[0].type.startsWith("image/")) {
+        setFileWarning("View once supports a single image only.");
+        return;
+      }
+    }
+
     if (payload.kind === "json" && payload.content) {
       try {
         JSON.parse(payload.content);
@@ -273,7 +283,8 @@ export default function ChatComposer({
       selectedFiles,
       replyToMessage?.id,
       payload.kind,
-      payload.language
+      payload.language,
+      sendAsViewOnce
     );
 
     editor.commands.clearContent(true);
@@ -282,8 +293,9 @@ export default function ChatComposer({
     setShowEmojiPicker(false);
     setShowLanguageMenu(false);
     setSelectedLanguage("plaintext");
+    setSendAsViewOnce(false);
     onTyping(false);
-  }, [editor, onSendMessage, onTyping, replyToMessage?.id, roomId, selectedFiles]);
+  }, [editor, onSendMessage, onTyping, replyToMessage?.id, roomId, selectedFiles, sendAsViewOnce]);
 
   handleSendRef.current = handleSend;
 
@@ -444,7 +456,17 @@ export default function ChatComposer({
     setShowEmojiPicker(false);
     setShowLanguageMenu(false);
     setSelectedLanguage("plaintext");
+    setSendAsViewOnce(false);
   }, [editor, roomId]);
+
+  useEffect(() => {
+    if (!sendAsViewOnce) return;
+    const hasSingleImage =
+      selectedFiles.length === 1 && selectedFiles[0]?.type.startsWith("image/");
+    if (!hasSingleImage) {
+      setSendAsViewOnce(false);
+    }
+  }, [selectedFiles, sendAsViewOnce]);
 
   useEffect(() => {
     if (!editor) return;
@@ -526,6 +548,19 @@ export default function ChatComposer({
           aria-label="Attach files"
         >
           <PaperClipIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        </button>
+        <button
+          onClick={() => setSendAsViewOnce((prev) => !prev)}
+          disabled={selectedFiles.length === 0}
+          className={`p-1.5 sm:p-2 lg:p-2.5 rounded-full border cursor-pointer flex-shrink-0 ${
+            sendAsViewOnce
+              ? "border-amber-400 bg-amber-50 text-amber-700"
+              : "border-[var(--theme-border)] bg-[var(--theme-surface)] text-[var(--theme-text-muted)] hover:bg-[var(--theme-surface-muted)]"
+          } ${selectedFiles.length === 0 ? "opacity-50 cursor-not-allowed" : ""} focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70`}
+          aria-label="Send as view once"
+          title="Send as view once"
+        >
+          <EyeIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
 
         <div className="relative shrink-0 hidden sm:block">

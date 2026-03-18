@@ -20,6 +20,7 @@ export interface SendMessagePayload {
   kind?: ChatMessageKind;
   language?: ChatLanguage;
   replyToMessageId?: number;
+  viewOnce?: boolean;
 }
 
 export interface AddParticipantsPayload {
@@ -53,6 +54,11 @@ export interface ForwardMessagePayload {
 
 export interface PinMessagePayload {
   pinned: boolean;
+}
+
+export interface ViewOnceAttachmentStatus {
+  isViewOnce: boolean;
+  isViewed: boolean;
 }
 
 export const chatApi = {
@@ -105,6 +111,9 @@ export const chatApi = {
       }
       if (typeof payload.replyToMessageId === "number") {
         formData.append("replyToMessageId", String(payload.replyToMessageId));
+      }
+      if (payload.viewOnce === true) {
+        formData.append("viewOnce", "true");
       }
       files.forEach((file) => formData.append("files", file));
       return apiClient.postForm<ChatMessage>("/chat/messages", formData);
@@ -168,6 +177,17 @@ export const chatApi = {
 
     return { blob, filename };
   },
+
+  getViewOnceAttachmentStatus: (attachmentId: number) =>
+    apiClient.get<ViewOnceAttachmentStatus>(
+      `/chat/attachments/${attachmentId}/view-once/status`
+    ),
+
+  recordViewOnceAttachmentView: (attachmentId: number) =>
+    apiClient.post<{ attachmentId: number; userId: number }>(
+      `/chat/attachments/${attachmentId}/view-once/view`,
+      {}
+    ),
 
   pinMessage: (roomId: number, messageId: number, pinned: boolean) =>
     apiClient.post<ChatMessage>(`/chat/rooms/${roomId}/messages/${messageId}/pin`, { pinned }),

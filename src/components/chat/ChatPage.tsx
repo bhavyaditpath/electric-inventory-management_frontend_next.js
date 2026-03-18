@@ -661,7 +661,8 @@ function ChatPageContent() {
       files?: File[],
       replyToMessageId?: number,
       kind?: ChatMessageKind,
-      language?: ChatLanguage
+      language?: ChatLanguage,
+      viewOnce?: boolean
     ) => {
       if (!activeRoomId) return;
       const trimmed = content.trim();
@@ -681,6 +682,7 @@ function ChatPageContent() {
       if (
         isConnected &&
         !hasFiles &&
+        !viewOnce &&
         typeof replyToMessageId !== "number" &&
         normalizedKind === "text" &&
         normalizedLanguage === "plaintext"
@@ -697,6 +699,7 @@ function ChatPageContent() {
             replyToMessageId,
             kind: normalizedKind,
             language: normalizedLanguage,
+            viewOnce: viewOnce === true,
           },
           files
         );

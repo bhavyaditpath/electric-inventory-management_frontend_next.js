@@ -22,6 +22,8 @@ import {
   ArrowUturnLeftIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  EyeIcon,
+  EyeSlashIcon,
   EllipsisHorizontalIcon,
   PencilSquareIcon,
   PlusIcon,
@@ -45,7 +47,7 @@ interface ChatMessageListProps {
   isGroupChat?: boolean;
   bottomRef: React.RefObject<HTMLDivElement | null>;
   resolveAttachmentUrl: (url: string) => string;
-  onOpenLightbox: (url: string, name: string) => void;
+  onOpenLightbox: (url: string, name: string, onCloseCleanup?: () => void) => void;
   isAdmin?: boolean;
   onDeleteMessage?: (messageId: number) => void;
   onEditMessage?: (messageId: number, content: string) => Promise<boolean>;
@@ -113,6 +115,12 @@ export default function ChatMessageList({
   const [reactionOverrides, setReactionOverrides] = useState<
     Record<number, MessageReactionView[]>
   >({});
+  const [viewOnceStatusByAttachmentId, setViewOnceStatusByAttachmentId] = useState<
+    Record<number, { isViewOnce: boolean; isViewed: boolean }>
+  >({});
+  const [openingViewOnceAttachmentId, setOpeningViewOnceAttachmentId] = useState<
+    number | null
+  >(null);
   const listRef = useRef<HTMLDivElement | null>(null);
   const reactionActionRef = useRef<HTMLDivElement | null>(null);
   const reactionPickerRef = useRef<HTMLDivElement | null>(null);
@@ -586,6 +594,93 @@ export default function ChatMessageList({
     }
   };
 
+  useEffect(() => {
+    const imageAttachmentIds = messages
+      .flatMap((message) => message.attachments || [])
+      .filter((attachment) => isImageAttachment(attachment.mimeType))
+      .map((attachment) => attachment.id)
+      .filter((id) => !viewOnceStatusByAttachmentId[id]);
+
+    if (imageAttachmentIds.length === 0) return;
+
+    let cancelled = false;
+    Promise.all(
+      imageAttachmentIds.map(async (attachmentId) => {
+        const response = await chatApi.getViewOnceAttachmentStatus(attachmentId);
+        if (!response.success || !response.data) return null;
+        return { attachmentId, ...response.data };
+      })
+    )
+      .then((results) => {
+        if (cancelled) return;
+        setViewOnceStatusByAttachmentId((prev) => {
+          const next = { ...prev };
+          results.forEach((result) => {
+            if (!result) return;
+            next[result.attachmentId] = {
+              isViewOnce: result.isViewOnce,
+              isViewed: result.isViewed,
+            };
+          });
+          return next;
+        });
+      })
+      .catch(() => {
+        // non-blocking status prefetch
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [messages, viewOnceStatusByAttachmentId]);
+
+  const handleOpenViewOnceImage = useCallback(
+    async (attachment: ChatAttachment) => {
+      if (openingViewOnceAttachmentId === attachment.id) return;
+      setOpeningViewOnceAttachmentId(attachment.id);
+
+      try {
+        const statusResponse = await chatApi.getViewOnceAttachmentStatus(attachment.id);
+        if (statusResponse.success && statusResponse.data) {
+          setViewOnceStatusByAttachmentId((prev) => ({
+            ...prev,
+            [attachment.id]: statusResponse.data!,
+          }));
+          if (statusResponse.data.isViewed) {
+            showError("This view-once image has already been opened.");
+            return;
+          }
+        }
+
+        const { blob } = await chatApi.downloadAttachment(attachment.id);
+        const objectUrl = URL.createObjectURL(blob);
+        onOpenLightbox(objectUrl, attachment.fileName, () => URL.revokeObjectURL(objectUrl));
+
+        const recordResponse = await chatApi.recordViewOnceAttachmentView(attachment.id);
+        if (recordResponse.success) {
+          setViewOnceStatusByAttachmentId((prev) => ({
+            ...prev,
+            [attachment.id]: { isViewOnce: true, isViewed: true },
+          }));
+          return;
+        }
+
+        if (recordResponse.message === "Already viewed") {
+          setViewOnceStatusByAttachmentId((prev) => ({
+            ...prev,
+            [attachment.id]: { isViewOnce: true, isViewed: true },
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to open view-once attachment:", error);
+        showError("Unable to open this view-once image.");
+      } finally {
+        setOpeningViewOnceAttachmentId(null);
+      }
+    },
+    [onOpenLightbox, openingViewOnceAttachmentId]
+  );
+
   const startEditing = useCallback((message: ChatMessage) => {
     setEditingMessageId(message.id);
     setEditInput(message.content || "");
@@ -879,8 +974,80 @@ export default function ChatMessageList({
                         const fileUrl = resolveAttachmentUrl(attachment.url);
                         const extension = getFileExtension(attachment.fileName);
                         const isImage = isImageAttachment(attachment.mimeType);
+                        const viewOnceStatus = viewOnceStatusByAttachmentId[attachment.id];
+                        const isViewOnce =
+                          attachment.isViewOnce === true ||
+                          viewOnceStatus?.isViewOnce === true;
+                        const isViewedViewOnce =
+                          isViewOnce && viewOnceStatus?.isViewed === true;
+                        const isOpeningViewOnce =
+                          isViewOnce && openingViewOnceAttachmentId === attachment.id;
 
                         if (isImage) {
+                          if (isViewOnce) {
+                            if (isViewedViewOnce) {
+                              return (
+                                <div
+                                  key={attachment.id}
+                                  className={`w-full overflow-hidden rounded-xl border ${isMe
+                                    ? "border-white/20 bg-gradient-to-br from-blue-500/30 to-blue-700/20 text-blue-100"
+                                    : "border-[var(--theme-border)] bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600"
+                                    }`}
+                                >
+                                  <div className="flex items-center justify-center px-4 py-8">
+                                    <div className="text-center">
+                                      <span className={`mx-auto mb-2 inline-flex h-10 w-10 items-center justify-center rounded-full border ${isMe
+                                        ? "border-white/30 bg-white/10 text-blue-100"
+                                        : "border-slate-300 bg-white/70 text-slate-500"
+                                        }`}>
+                                        <EyeSlashIcon className="h-5 w-5" />
+                                      </span>
+                                      <p className="text-xs font-semibold">Opened</p>
+                                      <p className={`mt-1 text-[11px] ${isMe ? "text-blue-100/90" : "text-slate-500"}`}>
+                                        This photo is no longer available.
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <button
+                                key={attachment.id}
+                                onClick={() => void handleOpenViewOnceImage(attachment)}
+                                disabled={isOpeningViewOnce}
+                                className={`group relative w-full overflow-hidden rounded-xl border cursor-pointer ${isMe
+                                  ? "border-white/20 text-white"
+                                  : "border-[var(--theme-border)] text-[var(--theme-text)]"
+                                  } ${isOpeningViewOnce ? "opacity-70 cursor-wait" : ""}`}
+                                aria-label={`Open view-once image ${attachment.fileName}`}
+                              >
+                                <div
+                                  className={`absolute inset-0 ${isMe
+                                    ? "bg-gradient-to-br from-blue-400/30 via-blue-500/20 to-blue-700/20"
+                                    : "bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400"
+                                    }`}
+                                />
+                                <div className={`absolute inset-0 backdrop-blur-sm ${isMe ? "bg-black/10" : "bg-white/20"}`} />
+                                <div className="relative flex items-center justify-center px-4 py-8">
+                                  <div className="text-center">
+                                    <span className={`mx-auto mb-2 inline-flex h-10 w-10 items-center justify-center rounded-full border transition-transform group-hover:scale-105 ${isMe
+                                      ? "border-white/30 bg-white/10 text-white"
+                                      : "border-slate-400/60 bg-white/70 text-slate-700"
+                                      }`}>
+                                      <EyeIcon className="h-5 w-5" />
+                                    </span>
+                                    <p className="text-xs font-semibold">View once photo</p>
+                                    <p className={`mt-1 text-[11px] ${isMe ? "text-blue-100/95" : "text-slate-700"}`}>
+                                      {isOpeningViewOnce ? "Opening..." : "Tap to open"}
+                                    </p>
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          }
+
                           return (
                             <button
                               key={attachment.id}
