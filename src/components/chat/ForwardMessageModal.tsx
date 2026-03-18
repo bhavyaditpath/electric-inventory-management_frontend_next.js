@@ -18,15 +18,13 @@ export default function ForwardMessageModal({
   isOpen,
   sourceMessage,
   rooms,
-  currentRoomId,
+  currentRoomId: _currentRoomId,
   isLoading = false,
   onClose,
   onConfirm,
 }: ForwardMessageModalProps) {
   const [search, setSearch] = useState("");
-  const [selectedRoomIds, setSelectedRoomIds] = useState<number[]>(
-    currentRoomId ? [currentRoomId] : []
-  );
+  const [selectedRoomIds, setSelectedRoomIds] = useState<number[]>([]);
   const [note, setNote] = useState("");
 
   const filteredRooms = useMemo(() => {
@@ -38,8 +36,8 @@ export default function ForwardMessageModal({
   const sourcePreview = useMemo(() => {
     if (!sourceMessage) return "";
     const prefix = getFormatPreviewPrefix(sourceMessage.kind, sourceMessage.language);
-    const text = sourceMessage.content?.trim();
-    if (text) return `${prefix}${text}`;
+    const rawText = sourceMessage.content || "";
+    if (rawText.trim().length > 0) return `${prefix}${rawText}`;
     const attachmentCount = sourceMessage.attachments?.length || 0;
     if (attachmentCount > 0) {
       return attachmentCount === 1 ? "Attachment" : `${attachmentCount} attachments`;
@@ -96,7 +94,7 @@ export default function ForwardMessageModal({
             <p className="text-[11px] font-semibold text-[var(--theme-text-muted)]">
               Source message
             </p>
-            <p className="text-xs text-[var(--theme-text)] break-words">
+            <p className="text-xs text-[var(--theme-text)] break-words whitespace-pre-wrap">
               {sourcePreview}
             </p>
           </div>

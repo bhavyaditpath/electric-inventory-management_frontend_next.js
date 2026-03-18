@@ -836,10 +836,15 @@ function ChatPageContent() {
     async (targetRoomIds: number[], note: string) => {
       if (!forwardSourceMessage) return;
 
+      const resolvedSourceMessageId =
+        typeof forwardSourceMessage.forwardedFrom?.messageId === "number"
+          ? forwardSourceMessage.forwardedFrom.messageId
+          : forwardSourceMessage.id;
+
       setForwardLoading(true);
       try {
         const response = await chatApi.forwardMessage({
-          sourceMessageId: forwardSourceMessage.id,
+          sourceMessageId: resolvedSourceMessageId,
           targetRoomIds,
           note,
         });

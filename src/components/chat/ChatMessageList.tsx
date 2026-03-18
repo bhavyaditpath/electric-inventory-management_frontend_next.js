@@ -202,12 +202,12 @@ export default function ChatMessageList({
   const getForwardedPreviewText = (message: ChatMessage) => {
     if (!message.forwardedFrom) return null;
     if (message.forwardedFrom.isRemoved) return "This message was deleted";
-    const value = message.forwardedFrom.contentPreview?.trim();
-    if (!value || value.length === 0) return "";
+    const rawValue = message.forwardedFrom.contentPreview || "";
+    if (rawValue.trim().length === 0) return "";
     return `${getFormatPreviewPrefix(
       message.forwardedFrom.kind as ChatMessageKind | undefined,
       message.forwardedFrom.language as ChatLanguage | undefined
-    )}${value}`;
+    )}${rawValue}`;
   };
 
   const isImageAttachment = (mimeType: string) => mimeType.startsWith("image/");
@@ -808,7 +808,7 @@ export default function ChatMessageList({
                       <p className={`text-[10px] sm:text-[11px] font-semibold ${isMe ? "text-blue-100" : "text-[var(--theme-text-muted)]"}`}>
                         Forwarded from {message.forwardedFrom.senderName || "Unknown user"}
                       </p>
-                      <p className={`text-[11px] sm:text-xs truncate ${isMe ? "text-blue-50" : "text-[var(--theme-text)]"}`}>
+                      <p className={`text-[11px] sm:text-xs whitespace-pre-wrap break-words ${isMe ? "text-blue-50" : "text-[var(--theme-text)]"}`}>
                         {forwardedPreviewText}
                       </p>
                     </div>
