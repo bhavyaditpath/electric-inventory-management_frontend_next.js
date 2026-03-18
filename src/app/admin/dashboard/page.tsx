@@ -77,10 +77,10 @@ export default function DashboardPage() {
 
       // Fetch stats from backend APIs
       const [totalInventoryRes, activeBranchesRes, monthlySalesRes, pendingRequestsRes] = await Promise.all([
-        dashboardApi.getTotalInventory(user.id),
+        dashboardApi.getTotalInventory(),
         dashboardApi.getActiveBranches(),
-        dashboardApi.getMonthlySales(user.id),
-        dashboardApi.getPendingRequests(user.id)
+        dashboardApi.getMonthlySales(),
+        dashboardApi.getPendingRequests()
       ]);
 
       const totalInventory =

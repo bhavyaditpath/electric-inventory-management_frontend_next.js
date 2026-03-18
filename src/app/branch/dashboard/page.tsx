@@ -44,8 +44,8 @@ export default function BranchDashboardPage() {
         const [currentStockRes, activeAlertsRes, pendingOrdersRes, todaysBuysRes] = await Promise.all([
           dashboardApi.getCurrentStock(user.id),
           dashboardApi.getActiveAlerts(user.id),
-          dashboardApi.getPendingOrders(user.id),
-          dashboardApi.getTodaysBuys(user.id)
+          dashboardApi.getPendingOrders(),
+          dashboardApi.getTodaysBuys()
         ]);
 
         const currentStock = (currentStockRes as any).count || 0;
