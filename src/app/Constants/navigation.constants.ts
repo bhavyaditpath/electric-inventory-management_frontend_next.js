@@ -13,6 +13,7 @@ export const NAVIGATION = {
     request: '/admin/request',
     reports: '/admin/reports',
     purchaseTrend: '/admin/purchase-trend',
+    analytics: '/admin/analytics',
     chat: '/admin/chat',
   },
   branch: {
@@ -22,6 +23,7 @@ export const NAVIGATION = {
     requestedpurchase: '/branch/requestedpurchase',
     sales: '/branch/sales',
     purchaseTrend: '/branch/purchase-trend',
+    analytics: '/branch/analytics',
     alerts: '/branch/alerts',
     chat: '/branch/chat',
   },
