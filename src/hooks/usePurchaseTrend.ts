@@ -6,7 +6,7 @@ import { dashboardApi } from "@/Services/dashboard.api";
 import { useAuth } from "@/contexts/AuthContext";
 import { PURCHASE_TREND_OPTION_KEYS } from "@/constants/charts/purchase-trend.constants";
 import { PurchaseTrendChartModel } from "@/models/charts/purchase-trend/purchase-trend-chart.model";
-import { Branch, PaginatedResponse } from "@/types/api-types";
+import { Branch } from "@/types/api-types";
 import { UserRole } from "@/types/enums";
 import {
   BranchOption,
@@ -76,13 +76,9 @@ export function usePurchaseTrend() {
       }
 
       try {
-        const response = await branchApi.getAll({ page: 1, pageSize: 500, sortBy: "name", sortOrder: "asc" });
-        const payload = unwrapApiData<PaginatedResponse<Branch> | Branch[]>(response);
-        const items: Branch[] = Array.isArray(payload)
-          ? payload
-          : Array.isArray(payload.items)
-            ? payload.items
-            : [];
+        const response = await branchApi.getAllWithoutPagination();
+        const payload = unwrapApiData<Branch[]>(response);
+        const items: Branch[] = Array.isArray(payload) ? payload : [];
 
         const mapped = items
           .filter((item) => typeof item.id === "number")

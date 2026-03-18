@@ -20,6 +20,7 @@ export const branchApi = {
     const queryString = searchParams.toString();
     return apiClient.get(`/branch${queryString ? `?${queryString}` : ''}`);
   },
+  getAllWithoutPagination: () => apiClient.get('/branch/all'),
   getById: (id: number) => apiClient.get(`/branch/${id}`),
   create: (branchData: { name: string; address: string; phone: string }) =>
     apiClient.post('/branch', branchData),
