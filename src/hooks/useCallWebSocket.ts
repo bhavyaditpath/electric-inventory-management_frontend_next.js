@@ -6,8 +6,9 @@ import { useWebRTC } from "./useWebRTC";
 import { CallDirection, CallOutcome, CallState, CallType } from "@/types/enums";
 import { useAuth } from "@/contexts/AuthContext";
 
-const SOCKET_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const SOCKET_BASE_URL = (
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
+).replace(/\/+$/, "");
 const OUTGOING_CALL_TTL_MS = 30000;
 const CALL_SESSION_KEY = "chat_call_session";
 
@@ -370,9 +371,14 @@ export const useCallWebSocket = () => {
         const socket = io(`${SOCKET_BASE_URL}/chat`, {
             auth: { token },
             transports: ["websocket"],
+            reconnection: true,
+            timeout: 20000,
         });
 
         socketRef.current = socket;
+        socket.on("connect_error", (error) => {
+            console.error("Call socket connection error:", error.message);
+        });
 
         // ---------- INCOMING CALL ----------
         socket.on("incomingCall", async ({ callerId, callerName, callType, roomId, isGroupCall, callLogId }) => {
