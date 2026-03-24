@@ -120,7 +120,15 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions = {}) => {
     socket.on("messageDeleted", (payload: { id: number; chatRoomId: number }) => {
       handlersRef.current.onMessageDeleted?.(payload);
     });
-    socket.on("messageReactionUpdated", (message: ChatMessage) => {
+    socket.on("messageReactionUpdated", async (message: ChatMessage) => {
+      // Decrypt the message if encryption is enabled and content appears encrypted
+      if (handlersRef.current.isEncryptionEnabled && handlersRef.current.decryptMessage && message.content && isEncryptedMessage(message.content)) {
+        try {
+          message.content = await handlersRef.current.decryptMessage(message.content, message.chatRoomId);
+        } catch (error) {
+          console.error("Failed to decrypt reaction-updated message:", error);
+        }
+      }
       handlersRef.current.onMessageReactionUpdated?.(message);
     });
     socket.on("reactionNotification", (payload: ChatReactionNotification) => {

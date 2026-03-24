@@ -184,12 +184,29 @@ function ChatPageContent() {
   }, [fetchRooms]);
 
   const handleMessageReactionUpdated = useCallback((updatedMessage: ChatMessage) => {
+    const mergeReactionUpdate = (baseMessage: ChatMessage, incomingMessage: ChatMessage) => {
+      const merged = { ...baseMessage, ...incomingMessage };
+
+      // Some reaction update payloads can contain encrypted content. Keep already-readable
+      // content in state so reacting doesn't suddenly show ciphertext in the UI.
+      if (
+        baseMessage.content &&
+        incomingMessage.content &&
+        isEncryptedMessage(incomingMessage.content) &&
+        !isEncryptedMessage(baseMessage.content)
+      ) {
+        merged.content = baseMessage.content;
+      }
+
+      return merged;
+    };
+
     const currentRoomId = activeRoomIdRef.current;
     if (currentRoomId === updatedMessage.chatRoomId) {
       setMessages((prev) =>
         prev.map((message) =>
           message.id === updatedMessage.id
-            ? { ...message, ...updatedMessage }
+            ? mergeReactionUpdate(message, updatedMessage)
             : message
         )
       );
@@ -201,7 +218,7 @@ function ChatPageContent() {
         if (!room.lastMessage || room.lastMessage.id !== updatedMessage.id) return room;
         return {
           ...room,
-          lastMessage: { ...room.lastMessage, ...updatedMessage },
+          lastMessage: mergeReactionUpdate(room.lastMessage, updatedMessage),
         };
       })
     );
