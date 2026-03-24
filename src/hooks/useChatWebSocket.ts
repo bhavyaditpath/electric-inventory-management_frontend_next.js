@@ -11,9 +11,8 @@ import {
 } from "@/types/chat.types";
 import { isEncryptedMessage } from "@/utils/chatEncryption";
 
-const SOCKET_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
-).replace(/\/+$/, "");
+const SOCKET_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 interface TypingPayload {
   userId: number;
@@ -80,17 +79,12 @@ export const useChatWebSocket = (options: UseChatWebSocketOptions = {}) => {
     const socket = io(`${SOCKET_BASE_URL}/chat`, {
       auth: { token },
       transports: ["websocket"],
-      reconnection: true,
-      timeout: 20000,
     });
 
     socketRef.current = socket;
 
     socket.on("connect", () => setIsConnected(true));
     socket.on("disconnect", () => setIsConnected(false));
-    socket.on("connect_error", (error) => {
-      console.error("Chat socket connection error:", error.message);
-    });
     socket.on("newMessage", async (message: ChatMessage) => {
       // Decrypt the message if encryption is enabled and content appears encrypted
       if (handlersRef.current.isEncryptionEnabled && handlersRef.current.decryptMessage && message.content && isEncryptedMessage(message.content)) {
