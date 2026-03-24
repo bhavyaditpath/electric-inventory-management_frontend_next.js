@@ -29,6 +29,7 @@ const menuItems: MenuItem[] = [
   { name: "Requested Purchase", href: "/branch/requestedpurchase", icon: ClipboardDocumentListIcon },
   { name: "Reports", href: "/branch/reports", icon: DocumentChartBarIcon },
   { name: "Purchase Trend", href: "/branch/purchase-trend", icon: DocumentChartBarIcon },
+  { name: "Analytics", href: "/branch/analytics", icon: DocumentChartBarIcon },
   { name: "Chat", href: "/branch/chat", icon: ChatBubbleLeftRightIcon },
   // { name: "Sales", href: "/branch/sales", icon: ChartBarIcon },
   { name: "Alerts", href: "/branch/alerts", icon: ExclamationTriangleIcon },
