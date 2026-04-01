@@ -63,6 +63,7 @@ const PurchasePage = () => {
       setLoadingPurchases(true);
       const response = await purchaseApi.getPurchases();
       setPurchases(Array.isArray(response) ? response : []);
+      console.log('Loaded purchases:', response);
     } catch (err) {
       setPurchases([]);
       console.error('Failed to load purchases:', err);
@@ -368,7 +369,7 @@ const PurchasePage = () => {
               </div>
             ) : (
               <div className="space-y-3 max-h-[35rem] overflow-y-auto pr-1">
-                {purchases.slice(0, 10).map((purchase) => (
+                {purchases.slice(0, 1000).map((purchase) => (
                   <div
                     key={purchase.id}
                     className="border border-[var(--theme-border)] rounded-lg p-4 hover:bg-[var(--theme-surface-muted)] transition-colors"
